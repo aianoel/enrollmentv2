@@ -4,22 +4,22 @@ import { Card, CardContent } from '../components/ui/card';
 import { useAuth } from '../contexts/AuthContext';
 
 export const Dashboard: React.FC = () => {
-  const { userProfile } = useAuth();
+  const { user } = useAuth();
 
-  if (!userProfile) return null;
+  if (!user) return null;
 
   return (
     <div className="space-y-6">
       {/* Welcome Header */}
       <div className="bg-gradient-to-r from-primary-600 to-primary-700 rounded-xl p-6 text-white">
         <h2 className="text-2xl font-bold mb-2" data-testid="welcome-message">
-          Welcome back, {userProfile.firstName}!
+          Welcome back, {user.name}!
         </h2>
         <p className="opacity-90">
-          {userProfile.role === 'student' && "Ready to continue your learning journey?"}
-          {userProfile.role === 'teacher' && "Ready to inspire minds today?"}
-          {userProfile.role === 'admin' && "Ready to manage the school system?"}
-          {userProfile.role === 'parent' && "Keep track of your child's progress."}
+          {user.role === 'student' && "Ready to continue your learning journey?"}
+          {user.role === 'teacher' && "Ready to inspire minds today?"}
+          {user.role === 'admin' && "Ready to manage the school system?"}
+          {user.role === 'parent' && "Keep track of your child's progress."}
         </p>
       </div>
 
@@ -50,7 +50,7 @@ export const Dashboard: React.FC = () => {
           <CardContent className="p-0">
             <div className="p-6 border-b border-gray-200">
               <h3 className="text-lg font-semibold text-gray-900">
-                {userProfile.role === 'student' ? 'Upcoming Deadlines' : 'Upcoming Events'}
+                {user.role === 'student' ? 'Upcoming Deadlines' : 'Upcoming Events'}
               </h3>
             </div>
             <div className="p-6 space-y-4">
@@ -59,7 +59,7 @@ export const Dashboard: React.FC = () => {
                 <i className="fas fa-calendar text-2xl mb-2 text-gray-400"></i>
                 <p>No upcoming items to display.</p>
                 <p className="text-sm">
-                  {userProfile.role === 'student' 
+                  {user.role === 'student' 
                     ? 'Assignment deadlines will appear here.' 
                     : 'Scheduled events will appear here.'}
                 </p>

@@ -14,16 +14,16 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useChat } from '../../contexts/ChatContext';
 
 export const MainLayout: React.FC = () => {
-  const { userProfile } = useAuth();
+  const { user } = useAuth();
   const { isOpen } = useChat();
   const [currentSection, setCurrentSection] = useState('dashboard');
 
-  if (!userProfile) return null;
+  if (!user) return null;
 
   const renderContent = () => {
     // Role-specific dashboard routing
     if (currentSection === 'dashboard') {
-      switch (userProfile.role) {
+      switch (user.role) {
         case 'teacher':
           return <TeacherDashboard />;
         case 'admin':

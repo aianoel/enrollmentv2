@@ -6,9 +6,9 @@ import { EmptyState } from '../../components/common/EmptyState';
 import { useAuth } from '../../contexts/AuthContext';
 
 export const TeacherDashboard: React.FC = () => {
-  const { userProfile } = useAuth();
+  const { user } = useAuth();
 
-  if (!userProfile || userProfile.role !== 'teacher') {
+  if (!user || user.role !== 'teacher') {
     return <EmptyState message="Access denied. Teacher role required." />;
   }
 
@@ -17,7 +17,7 @@ export const TeacherDashboard: React.FC = () => {
       {/* Welcome Header */}
       <div className="bg-gradient-to-r from-primary-600 to-primary-700 rounded-xl p-6 text-white">
         <h2 className="text-2xl font-bold mb-2" data-testid="welcome-message">
-          Welcome back, {userProfile.firstName}!
+          Welcome back, {user.name}!
         </h2>
         <p className="opacity-90">Ready to inspire minds today?</p>
       </div>
