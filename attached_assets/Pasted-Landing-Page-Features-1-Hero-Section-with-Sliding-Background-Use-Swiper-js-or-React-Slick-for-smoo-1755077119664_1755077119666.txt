@@ -1,0 +1,103 @@
+Landing Page Features
+1️⃣ Hero Section with Sliding Background
+Use Swiper.js or React Slick for smooth image sliding.
+
+Images stored in Firebase Storage.
+
+Admin uploads/replaces images in dashboard, URLs stored in Firebase Realtime Database under landingPage/heroImages.
+
+Firebase Structure:
+
+json
+Copy
+Edit
+"landingPage": {
+  "heroImages": [
+    "https://firebasestorage.googleapis.com/.../slide1.jpg",
+    "https://firebasestorage.googleapis.com/.../slide2.jpg"
+  ]
+}
+2️⃣ Announcements
+Stored in Firebase under announcements.
+
+Displayed in a scrolling marquee or card layout.
+
+Each announcement has: title, content, date, postedBy.
+
+json
+Copy
+Edit
+"announcements": {
+  "ann1": {
+    "title": "Class Suspension",
+    "content": "No classes on Aug 15 due to weather.",
+    "date": "2025-08-12",
+    "postedBy": "Admin"
+  }
+}
+3️⃣ Latest News
+Stored in Firebase under news.
+
+Display as cards with image, title, summary, and read-more link.
+
+json
+Copy
+Edit
+"news": {
+  "news1": {
+    "title": "Science Fair Winners",
+    "summary": "Congratulations to our students...",
+    "image": "https://firebasestorage.googleapis.com/.../news1.jpg",
+    "date": "2025-08-10"
+  }
+}
+4️⃣ Events
+Stored under events.
+
+Display as upcoming events with date/time.
+
+Optional: clickable to view details.
+
+json
+Copy
+Edit
+"events": {
+  "event1": {
+    "title": "Foundation Day",
+    "date": "2025-09-05",
+    "location": "School Gym",
+    "description": "Join us for our annual celebration."
+  }
+}
+5️⃣ Admin Control
+Admin login via Firebase Auth.
+
+Admin dashboard to:
+
+Upload hero images (stored in Firebase Storage, URL saved in DB).
+
+Add/edit/delete announcements, news, and events.
+
+Create other accounts (teachers, students, parents).
+
+All updates instantly reflect on the landing page via Realtime Database.
+
+6️⃣ Example Firebase Database Layout
+json
+Copy
+Edit
+{
+  "landingPage": {
+    "heroImages": ["url1", "url2"]
+  },
+  "announcements": { ... },
+  "news": { ... },
+  "events": { ... },
+  "users": {
+    "uid123": {
+      "name": "John Admin",
+      "role": "admin",
+      "email": "admin@example.com"
+    }
+  }
+}

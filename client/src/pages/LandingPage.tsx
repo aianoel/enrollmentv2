@@ -2,6 +2,11 @@ import React from 'react';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { GraduationCap, Users, BookOpen, MessageCircle, FileText, CreditCard, UserCheck, Building2, Phone, Mail, MapPin } from 'lucide-react';
+import { HeroSlider } from '../components/landing/HeroSlider';
+import { AnnouncementMarquee } from '../components/landing/AnnouncementMarquee';
+import { NewsSection } from '../components/landing/NewsSection';
+import { EventsSection } from '../components/landing/EventsSection';
+import { useLandingPageData } from '../hooks/useLandingPageData';
 
 interface LandingPageProps {
   onLoginClick: () => void;
@@ -9,6 +14,15 @@ interface LandingPageProps {
 }
 
 export const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick, onEnrollmentClick }) => {
+  const { heroImages, announcements, news, events, loading } = useLandingPageData();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
   const features = [
     { icon: Users, title: 'Multi-Role Portals', description: 'Separate dashboards for students, teachers, parents, and staff' },
     { icon: UserCheck, title: 'Advanced Enrollment', description: 'Complete online enrollment with document upload and payment' },
@@ -72,26 +86,15 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick, onEnroll
         </div>
       </nav>
 
-      {/* Hero Section */}
-      <section id="home" className="bg-gradient-to-br from-blue-50 to-indigo-100 py-20">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6">
-            Manage Your School <span className="text-primary">Smarter</span>.<br />
-            Learn Anywhere, Anytime.
-          </h1>
-          <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
-            A complete digital platform for students, teachers, parents, and administrators — powered by real-time technology.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" onClick={onLoginClick} className="px-8 py-3">
-              Login to Portal
-            </Button>
-            <Button size="lg" variant="outline" onClick={onEnrollmentClick} className="px-8 py-3">
-              Enroll Now
-            </Button>
-          </div>
-        </div>
-      </section>
+      {/* Hero Section with Slider */}
+      <HeroSlider 
+        images={heroImages}
+        onLoginClick={onLoginClick}
+        onEnrollmentClick={onEnrollmentClick}
+      />
+
+      {/* Announcements Marquee */}
+      <AnnouncementMarquee announcements={announcements} />
 
       {/* Features Section */}
       <section id="features" className="py-20">
@@ -249,6 +252,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick, onEnroll
           </div>
         </div>
       </section>
+
+      {/* News Section */}
+      <NewsSection news={news} />
+
+      {/* Events Section */}
+      <EventsSection events={events} />
 
       {/* Portal Access Preview */}
       <section className="py-20">

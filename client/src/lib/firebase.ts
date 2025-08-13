@@ -21,15 +21,16 @@ export const auth = getAuth(app);
 export const database = getDatabase(app);
 export const storage = getStorage(app);
 
-// Connect to emulators in development
-if (import.meta.env.DEV) {
-  try {
-    connectAuthEmulator(auth, "http://localhost:9099", { disableWarnings: true });
-    connectDatabaseEmulator(database, "localhost", 9000);
-    connectStorageEmulator(storage, "localhost", 9199);
-  } catch (error) {
-    // Emulators already connected or not available
-  }
-}
+// Note: Emulators disabled for production Firebase usage
+// Connect to emulators in development only when emulators are running
+// if (import.meta.env.DEV && import.meta.env.VITE_USE_FIREBASE_EMULATOR) {
+//   try {
+//     connectAuthEmulator(auth, "http://localhost:9099", { disableWarnings: true });
+//     connectDatabaseEmulator(database, "localhost", 9000);
+//     connectStorageEmulator(storage, "localhost", 9199);
+//   } catch (error) {
+//     // Emulators already connected or not available
+//   }
+// }
 
 export default app;
