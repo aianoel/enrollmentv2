@@ -45,6 +45,20 @@ export function AcademicCoordinatorDashboard() {
     refetchInterval: 300000
   });
 
+  // Fetch all teachers data
+  const { data: teachers = [], isLoading: teachersLoading } = useQuery({
+    queryKey: ["/api/academic/teachers"],
+    queryFn: () => apiRequest("/api/academic/teachers"),
+    refetchInterval: 300000
+  });
+
+  // Fetch teacher statistics
+  const { data: teacherStats = {}, isLoading: teacherStatsLoading } = useQuery({
+    queryKey: ["/api/academic/teachers/stats"],
+    queryFn: () => apiRequest("/api/academic/teachers/stats"),
+    refetchInterval: 300000
+  });
+
   const { data: academicReports = [], isLoading: reportsLoading } = useQuery({
     queryKey: ["/api/reports/academic"],
     queryFn: () => apiRequest("/api/reports?type=academic"),
@@ -116,9 +130,9 @@ export function AcademicCoordinatorDashboard() {
                 <Users className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{academicStats.totalTeachers || 0}</div>
+                <div className="text-2xl font-bold">{teacherStats.totalTeachers || 0}</div>
                 <p className="text-xs text-muted-foreground">
-                  {academicStats.activeTeachers || 0} currently teaching
+                  {teacherStats.activeTeachers || 0} currently active
                 </p>
               </CardContent>
             </Card>
@@ -294,40 +308,84 @@ export function AcademicCoordinatorDashboard() {
               <CardDescription>Monitor teacher performance and assignments</CardDescription>
             </CardHeader>
             <CardContent>
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 mb-6">
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm">Total Teachers</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{teacherStats.totalTeachers || 0}</div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm">Active Teachers</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{teacherStats.activeTeachers || 0}</div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm">Activity Rate</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{Math.round(teacherStats.activityRate || 0)}%</div>
+                  </CardContent>
+                </Card>
+              </div>
+              
               <ScrollArea className="h-96">
-                {teacherLoading ? (
+                {teachersLoading ? (
                   <p className="text-center text-muted-foreground">Loading teacher data...</p>
-                ) : teacherPerformance.length > 0 ? (
+                ) : teachers.length > 0 ? (
                   <div className="space-y-4">
-                    {teacherPerformance.map((teacher: any) => (
+                    {teachers.map((teacher: any) => (
                       <div key={teacher.id} className="border rounded-lg p-4">
                         <div className="flex items-start justify-between">
                           <div className="space-y-2 flex-1">
                             <div className="flex items-center gap-2">
                               <h3 className="font-semibold">{teacher.name}</h3>
-                              <Badge variant="outline">{teacher.subject}</Badge>
+                              <Badge variant={teacher.status === 'Active' ? 'default' : 'secondary'}>
+                                {teacher.status}
+                              </Badge>
                             </div>
-                            <div className="grid grid-cols-3 gap-4 text-sm">
+                            <p className="text-sm text-muted-foreground">{teacher.email}</p>
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                               <div>
-                                <span className="text-muted-foreground">Performance Score:</span>
-                                <div className="font-medium">{teacher.performanceScore || "N/A"}/100</div>
+                                <span className="text-muted-foreground">Sections:</span>
+                                <div className="font-medium">{teacher.sectionsCount}</div>
                               </div>
                               <div>
-                                <span className="text-muted-foreground">Student Rating:</span>
-                                <div className="font-medium">{teacher.studentRating || "N/A"}/5</div>
+                                <span className="text-muted-foreground">Subjects:</span>
+                                <div className="font-medium">{teacher.subjectsCount}</div>
                               </div>
                               <div>
-                                <span className="text-muted-foreground">Classes Assigned:</span>
-                                <div className="font-medium">{teacher.classesAssigned || 0}</div>
+                                <span className="text-muted-foreground">Tasks:</span>
+                                <div className="font-medium">{teacher.tasksCount}</div>
+                              </div>
+                              <div>
+                                <span className="text-muted-foreground">Meetings:</span>
+                                <div className="font-medium">{teacher.meetingsCount}</div>
                               </div>
                             </div>
+                            {teacher.sections.length > 0 && (
+                              <div className="mt-2">
+                                <span className="text-xs text-muted-foreground">Teaching: </span>
+                                {teacher.subjects.map((subject: string, index: number) => (
+                                  <Badge key={index} variant="outline" className="mr-1 text-xs">
+                                    {subject}
+                                  </Badge>
+                                ))}
+                              </div>
+                            )}
                           </div>
                         </div>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <p className="text-center text-muted-foreground">No teacher performance data available</p>
+                  <p className="text-center text-muted-foreground">No teachers found</p>
                 )}
               </ScrollArea>
             </CardContent>
