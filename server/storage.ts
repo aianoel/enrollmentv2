@@ -2,6 +2,7 @@ import {
   users, announcements, news, events, enrollments, sections, roles, subjects, 
   teacherAssignments, orgChart, schoolSettings, tuitionFees, grades, chatMessages,
   teacherTasks, taskSubmissions, teacherMeetings, notifications,
+  guidanceBehaviorRecords, guidanceCounselingSessions, guidanceWellnessPrograms, guidanceProgramParticipants,
   type User, type InsertUser, 
   type Announcement, type InsertAnnouncement, 
   type News, type InsertNews, 
@@ -19,7 +20,11 @@ import {
   type TeacherTask, type InsertTeacherTask,
   type TaskSubmission, type InsertTaskSubmission,
   type TeacherMeeting, type InsertTeacherMeeting,
-  type Notification, type InsertNotification
+  type Notification, type InsertNotification,
+  type GuidanceBehaviorRecord, type InsertGuidanceBehaviorRecord,
+  type GuidanceCounselingSession, type InsertGuidanceCounselingSession,
+  type GuidanceWellnessProgram, type InsertGuidanceWellnessProgram,
+  type GuidanceProgramParticipant, type InsertGuidanceProgramParticipant
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and } from "drizzle-orm";
@@ -127,6 +132,26 @@ export interface IStorage {
   createNotification(notification: InsertNotification): Promise<Notification>;
   markNotificationAsRead(id: number): Promise<void>;
   deleteNotification(id: number): Promise<void>;
+  
+  // Guidance office features
+  getBehaviorRecords(studentId?: number): Promise<GuidanceBehaviorRecord[]>;
+  createBehaviorRecord(record: InsertGuidanceBehaviorRecord): Promise<GuidanceBehaviorRecord>;
+  updateBehaviorRecord(id: number, updates: Partial<InsertGuidanceBehaviorRecord>): Promise<GuidanceBehaviorRecord>;
+  deleteBehaviorRecord(id: number): Promise<void>;
+  
+  getCounselingSessions(studentId?: number, counselorId?: number): Promise<GuidanceCounselingSession[]>;
+  createCounselingSession(session: InsertGuidanceCounselingSession): Promise<GuidanceCounselingSession>;
+  updateCounselingSession(id: number, updates: Partial<InsertGuidanceCounselingSession>): Promise<GuidanceCounselingSession>;
+  deleteCounselingSession(id: number): Promise<void>;
+  
+  getWellnessPrograms(): Promise<GuidanceWellnessProgram[]>;
+  createWellnessProgram(program: InsertGuidanceWellnessProgram): Promise<GuidanceWellnessProgram>;
+  updateWellnessProgram(id: number, updates: Partial<InsertGuidanceWellnessProgram>): Promise<GuidanceWellnessProgram>;
+  deleteWellnessProgram(id: number): Promise<void>;
+  
+  getProgramParticipants(programId?: number): Promise<GuidanceProgramParticipant[]>;
+  addProgramParticipant(participant: InsertGuidanceProgramParticipant): Promise<GuidanceProgramParticipant>;
+  removeProgramParticipant(id: number): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -489,6 +514,87 @@ export class DatabaseStorage implements IStorage {
 
   async deleteNotification(id: number): Promise<void> {
     await db.delete(notifications).where(eq(notifications.id, id));
+  }
+
+  // Guidance office implementations
+  async getBehaviorRecords(studentId?: number): Promise<GuidanceBehaviorRecord[]> {
+    if (studentId) {
+      return await db.select().from(guidanceBehaviorRecords).where(eq(guidanceBehaviorRecords.studentId, studentId)).orderBy(desc(guidanceBehaviorRecords.dateReported));
+    }
+    return await db.select().from(guidanceBehaviorRecords).orderBy(desc(guidanceBehaviorRecords.dateReported));
+  }
+
+  async createBehaviorRecord(record: InsertGuidanceBehaviorRecord): Promise<GuidanceBehaviorRecord> {
+    const [newRecord] = await db.insert(guidanceBehaviorRecords).values(record).returning();
+    return newRecord;
+  }
+
+  async updateBehaviorRecord(id: number, updates: Partial<InsertGuidanceBehaviorRecord>): Promise<GuidanceBehaviorRecord> {
+    const [updatedRecord] = await db.update(guidanceBehaviorRecords).set(updates).where(eq(guidanceBehaviorRecords.id, id)).returning();
+    return updatedRecord;
+  }
+
+  async deleteBehaviorRecord(id: number): Promise<void> {
+    await db.delete(guidanceBehaviorRecords).where(eq(guidanceBehaviorRecords.id, id));
+  }
+
+  async getCounselingSessions(studentId?: number, counselorId?: number): Promise<GuidanceCounselingSession[]> {
+    if (studentId && counselorId) {
+      return await db.select().from(guidanceCounselingSessions).where(and(eq(guidanceCounselingSessions.studentId, studentId), eq(guidanceCounselingSessions.counselorId, counselorId))).orderBy(desc(guidanceCounselingSessions.sessionDate));
+    } else if (studentId) {
+      return await db.select().from(guidanceCounselingSessions).where(eq(guidanceCounselingSessions.studentId, studentId)).orderBy(desc(guidanceCounselingSessions.sessionDate));
+    } else if (counselorId) {
+      return await db.select().from(guidanceCounselingSessions).where(eq(guidanceCounselingSessions.counselorId, counselorId)).orderBy(desc(guidanceCounselingSessions.sessionDate));
+    }
+    return await db.select().from(guidanceCounselingSessions).orderBy(desc(guidanceCounselingSessions.sessionDate));
+  }
+
+  async createCounselingSession(session: InsertGuidanceCounselingSession): Promise<GuidanceCounselingSession> {
+    const [newSession] = await db.insert(guidanceCounselingSessions).values(session).returning();
+    return newSession;
+  }
+
+  async updateCounselingSession(id: number, updates: Partial<InsertGuidanceCounselingSession>): Promise<GuidanceCounselingSession> {
+    const [updatedSession] = await db.update(guidanceCounselingSessions).set(updates).where(eq(guidanceCounselingSessions.id, id)).returning();
+    return updatedSession;
+  }
+
+  async deleteCounselingSession(id: number): Promise<void> {
+    await db.delete(guidanceCounselingSessions).where(eq(guidanceCounselingSessions.id, id));
+  }
+
+  async getWellnessPrograms(): Promise<GuidanceWellnessProgram[]> {
+    return await db.select().from(guidanceWellnessPrograms).orderBy(desc(guidanceWellnessPrograms.startDate));
+  }
+
+  async createWellnessProgram(program: InsertGuidanceWellnessProgram): Promise<GuidanceWellnessProgram> {
+    const [newProgram] = await db.insert(guidanceWellnessPrograms).values(program).returning();
+    return newProgram;
+  }
+
+  async updateWellnessProgram(id: number, updates: Partial<InsertGuidanceWellnessProgram>): Promise<GuidanceWellnessProgram> {
+    const [updatedProgram] = await db.update(guidanceWellnessPrograms).set(updates).where(eq(guidanceWellnessPrograms.id, id)).returning();
+    return updatedProgram;
+  }
+
+  async deleteWellnessProgram(id: number): Promise<void> {
+    await db.delete(guidanceWellnessPrograms).where(eq(guidanceWellnessPrograms.id, id));
+  }
+
+  async getProgramParticipants(programId?: number): Promise<GuidanceProgramParticipant[]> {
+    if (programId) {
+      return await db.select().from(guidanceProgramParticipants).where(eq(guidanceProgramParticipants.programId, programId)).orderBy(desc(guidanceProgramParticipants.joinedAt));
+    }
+    return await db.select().from(guidanceProgramParticipants).orderBy(desc(guidanceProgramParticipants.joinedAt));
+  }
+
+  async addProgramParticipant(participant: InsertGuidanceProgramParticipant): Promise<GuidanceProgramParticipant> {
+    const [newParticipant] = await db.insert(guidanceProgramParticipants).values(participant).returning();
+    return newParticipant;
+  }
+
+  async removeProgramParticipant(id: number): Promise<void> {
+    await db.delete(guidanceProgramParticipants).where(eq(guidanceProgramParticipants.id, id));
   }
 }
 

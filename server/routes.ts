@@ -954,6 +954,203 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Enhanced Guidance Office API Routes
+  app.get("/api/guidance/behavior-records", async (req, res) => {
+    try {
+      const studentId = req.query.studentId ? parseInt(req.query.studentId as string) : undefined;
+      const records = await storage.getBehaviorRecords(studentId);
+      res.json(records);
+    } catch (error) {
+      console.error("Error fetching behavior records:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.post("/api/guidance/behavior-records", async (req, res) => {
+    try {
+      const recordData = req.body;
+      const newRecord = await storage.createBehaviorRecord(recordData);
+      
+      // Notify parent and teacher if status is escalated
+      if (recordData.status === "Escalated") {
+        const users = await storage.getAllUsers();
+        const parents = users.filter((u: any) => u.role === 'parent');
+        const teachers = users.filter((u: any) => u.role === 'teacher');
+        
+        // Notify parents
+        for (const parent of parents) {
+          await storage.createNotification({
+            recipientId: parent.id,
+            message: `Behavioral incident escalated for student: ${recordData.incidentType}`,
+            link: `/guidance/behavior/${newRecord.id}`,
+          });
+        }
+        
+        // Notify teachers
+        for (const teacher of teachers) {
+          await storage.createNotification({
+            recipientId: teacher.id,
+            message: `Behavioral incident escalated: ${recordData.incidentType}`,
+            link: `/guidance/behavior/${newRecord.id}`,
+          });
+        }
+      }
+      
+      res.status(201).json(newRecord);
+    } catch (error) {
+      console.error("Error creating behavior record:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.patch("/api/guidance/behavior-records/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const updates = req.body;
+      const updatedRecord = await storage.updateBehaviorRecord(id, updates);
+      res.json(updatedRecord);
+    } catch (error) {
+      console.error("Error updating behavior record:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.get("/api/guidance/counseling-sessions", async (req, res) => {
+    try {
+      const studentId = req.query.studentId ? parseInt(req.query.studentId as string) : undefined;
+      const counselorId = req.query.counselorId ? parseInt(req.query.counselorId as string) : undefined;
+      const sessions = await storage.getCounselingSessions(studentId, counselorId);
+      res.json(sessions);
+    } catch (error) {
+      console.error("Error fetching counseling sessions:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.post("/api/guidance/counseling-sessions", async (req, res) => {
+    try {
+      const sessionData = req.body;
+      const newSession = await storage.createCounselingSession(sessionData);
+      
+      // Notify based on confidentiality level
+      if (sessionData.confidentialityLevel === "Share with Parent") {
+        const users = await storage.getAllUsers();
+        const parents = users.filter((u: any) => u.role === 'parent');
+        for (const parent of parents) {
+          await storage.createNotification({
+            recipientId: parent.id,
+            message: `Counseling session update for your child`,
+            link: `/guidance/sessions/${newSession.id}`,
+          });
+        }
+      } else if (sessionData.confidentialityLevel === "Share with Teacher") {
+        const users = await storage.getAllUsers();
+        const teachers = users.filter((u: any) => u.role === 'teacher');
+        for (const teacher of teachers) {
+          await storage.createNotification({
+            recipientId: teacher.id,
+            message: `Counseling session update for student`,
+            link: `/guidance/sessions/${newSession.id}`,
+          });
+        }
+      }
+      
+      res.status(201).json(newSession);
+    } catch (error) {
+      console.error("Error creating counseling session:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.get("/api/guidance/wellness-programs", async (req, res) => {
+    try {
+      const programs = await storage.getWellnessPrograms();
+      res.json(programs);
+    } catch (error) {
+      console.error("Error fetching wellness programs:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.post("/api/guidance/wellness-programs", async (req, res) => {
+    try {
+      const programData = req.body;
+      const newProgram = await storage.createWellnessProgram(programData);
+      
+      // Notify all students about new wellness program
+      const users = await storage.getAllUsers();
+      const students = users.filter((u: any) => u.role === 'student');
+      
+      for (const student of students) {
+        await storage.createNotification({
+          recipientId: student.id,
+          message: `New wellness program available: ${programData.programName}`,
+          link: `/guidance/programs/${newProgram.id}`,
+        });
+      }
+      
+      res.status(201).json(newProgram);
+    } catch (error) {
+      console.error("Error creating wellness program:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.get("/api/guidance/program-participants", async (req, res) => {
+    try {
+      const programId = req.query.programId ? parseInt(req.query.programId as string) : undefined;
+      const participants = await storage.getProgramParticipants(programId);
+      res.json(participants);
+    } catch (error) {
+      console.error("Error fetching program participants:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.post("/api/guidance/program-participants", async (req, res) => {
+    try {
+      const participantData = req.body;
+      const newParticipant = await storage.addProgramParticipant(participantData);
+      res.status(201).json(newParticipant);
+    } catch (error) {
+      console.error("Error adding program participant:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.get("/api/guidance/students", async (req, res) => {
+    try {
+      const users = await storage.getAllUsers();
+      const students = users.filter((u: any) => u.role === 'student');
+      res.json(students);
+    } catch (error) {
+      console.error("Error fetching students:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.get("/api/guidance/teachers", async (req, res) => {
+    try {
+      const users = await storage.getAllUsers();
+      const teachers = users.filter((u: any) => u.role === 'teacher');
+      res.json(teachers);
+    } catch (error) {
+      console.error("Error fetching teachers:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.post("/api/guidance/notifications", async (req, res) => {
+    try {
+      const notificationData = req.body;
+      const newNotification = await storage.createNotification(notificationData);
+      res.status(201).json(newNotification);
+    } catch (error) {
+      console.error("Error sending notification:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
   const httpServer = createServer(app);
 
   return httpServer;

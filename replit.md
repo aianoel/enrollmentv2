@@ -10,6 +10,15 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+**August 13, 2025 - Enhanced Guidance Office Dashboard**:
+- Added comprehensive guidance office database schema with 4 new tables: guidance_behavior_records, guidance_counseling_sessions, guidance_wellness_programs, guidance_program_participants
+- Created comprehensive EnhancedGuidanceDashboard with behavior incident tracking, counseling session management, wellness program coordination, and student participation tracking
+- Implemented complete API routes for all guidance office features with automatic notification system
+- Added real-time status tracking for behavioral incidents (Pending, Resolved, Escalated)
+- Integrated confidentiality levels for counseling sessions (Internal, Share with Parent, Share with Teacher)
+- Automated notification system for escalated incidents and program announcements
+- Successfully deployed enhanced guidance dashboard replacing basic version
+
 **August 13, 2025 - Enhanced Teacher & Student Dashboards**:
 - Added enhanced database schema with teacher tasks, meetings, task submissions, and notifications tables
 - Created comprehensive EnhancedTeacherDashboard with task management, meeting scheduling, grade tracking, and student communication

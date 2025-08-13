@@ -1,0 +1,93 @@
+Alright — here’s the PostgreSQL schema mapping for the Guidance Office functions we discussed.
+This design will let the guidance staff record behavior cases, counseling sessions, wellness programs, and notify parents/teachers.
+
+PostgreSQL Tables for Guidance Office
+sql
+Copy
+Edit
+-- ===============================
+-- 1. Behavioral Records
+-- ===============================
+CREATE TABLE guidance_behavior_records (
+    id SERIAL PRIMARY KEY,
+    student_id INT REFERENCES users(id) ON DELETE CASCADE,
+    reported_by INT REFERENCES users(id), -- Teacher/Staff ID
+    incident_type VARCHAR(100) NOT NULL, -- Bullying, Misconduct, Truancy, etc.
+    description TEXT NOT NULL,
+    action_taken TEXT,
+    status VARCHAR(50) DEFAULT 'Pending', -- Pending, Resolved, Escalated
+    date_reported TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ===============================
+-- 2. Counseling Sessions
+-- ===============================
+CREATE TABLE guidance_counseling_sessions (
+    id SERIAL PRIMARY KEY,
+    student_id INT REFERENCES users(id) ON DELETE CASCADE,
+    counselor_id INT REFERENCES users(id), -- Guidance officer
+    session_date TIMESTAMP NOT NULL,
+    session_notes TEXT,
+    follow_up_date TIMESTAMP,
+    confidentiality_level VARCHAR(50) DEFAULT 'Internal' -- Internal, Share with Parent, Share with Teacher
+);
+
+-- ===============================
+-- 3. Wellness Programs
+-- ===============================
+CREATE TABLE guidance_wellness_programs (
+    id SERIAL PRIMARY KEY,
+    program_name VARCHAR(255) NOT NULL,
+    description TEXT,
+    start_date TIMESTAMP NOT NULL,
+    end_date TIMESTAMP NOT NULL,
+    created_by INT REFERENCES users(id), -- Guidance officer
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ===============================
+-- 4. Program Participants
+-- ===============================
+CREATE TABLE guidance_program_participants (
+    id SERIAL PRIMARY KEY,
+    program_id INT REFERENCES guidance_wellness_programs(id) ON DELETE CASCADE,
+    student_id INT REFERENCES users(id) ON DELETE CASCADE,
+    joined_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ===============================
+-- 5. Notifications (Shared Table)
+-- ===============================
+CREATE TABLE notifications (
+    id SERIAL PRIMARY KEY,
+    recipient_id INT REFERENCES users(id) ON DELETE CASCADE,
+    message TEXT NOT NULL,
+    link TEXT,
+    is_read BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+Feature → Table Mapping
+Feature	Table(s)	Description
+Record behavioral incidents	guidance_behavior_records	Logs misconduct, bullying, truancy cases
+Log counseling sessions	guidance_counseling_sessions	Stores session details, counselor, notes
+Manage wellness programs	guidance_wellness_programs + guidance_program_participants	Creates and tracks program participants
+Notify parents/teachers	notifications	Sends messages linked to incidents or sessions
+Track intervention status	guidance_behavior_records.status	Updates from Pending → Resolved
+
+✅ With this schema:
+
+Guidance staff can track every behavioral case & counseling record.
+
+Programs like anti-bullying campaigns can be registered and tracked.
+
+Notifications are built-in to alert parents & teachers when needed.
+
+If you want, I can also make the React Guidance Dashboard UI that:
+
+Lists behavioral records with status filters
+
+Allows adding counseling sessions with date/time picker
+
+Manages wellness programs & participants
+
+Sends notifications automatically after entries

@@ -90,6 +90,46 @@ export const notifications = pgTable('notifications', {
   createdAt: timestamp('created_at').defaultNow(),
 });
 
+// Guidance Office Tables
+export const guidanceBehaviorRecords = pgTable('guidance_behavior_records', {
+  id: serial('id').primaryKey(),
+  studentId: integer('student_id').notNull().references(() => users.id),
+  reportedBy: integer('reported_by').notNull().references(() => users.id),
+  incidentType: varchar('incident_type', { length: 100 }).notNull(),
+  description: text('description').notNull(),
+  actionTaken: text('action_taken'),
+  status: varchar('status', { length: 50 }).default('Pending').notNull(),
+  dateReported: timestamp('date_reported').defaultNow().notNull(),
+});
+
+export const guidanceCounselingSessions = pgTable('guidance_counseling_sessions', {
+  id: serial('id').primaryKey(),
+  studentId: integer('student_id').notNull().references(() => users.id),
+  counselorId: integer('counselor_id').notNull().references(() => users.id),
+  sessionDate: timestamp('session_date').notNull(),
+  sessionNotes: text('session_notes'),
+  followUpDate: timestamp('follow_up_date'),
+  confidentialityLevel: varchar('confidentiality_level', { length: 50 }).default('Internal').notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+export const guidanceWellnessPrograms = pgTable('guidance_wellness_programs', {
+  id: serial('id').primaryKey(),
+  programName: varchar('program_name', { length: 255 }).notNull(),
+  description: text('description'),
+  startDate: timestamp('start_date').notNull(),
+  endDate: timestamp('end_date').notNull(),
+  createdBy: integer('created_by').notNull().references(() => users.id),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+export const guidanceProgramParticipants = pgTable('guidance_program_participants', {
+  id: serial('id').primaryKey(),
+  programId: integer('program_id').notNull().references(() => guidanceWellnessPrograms.id),
+  studentId: integer('student_id').notNull().references(() => users.id),
+  joinedAt: timestamp('joined_at').defaultNow().notNull(),
+});
+
 // Legacy assignments table (keeping for compatibility)
 export const assignments = pgTable('assignments', {
   id: serial('id').primaryKey(),
@@ -369,6 +409,16 @@ export const selectTeacherMeetingSchema = createSelectSchema(teacherMeetings);
 export const insertNotificationSchema = createInsertSchema(notifications).omit({ id: true, createdAt: true });
 export const selectNotificationSchema = createSelectSchema(notifications);
 
+// Guidance office schemas
+export const insertGuidanceBehaviorRecordSchema = createInsertSchema(guidanceBehaviorRecords).omit({ id: true, dateReported: true });
+export const selectGuidanceBehaviorRecordSchema = createSelectSchema(guidanceBehaviorRecords);
+export const insertGuidanceCounselingSessionSchema = createInsertSchema(guidanceCounselingSessions).omit({ id: true, createdAt: true });
+export const selectGuidanceCounselingSessionSchema = createSelectSchema(guidanceCounselingSessions);
+export const insertGuidanceWellnessProgramSchema = createInsertSchema(guidanceWellnessPrograms).omit({ id: true, createdAt: true });
+export const selectGuidanceWellnessProgramSchema = createSelectSchema(guidanceWellnessPrograms);
+export const insertGuidanceProgramParticipantSchema = createInsertSchema(guidanceProgramParticipants).omit({ id: true, joinedAt: true });
+export const selectGuidanceProgramParticipantSchema = createSelectSchema(guidanceProgramParticipants);
+
 // Inferred types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -414,6 +464,16 @@ export type TeacherMeeting = typeof teacherMeetings.$inferSelect;
 export type InsertTeacherMeeting = z.infer<typeof insertTeacherMeetingSchema>;
 export type Notification = typeof notifications.$inferSelect;
 export type InsertNotification = z.infer<typeof insertNotificationSchema>;
+
+// Guidance office types
+export type GuidanceBehaviorRecord = typeof guidanceBehaviorRecords.$inferSelect;
+export type InsertGuidanceBehaviorRecord = z.infer<typeof insertGuidanceBehaviorRecordSchema>;
+export type GuidanceCounselingSession = typeof guidanceCounselingSessions.$inferSelect;
+export type InsertGuidanceCounselingSession = z.infer<typeof insertGuidanceCounselingSessionSchema>;
+export type GuidanceWellnessProgram = typeof guidanceWellnessPrograms.$inferSelect;
+export type InsertGuidanceWellnessProgram = z.infer<typeof insertGuidanceWellnessProgramSchema>;
+export type GuidanceProgramParticipant = typeof guidanceProgramParticipants.$inferSelect;
+export type InsertGuidanceProgramParticipant = z.infer<typeof insertGuidanceProgramParticipantSchema>;
 
 // User roles enum for validation
 export const UserRoles = ['admin', 'teacher', 'student', 'parent', 'guidance', 'registrar', 'accounting'] as const;
