@@ -322,6 +322,81 @@ export class DatabaseStorage implements IStorage {
     return result.rows?.[0] || {};
   }
 
+  // Teacher Assignment Methods
+  async assignTeacherToSection(teacherId: number, sectionId: number, isAdvisory: boolean = false): Promise<any> {
+    if (isAdvisory) {
+      // Update section to have this teacher as adviser
+      await db.execute(`UPDATE sections SET adviser_id = ${teacherId} WHERE id = ${sectionId}`);
+    }
+    return { success: true };
+  }
+
+  async assignTeacherSubject(teacherId: number, sectionId: number, subjectId: number): Promise<any> {
+    // Check if assignment already exists
+    const existing = await db.execute(`
+      SELECT id FROM teacher_assignments 
+      WHERE teacher_id = ${teacherId} AND section_id = ${sectionId} AND subject_id = ${subjectId}
+    `);
+    
+    if (existing.rows && existing.rows.length === 0) {
+      await db.execute(`
+        INSERT INTO teacher_assignments (teacher_id, section_id, subject_id) 
+        VALUES (${teacherId}, ${sectionId}, ${subjectId})
+      `);
+    }
+    return { success: true };
+  }
+
+  async createSchedule(data: any): Promise<any> {
+    const result = await db.execute(`
+      INSERT INTO schedules (teacher_id, section_id, subject_id, day_of_week, start_time, end_time, room)
+      VALUES (${data.teacherId}, ${data.sectionId}, ${data.subjectId}, '${data.dayOfWeek}', '${data.startTime}', '${data.endTime}', '${data.room}')
+      RETURNING *
+    `);
+    return result.rows?.[0] || {};
+  }
+
+  async uploadModule(data: any): Promise<any> {
+    const result = await db.execute(`
+      INSERT INTO learning_modules (title, description, file_url, teacher_id, subject_id, section_id, is_public)
+      VALUES ('${data.title}', '${data.description}', '${data.fileUrl}', ${data.teacherId}, ${data.subjectId}, ${data.sectionId || 'NULL'}, ${data.isPublic || false})
+      RETURNING *
+    `);
+    return result.rows?.[0] || {};
+  }
+
+  async getSchedules(): Promise<any[]> {
+    const result = await db.execute(`
+      SELECT 
+        s.*,
+        COALESCE(u.first_name || ' ' || u.last_name, u.name) as teacher_name,
+        sec.name as section_name,
+        subj.name as subject_name
+      FROM schedules s
+      JOIN users u ON s.teacher_id = u.id
+      JOIN sections sec ON s.section_id = sec.id
+      JOIN subjects subj ON s.subject_id = subj.id
+      ORDER BY s.day_of_week, s.start_time
+    `);
+    return result.rows || [];
+  }
+
+  async getModules(): Promise<any[]> {
+    const result = await db.execute(`
+      SELECT 
+        lm.*,
+        COALESCE(u.first_name || ' ' || u.last_name, u.name) as teacher_name,
+        subj.name as subject_name,
+        sec.name as section_name
+      FROM learning_modules lm
+      JOIN users u ON lm.teacher_id = u.id
+      JOIN subjects subj ON lm.subject_id = subj.id
+      LEFT JOIN sections sec ON lm.section_id = sec.id
+      ORDER BY lm.created_at DESC
+    `);
+    return result.rows || [];
+  }
+
   // Announcements
   async getAnnouncements(): Promise<Announcement[]> {
     return await db.select().from(announcements).orderBy(desc(announcements.createdAt));

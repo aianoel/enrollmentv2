@@ -1,0 +1,51 @@
+[vite] connecting...
+[vite] connected.
+Warning: Received NaN for the &#x60;children&#x60; attribute. If this is expected, cast the value to a string.
+    at div
+    at div
+    at div
+    at div
+    at _c9 (https://3e900d2e-df28-4d70-96f2-8b185abe54b7-00-29d2w07rj2cck.sisko.replit.dev/src/components/ui/card.tsx:114:12)
+    at div
+    at _c (https://3e900d2e-df28-4d70-96f2-8b185abe54b7-00-29d2w07rj2cck.sisko.replit.dev/src/components/ui/card.tsx:20:11)
+    at div
+    at div
+    at section
+    at EventsSection (https://3e900d2e-df28-4d70-96f2-8b185abe54b7-00-29d2w07rj2cck.sisko.replit.dev/src/components/landing/EventsSection.tsx:19:33)
+    at div
+    at LandingPage (https://3e900d2e-df28-4d70-96f2-8b185abe54b7-00-29d2w07rj2cck.sisko.replit.dev/src/pages/LandingPage.tsx:26:31)
+    at AppContent (https://3e900d2e-df28-4d70-96f2-8b185abe54b7-00-29d2w07rj2cck.sisko.replit.dev/src/App.tsx?v=VdykbtKsEk2OpKh0xlr49:34:29)
+    at Route (https://3e900d2e-df28-4d70-96f2-8b185abe54b7-00-29d2w07rj2cck.sisko.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=430b395e:323:16)
+    at Switch (https://3e900d2e-df28-4d70-96f2-8b185abe54b7-00-29d2w07rj2cck.sisko.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=430b395e:379:17)
+    at Router
+    at AuthProvider (https://3e900d2e-df28-4d70-96f2-8b185abe54b7-00-29d2w07rj2cck.sisko.replit.dev/src/contexts/AuthContext.tsx:30:32)
+    at Provider (https://3e900d2e-df28-4d70-96f2-8b185abe54b7-00-29d2w07rj2cck.sisko.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-PLT6GTVM.js?v=430b395e:38:15)
+    at TooltipProvider (https://3e900d2e-df28-4d70-96f2-8b185abe54b7-00-29d2w07rj2cck.sisko.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=430b395e:63:5)
+    at QueryClientProvider (https://3e900d2e-df28-4d70-96f2-8b185abe54b7-00-29d2w07rj2cck.sisko.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=430b395e:2805:3)
+    at App
+at div
+at div
+at div
+at div
+at _c9 (https://3e900d2e-df28-4d70-96f2-8b185abe54b7-00-29d2w07rj2cck.sisko.replit.dev/src/components/ui/card.tsx:114:12)
+at div
+at _c (https://3e900d2e-df28-4d70-96f2-8b185abe54b7-00-29d2w07rj2cck.sisko.replit.dev/src/components/ui/card.tsx:20:11)
+at div
+at div
+at section
+at EventsSection (https://3e900d2e-df28-4d70-96f2-8b185abe54b7-00-29d2w07rj2cck.sisko.replit.dev/src/components/landing/EventsSection.tsx:19:33)
+at div
+at LandingPage (https://3e900d2e-df28-4d70-96f2-8b185abe54b7-00-29d2w07rj2cck.sisko.replit.dev/src/pages/LandingPage.tsx:26:31)
+at AppContent (https://3e900d2e-df28-4d70-96f2-8b185abe54b7-00-29d2w07rj2cck.sisko.replit.dev/src/App.tsx?v=VdykbtKsEk2OpKh0xlr49:34:29)
+at Route (https://3e900d2e-df28-4d70-96f2-8b185abe54b7-00-29d2w07rj2cck.sisko.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=430b395e:323:16)
+at Switch (https://3e900d2e-df28-4d70-96f2-8b185abe54b7-00-29d2w07rj2cck.sisko.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=430b395e:379:17)
+at Router
+at AuthProvider (https://3e900d2e-df28-4d70-96f2-8b185abe54b7-00-29d2w07rj2cck.sisko.replit.dev/src/contexts/AuthContext.tsx:30:32)
+at Provider (https://3e900d2e-df28-4d70-96f2-8b185abe54b7-00-29d2w07rj2cck.sisko.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-PLT6GTVM.js?v=430b395e:38:15)
+at TooltipProvider (https://3e900d2e-df28-4d70-96f2-8b185abe54b7-00-29d2w07rj2cck.sisko.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=430b395e:63:5)
+at QueryClientProvider (https://3e900d2e-df28-4d70-96f2-8b185abe54b7-00-29d2w07rj2cck.sisko.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=430b395e:2805:3)
+at App
+at t.value (https://3e900d2e-df28-4d70-96f2-8b185abe54b7-00-29d2w07rj2cck.sisko.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:17465)
+at new t (https://3e900d2e-df28-4d70-96f2-8b185abe54b7-00-29d2w07rj2cck.sisko.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:12630)
+at t.value (https://3e900d2e-df28-4d70-96f2-8b185abe54b7-00-29d2w07rj2cck.sisko.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:32766)
+at https://3e900d2e-df28-4d70-96f2-8b185abe54b7-00-29d2w07rj2cck.sisko.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:34400
