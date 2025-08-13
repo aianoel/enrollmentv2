@@ -1,36 +1,11 @@
-import { initializeApp } from "firebase/app";
-import { getAuth, connectAuthEmulator } from "firebase/auth";
-import { getDatabase, connectDatabaseEmulator } from "firebase/database";
-import { getStorage, connectStorageEmulator } from "firebase/storage";
+// Firebase replaced with PostgreSQL authentication
+// This file is kept for compatibility during migration
 
-const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: `${import.meta.env.VITE_FIREBASE_PROJECT_ID}.firebaseapp.com`,
-  databaseURL: `https://${import.meta.env.VITE_FIREBASE_PROJECT_ID}-default-rtdb.firebaseio.com`,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: `${import.meta.env.VITE_FIREBASE_PROJECT_ID}.firebasestorage.app`,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID,
-};
+export const MIGRATION_NOTE = "Firebase has been replaced with PostgreSQL authentication";
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
+// Placeholder functions for migration compatibility
+export const auth = null;
+export const database = null;
+export const storage = null;
 
-// Initialize services
-export const auth = getAuth(app);
-export const database = getDatabase(app);
-export const storage = getStorage(app);
-
-// Note: Emulators disabled for production Firebase usage
-// Connect to emulators in development only when emulators are running
-// if (import.meta.env.DEV && import.meta.env.VITE_USE_FIREBASE_EMULATOR) {
-//   try {
-//     connectAuthEmulator(auth, "http://localhost:9099", { disableWarnings: true });
-//     connectDatabaseEmulator(database, "localhost", 9000);
-//     connectStorageEmulator(storage, "localhost", 9199);
-//   } catch (error) {
-//     // Emulators already connected or not available
-//   }
-// }
-
-export default app;
+export default null;

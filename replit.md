@@ -32,47 +32,49 @@ Preferred communication style: Simple, everyday language.
 
 ### Backend Architecture
 
-**Firebase Services**:
-- Firebase Authentication for user management with email/password
-- Firebase Realtime Database for real-time data synchronization
-- Firebase Storage for file uploads (documents, modules, profile pictures)
+**PostgreSQL Database**:
+- PostgreSQL database with Drizzle ORM for type-safe database operations
+- Role-based user management with password hashing
+- Structured relational data with foreign key relationships
+- Real-time data access through database queries
 
-**Express Server (Development)**:
-- Express.js server for development and API endpoints
+**Express Server**:
+- Express.js server for API endpoints and business logic
 - Vite integration for hot reloading and development features
-- Basic storage interface with in-memory implementation for development
+- Database storage interface with PostgreSQL implementation
 
 **Data Schema**:
-- Zod schemas for type validation and data structure definition
-- Role-based user types (student, teacher, admin, parent, etc.)
-- Structured data models for grades, assignments, modules, meetings, announcements
+- Drizzle ORM schema definitions with PostgreSQL-compatible types
+- Type-safe database operations with Zod validation
+- Role-based user types (student, teacher, admin, parent, guidance, registrar, accounting)
+- Structured data models for grades, assignments, meetings, announcements, news, events
 
-### Real-time Features
+### Database Features
 
-**Chat System**: Real-time messaging using Firebase Realtime Database with online presence tracking and user status management.
+**Chat System**: Database-stored messaging with PostgreSQL for persistent chat history and user communication.
 
-**Live Data Updates**: Real-time synchronization of grades, assignments, announcements using Firebase's onValue listeners.
+**Data Management**: CRUD operations for grades, assignments, announcements using PostgreSQL with Drizzle ORM for type safety.
 
 ### Authentication & Authorization
 
-**Role-Based Access Control**: Seven distinct user roles with different permissions and portal access. Authentication handled through Firebase Auth with user profiles stored in Realtime Database.
+**Role-Based Access Control**: Seven distinct user roles with different permissions and portal access. Authentication handled through PostgreSQL with password hashing and session management.
 
-**Protected Routes**: Client-side route protection based on authentication status and user roles.
+**Protected Routes**: Client-side route protection based on authentication status and user roles stored in database.
 
 ### File Management
 
-**Firebase Storage Integration**: File upload system for learning modules, assignments, and enrollment documents with helper utilities for file validation and type checking.
+**Database File References**: File upload system with PostgreSQL storage of file URLs and metadata for learning modules, assignments, and enrollment documents.
 
 ### Enrollment System
 
-**Multi-Step Workflow**: Progressive enrollment process with document upload, payment verification, and approval workflow managed through Firebase Realtime Database.
+**Multi-Step Workflow**: Progressive enrollment process with document upload, payment verification, and approval workflow managed through PostgreSQL database.
 
 ## External Dependencies
 
-### Core Firebase Services
-- **Firebase Authentication**: User authentication and session management
-- **Firebase Realtime Database**: Real-time data storage and synchronization
-- **Firebase Storage**: File storage and management
+### Core Database Services
+- **PostgreSQL**: Primary database for all data storage and management
+- **Drizzle ORM**: Type-safe database operations and schema management
+- **@neondatabase/serverless**: PostgreSQL connection pooling and management
 
 ### UI Framework & Styling
 - **Radix UI**: Headless UI primitives for components

@@ -1,291 +1,240 @@
-import { z } from "zod";
+import { pgTable, serial, varchar, text, integer, decimal, date, timestamp, boolean } from 'drizzle-orm/pg-core';
+import { relations } from 'drizzle-orm';
+import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
+import { z } from 'zod';
 
-// User roles
-export const UserRole = z.enum([
-  'student',
-  'teacher', 
-  'admin',
-  'registrar',
-  'accounting',
-  'guidance',
-  'parent'
-]);
-
-// Base user schema
-export const userSchema = z.object({
-  id: z.string(),
-  email: z.string().email(),
-  firstName: z.string(),
-  lastName: z.string(),
-  role: UserRole,
-  profilePicture: z.string().optional(),
-  phoneNumber: z.string().optional(),
-  address: z.string().optional(),
-  isActive: z.boolean().default(true),
-  createdAt: z.string(),
-  updatedAt: z.string(),
+// Users table
+export const users = pgTable('users', {
+  id: serial('id').primaryKey(),
+  name: varchar('name', { length: 100 }).notNull(),
+  email: varchar('email', { length: 100 }).unique().notNull(),
+  passwordHash: varchar('password_hash', { length: 255 }).notNull(),
+  role: varchar('role', { length: 20 }).notNull(),
+  createdAt: timestamp('created_at').defaultNow(),
 });
 
-// Student specific fields
-export const studentSchema = userSchema.extend({
-  studentId: z.string(),
-  grade: z.string(),
-  section: z.string().optional(),
-  parentId: z.string().optional(),
-  enrollmentStatus: z.enum(['enrolled', 'pending', 'rejected']).default('enrolled'),
-  academicYear: z.string(),
+// Sections table
+export const sections = pgTable('sections', {
+  id: serial('id').primaryKey(),
+  name: varchar('name', { length: 100 }).notNull(),
+  gradeLevel: integer('grade_level').notNull(),
+  adviserId: integer('adviser_id'),
 });
 
-// Teacher specific fields  
-export const teacherSchema = userSchema.extend({
-  employeeId: z.string(),
-  department: z.string(),
-  assignedSections: z.array(z.string()).default([]),
-  subjects: z.array(z.string()).default([]),
+// Enrollments table
+export const enrollments = pgTable('enrollments', {
+  id: serial('id').primaryKey(),
+  studentId: integer('student_id').notNull(),
+  sectionId: integer('section_id'),
+  status: varchar('status', { length: 20 }).default('pending'),
+  documents: text('documents'),
+  paymentStatus: varchar('payment_status', { length: 20 }).default('unpaid'),
+  createdAt: timestamp('created_at').defaultNow(),
 });
 
-// Parent specific fields
-export const parentSchema = userSchema.extend({
-  children: z.array(z.string()).default([]), // student IDs
-  occupation: z.string().optional(),
+// Grades table
+export const grades = pgTable('grades', {
+  id: serial('id').primaryKey(),
+  studentId: integer('student_id').notNull(),
+  subject: varchar('subject', { length: 100 }).notNull(),
+  quarter: integer('quarter').notNull(),
+  grade: decimal('grade', { precision: 5, scale: 2 }),
+  teacherId: integer('teacher_id'),
 });
 
-// Subject schema
-export const subjectSchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  code: z.string(),
-  description: z.string().optional(),
-  teacherId: z.string(),
-  gradeLevel: z.string(),
-  semester: z.string(),
-  credits: z.number().default(1),
-  createdAt: z.string(),
+// Assignments table
+export const assignments = pgTable('assignments', {
+  id: serial('id').primaryKey(),
+  sectionId: integer('section_id').notNull(),
+  title: varchar('title', { length: 255 }).notNull(),
+  description: text('description'),
+  type: varchar('type', { length: 20 }).notNull(),
+  dueDate: date('due_date'),
+  fileUrl: varchar('file_url', { length: 255 }),
+  createdBy: integer('created_by').notNull(),
 });
 
-// Section schema
-export const sectionSchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  gradeLevel: z.string(),
-  adviserId: z.string(),
-  students: z.array(z.string()).default([]),
-  subjects: z.array(z.string()).default([]),
-  academicYear: z.string(),
-  capacity: z.number().default(40),
-  createdAt: z.string(),
+// Chat messages table
+export const chatMessages = pgTable('chat_messages', {
+  id: serial('id').primaryKey(),
+  senderId: integer('sender_id').notNull(),
+  receiverId: integer('receiver_id'),
+  message: text('message').notNull(),
+  createdAt: timestamp('created_at').defaultNow(),
 });
 
-// Grade schema
-export const gradeSchema = z.object({
-  id: z.string(),
-  studentId: z.string(),
-  subjectId: z.string(),
-  teacherId: z.string(),
-  quarter: z.enum(['Q1', 'Q2', 'Q3', 'Q4']),
-  academicYear: z.string(),
-  grade: z.number().min(0).max(100),
-  remarks: z.string().optional(),
-  createdAt: z.string(),
-  updatedAt: z.string(),
+// Meetings table
+export const meetings = pgTable('meetings', {
+  id: serial('id').primaryKey(),
+  sectionId: integer('section_id').notNull(),
+  title: varchar('title', { length: 255 }),
+  meetingLink: varchar('meeting_link', { length: 255 }),
+  date: timestamp('date'),
+  createdBy: integer('created_by').notNull(),
 });
 
-// Assignment schema
-export const assignmentSchema = z.object({
-  id: z.string(),
-  title: z.string(),
-  description: z.string(),
-  subjectId: z.string(),
-  teacherId: z.string(),
-  assignedSections: z.array(z.string()),
-  dueDate: z.string(),
-  points: z.number().default(100),
-  type: z.enum(['assignment', 'quiz', 'exam', 'project']),
-  attachments: z.array(z.string()).default([]),
-  isPublished: z.boolean().default(false),
-  createdAt: z.string(),
-  updatedAt: z.string(),
+// Hero images table
+export const heroImages = pgTable('hero_images', {
+  id: serial('id').primaryKey(),
+  imageUrl: varchar('image_url', { length: 255 }).notNull(),
+  uploadedBy: integer('uploaded_by'),
 });
 
-// Assignment submission schema
-export const assignmentSubmissionSchema = z.object({
-  id: z.string(),
-  assignmentId: z.string(),
-  studentId: z.string(),
-  submissionText: z.string().optional(),
-  attachments: z.array(z.string()).default([]),
-  submittedAt: z.string(),
-  grade: z.number().optional(),
-  feedback: z.string().optional(),
-  status: z.enum(['submitted', 'graded', 'returned']).default('submitted'),
+// Announcements table
+export const announcements = pgTable('announcements', {
+  id: serial('id').primaryKey(),
+  title: varchar('title', { length: 255 }).notNull(),
+  content: text('content').notNull(),
+  datePosted: date('date_posted').defaultNow(),
+  postedBy: integer('posted_by'),
 });
 
-// Learning module schema
-export const learningModuleSchema = z.object({
-  id: z.string(),
-  title: z.string(),
-  description: z.string(),
-  subjectId: z.string(),
-  teacherId: z.string(),
-  fileUrl: z.string(),
-  fileName: z.string(),
-  fileSize: z.number(),
-  fileType: z.string(),
-  assignedSections: z.array(z.string()),
-  isPublished: z.boolean().default(false),
-  downloadCount: z.number().default(0),
-  createdAt: z.string(),
-  updatedAt: z.string(),
+// News table
+export const news = pgTable('news', {
+  id: serial('id').primaryKey(),
+  title: varchar('title', { length: 255 }).notNull(),
+  summary: text('summary'),
+  imageUrl: varchar('image_url', { length: 255 }),
+  datePosted: date('date_posted').defaultNow(),
+  postedBy: integer('posted_by'),
 });
 
-// Announcement schema
-export const announcementSchema = z.object({
-  id: z.string(),
-  title: z.string(),
-  content: z.string(),
-  authorId: z.string(),
-  targetAudience: z.array(UserRole),
-  targetSections: z.array(z.string()).default([]),
-  priority: z.enum(['low', 'medium', 'high']).default('medium'),
-  isActive: z.boolean().default(true),
-  scheduledAt: z.string().optional(),
-  expiresAt: z.string().optional(),
-  attachments: z.array(z.string()).default([]),
-  createdAt: z.string(),
-  updatedAt: z.string(),
+// Events table
+export const events = pgTable('events', {
+  id: serial('id').primaryKey(),
+  title: varchar('title', { length: 255 }).notNull(),
+  description: text('description'),
+  date: date('date'),
+  location: varchar('location', { length: 255 }),
+  postedBy: integer('posted_by'),
 });
 
-// Chat message schema
-export const chatMessageSchema = z.object({
-  id: z.string(),
-  senderId: z.string(),
-  recipientId: z.string().optional(), // For private messages
-  roomId: z.string().optional(), // For group chats
-  message: z.string(),
-  type: z.enum(['text', 'file', 'image']).default('text'),
-  fileUrl: z.string().optional(),
-  fileName: z.string().optional(),
-  isEdited: z.boolean().default(false),
-  timestamp: z.string(),
-});
+// Relations
+export const usersRelations = relations(users, ({ many }) => ({
+  sections: many(sections),
+  enrollments: many(enrollments),
+  grades: many(grades),
+  assignments: many(assignments),
+  sentMessages: many(chatMessages, { relationName: 'sender' }),
+  receivedMessages: many(chatMessages, { relationName: 'receiver' }),
+  meetings: many(meetings),
+  heroImages: many(heroImages),
+  announcements: many(announcements),
+  news: many(news),
+  events: many(events),
+}));
 
-// Meeting schema
-export const meetingSchema = z.object({
-  id: z.string(),
-  title: z.string(),
-  description: z.string().optional(),
-  hostId: z.string(),
-  meetingLink: z.string(),
-  scheduledDate: z.string(),
-  startTime: z.string(),
-  endTime: z.string(),
-  attendees: z.array(z.string()).default([]),
-  assignedSections: z.array(z.string()).default([]),
-  isRecurring: z.boolean().default(false),
-  recurringType: z.enum(['daily', 'weekly', 'monthly']).optional(),
-  status: z.enum(['scheduled', 'ongoing', 'completed', 'cancelled']).default('scheduled'),
-  createdAt: z.string(),
-});
+export const sectionsRelations = relations(sections, ({ one, many }) => ({
+  adviser: one(users, {
+    fields: [sections.adviserId],
+    references: [users.id],
+  }),
+  enrollments: many(enrollments),
+  assignments: many(assignments),
+  meetings: many(meetings),
+}));
 
-// Enrollment application schema
-export const enrollmentApplicationSchema = z.object({
-  id: z.string(),
-  firstName: z.string(),
-  lastName: z.string(),
-  email: z.string().email(),
-  phoneNumber: z.string(),
-  dateOfBirth: z.string(),
-  gender: z.enum(['male', 'female', 'other']),
-  address: z.string(),
-  parentName: z.string(),
-  parentPhone: z.string(),
-  parentEmail: z.string().email().optional(),
-  desiredGradeLevel: z.string(),
-  desiredStrand: z.string().optional(),
-  previousSchool: z.string().optional(),
-  previousGPA: z.number().optional(),
-  documents: z.array(z.object({
-    type: z.string(),
-    fileName: z.string(),
-    fileUrl: z.string(),
-    uploadedAt: z.string(),
-  })).default([]),
-  paymentStatus: z.enum(['unpaid', 'pending', 'paid']).default('unpaid'),
-  paymentAmount: z.number().optional(),
-  status: z.enum(['pending', 'under_review', 'approved', 'rejected']).default('pending'),
-  reviewedBy: z.string().optional(),
-  reviewedAt: z.string().optional(),
-  reviewNotes: z.string().optional(),
-  assignedSection: z.string().optional(),
-  createdAt: z.string(),
-  updatedAt: z.string(),
-});
+export const enrollmentsRelations = relations(enrollments, ({ one }) => ({
+  student: one(users, {
+    fields: [enrollments.studentId],
+    references: [users.id],
+  }),
+  section: one(sections, {
+    fields: [enrollments.sectionId],
+    references: [sections.id],
+  }),
+}));
 
-// Payment record schema
-export const paymentRecordSchema = z.object({
-  id: z.string(),
-  studentId: z.string().optional(),
-  enrollmentApplicationId: z.string().optional(),
-  amount: z.number(),
-  paymentType: z.enum(['tuition', 'enrollment', 'miscellaneous']),
-  paymentMethod: z.enum(['cash', 'bank_transfer', 'online', 'check']),
-  referenceNumber: z.string().optional(),
-  description: z.string(),
-  status: z.enum(['pending', 'completed', 'failed', 'refunded']).default('pending'),
-  processedBy: z.string().optional(),
-  processedAt: z.string().optional(),
-  createdAt: z.string(),
-});
+export const gradesRelations = relations(grades, ({ one }) => ({
+  student: one(users, {
+    fields: [grades.studentId],
+    references: [users.id],
+  }),
+  teacher: one(users, {
+    fields: [grades.teacherId],
+    references: [users.id],
+  }),
+}));
 
-// Counseling record schema
-export const counselingRecordSchema = z.object({
-  id: z.string(),
-  studentId: z.string(),
-  counselorId: z.string(),
-  sessionDate: z.string(),
-  sessionType: z.enum(['individual', 'group', 'crisis', 'academic', 'behavioral']),
-  notes: z.string(),
-  followUpRequired: z.boolean().default(false),
-  followUpDate: z.string().optional(),
-  isConfidential: z.boolean().default(true),
-  parentNotified: z.boolean().default(false),
-  createdAt: z.string(),
-  updatedAt: z.string(),
-});
+export const assignmentsRelations = relations(assignments, ({ one }) => ({
+  section: one(sections, {
+    fields: [assignments.sectionId],
+    references: [sections.id],
+  }),
+  creator: one(users, {
+    fields: [assignments.createdBy],
+    references: [users.id],
+  }),
+}));
 
-// Export types
-export type User = z.infer<typeof userSchema>;
-export type Student = z.infer<typeof studentSchema>;
-export type Teacher = z.infer<typeof teacherSchema>;
-export type Parent = z.infer<typeof parentSchema>;
-export type Subject = z.infer<typeof subjectSchema>;
-export type Section = z.infer<typeof sectionSchema>;
-export type Grade = z.infer<typeof gradeSchema>;
-export type Assignment = z.infer<typeof assignmentSchema>;
-export type AssignmentSubmission = z.infer<typeof assignmentSubmissionSchema>;
-export type LearningModule = z.infer<typeof learningModuleSchema>;
-export type Announcement = z.infer<typeof announcementSchema>;
-export type ChatMessage = z.infer<typeof chatMessageSchema>;
-export type Meeting = z.infer<typeof meetingSchema>;
-export type EnrollmentApplication = z.infer<typeof enrollmentApplicationSchema>;
-export type PaymentRecord = z.infer<typeof paymentRecordSchema>;
-export type CounselingRecord = z.infer<typeof counselingRecordSchema>;
+export const chatMessagesRelations = relations(chatMessages, ({ one }) => ({
+  sender: one(users, {
+    fields: [chatMessages.senderId],
+    references: [users.id],
+    relationName: 'sender',
+  }),
+  receiver: one(users, {
+    fields: [chatMessages.receiverId],
+    references: [users.id],
+    relationName: 'receiver',
+  }),
+}));
 
-// Insert schemas (for creating new records)
-export const insertUserSchema = userSchema.omit({ id: true, createdAt: true, updatedAt: true });
-export const insertStudentSchema = studentSchema.omit({ id: true, createdAt: true, updatedAt: true });
-export const insertTeacherSchema = teacherSchema.omit({ id: true, createdAt: true, updatedAt: true });
-export const insertGradeSchema = gradeSchema.omit({ id: true, createdAt: true, updatedAt: true });
-export const insertAssignmentSchema = assignmentSchema.omit({ id: true, createdAt: true, updatedAt: true });
-export const insertEnrollmentApplicationSchema = enrollmentApplicationSchema.omit({ 
-  id: true, 
-  createdAt: true, 
-  updatedAt: true 
-});
+export const meetingsRelations = relations(meetings, ({ one }) => ({
+  section: one(sections, {
+    fields: [meetings.sectionId],
+    references: [sections.id],
+  }),
+  creator: one(users, {
+    fields: [meetings.createdBy],
+    references: [users.id],
+  }),
+}));
 
+// Schema types
+export const insertUserSchema = createInsertSchema(users).omit({ id: true, createdAt: true });
+export const selectUserSchema = createSelectSchema(users);
+export const insertSectionSchema = createInsertSchema(sections).omit({ id: true });
+export const selectSectionSchema = createSelectSchema(sections);
+export const insertEnrollmentSchema = createInsertSchema(enrollments).omit({ id: true, createdAt: true });
+export const selectEnrollmentSchema = createSelectSchema(enrollments);
+export const insertGradeSchema = createInsertSchema(grades).omit({ id: true });
+export const selectGradeSchema = createSelectSchema(grades);
+export const insertAssignmentSchema = createInsertSchema(assignments).omit({ id: true });
+export const selectAssignmentSchema = createSelectSchema(assignments);
+export const insertChatMessageSchema = createInsertSchema(chatMessages).omit({ id: true, createdAt: true });
+export const selectChatMessageSchema = createSelectSchema(chatMessages);
+export const insertMeetingSchema = createInsertSchema(meetings).omit({ id: true });
+export const selectMeetingSchema = createSelectSchema(meetings);
+export const insertAnnouncementSchema = createInsertSchema(announcements).omit({ id: true, datePosted: true });
+export const selectAnnouncementSchema = createSelectSchema(announcements);
+export const insertNewsSchema = createInsertSchema(news).omit({ id: true, datePosted: true });
+export const selectNewsSchema = createSelectSchema(news);
+export const insertEventSchema = createInsertSchema(events).omit({ id: true });
+export const selectEventSchema = createSelectSchema(events);
+
+// Inferred types
+export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
-export type InsertStudent = z.infer<typeof insertStudentSchema>;
-export type InsertTeacher = z.infer<typeof insertTeacherSchema>;
+export type Section = typeof sections.$inferSelect;
+export type InsertSection = z.infer<typeof insertSectionSchema>;
+export type Enrollment = typeof enrollments.$inferSelect;
+export type InsertEnrollment = z.infer<typeof insertEnrollmentSchema>;
+export type Grade = typeof grades.$inferSelect;
 export type InsertGrade = z.infer<typeof insertGradeSchema>;
+export type Assignment = typeof assignments.$inferSelect;
 export type InsertAssignment = z.infer<typeof insertAssignmentSchema>;
-export type InsertEnrollmentApplication = z.infer<typeof insertEnrollmentApplicationSchema>;
+export type ChatMessage = typeof chatMessages.$inferSelect;
+export type InsertChatMessage = z.infer<typeof insertChatMessageSchema>;
+export type Meeting = typeof meetings.$inferSelect;
+export type InsertMeeting = z.infer<typeof insertMeetingSchema>;
+export type Announcement = typeof announcements.$inferSelect;
+export type InsertAnnouncement = z.infer<typeof insertAnnouncementSchema>;
+export type News = typeof news.$inferSelect;
+export type InsertNews = z.infer<typeof insertNewsSchema>;
+export type Event = typeof events.$inferSelect;
+export type InsertEvent = z.infer<typeof insertEventSchema>;
+
+// User roles enum for validation
+export const UserRoles = ['admin', 'teacher', 'student', 'parent', 'guidance', 'registrar', 'accounting'] as const;
+export type UserRole = typeof UserRoles[number];

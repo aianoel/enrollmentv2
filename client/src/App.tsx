@@ -14,20 +14,20 @@ import { useState, useEffect } from "react";
 import NotFound from "@/pages/not-found";
 
 function AppContent() {
-  const { user, userProfile, loading } = useAuth();
+  const { user, loading } = useAuth();
   const [currentView, setCurrentView] = useState<'landing' | 'login' | 'enrollment'>('landing');
 
   // Show loading spinner while checking authentication
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
       </div>
     );
   }
 
   // Show main application with chat provider for authenticated users
-  if (user && userProfile) {
+  if (user) {
     return (
       <ChatProvider>
         <MainLayout />
@@ -48,8 +48,10 @@ function AppContent() {
   if (currentView === 'login') {
     return (
       <LoginForm 
-        onEnrollmentClick={() => setCurrentView('enrollment')}
-        onBackToLanding={() => setCurrentView('landing')}
+        onLogin={(user) => {
+          // Login handled by context
+          setCurrentView('landing');
+        }}
       />
     );
   }

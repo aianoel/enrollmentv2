@@ -1,6 +1,5 @@
-import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { ref, set } from 'firebase/database';
-import { auth, database } from '../lib/firebase';
+// Admin setup now handled via PostgreSQL database
+// Firebase has been replaced with PostgreSQL authentication
 
 interface UserSetup {
   email: string;
@@ -55,74 +54,14 @@ const defaultUsers: UserSetup[] = [
 ];
 
 export const createDefaultUsers = async (): Promise<void> => {
-  const results = [];
-  
-  for (const user of defaultUsers) {
-    try {
-      // Create user in Firebase Authentication
-      const userCredential = await createUserWithEmailAndPassword(
-        auth,
-        user.email,
-        user.password
-      );
-      
-      // Create user profile in Realtime Database
-      await set(ref(database, `users/${userCredential.user.uid}`), {
-        email: user.email,
-        name: user.name,
-        role: user.role,
-        createdAt: new Date().toISOString(),
-        isActive: true
-      });
-      
-      results.push({
-        success: true,
-        email: user.email,
-        role: user.role,
-        uid: userCredential.user.uid
-      });
-      
-      console.log(`✅ Created ${user.role}: ${user.email}`);
-      
-    } catch (error: any) {
-      results.push({
-        success: false,
-        email: user.email,
-        role: user.role,
-        error: error.message
-      });
-      
-      console.error(`❌ Failed to create ${user.role} (${user.email}):`, error.message);
-    }
-  }
-  
-  console.log('\n📊 Setup Summary:');
-  console.log(`✅ Success: ${results.filter(r => r.success).length}`);
-  console.log(`❌ Failed: ${results.filter(r => !r.success).length}`);
-  
+  console.log("Default users are now created via PostgreSQL database setup");
+  console.log("Users have been pre-loaded during initial database migration");
   return Promise.resolve();
 };
 
 export const createSingleUser = async (userSetup: UserSetup): Promise<string> => {
-  try {
-    const userCredential = await createUserWithEmailAndPassword(
-      auth,
-      userSetup.email,
-      userSetup.password
-    );
-    
-    await set(ref(database, `users/${userCredential.user.uid}`), {
-      email: userSetup.email,
-      name: userSetup.name,
-      role: userSetup.role,
-      createdAt: new Date().toISOString(),
-      isActive: true
-    });
-    
-    return userCredential.user.uid;
-  } catch (error: any) {
-    throw new Error(`Failed to create user: ${error.message}`);
-  }
+  console.log("Single user creation moved to PostgreSQL API endpoints");
+  throw new Error("Use /api/auth/register endpoint instead");
 };
 
 // Default admin credentials for easy access
