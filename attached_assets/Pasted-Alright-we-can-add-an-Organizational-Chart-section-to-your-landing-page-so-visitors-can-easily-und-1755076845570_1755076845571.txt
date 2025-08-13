@@ -1,0 +1,86 @@
+Alright — we can add an Organizational Chart section to your landing page so visitors can easily understand the school’s structure.
+
+Here’s the updated landing page content plan with the new section:
+
+Landing Page Content (Public Page, before login)
+1. Header / Navigation Bar
+Logo (School or system logo)
+
+Navigation Links: Home, About Us, Features, Enrollment, Org Chart, Contact, Login
+
+Sticky navigation for easy access.
+
+2. Hero Section
+Headline: "Manage Your School Smarter. Learn Anywhere, Anytime."
+
+Subheadline: "A complete digital platform for students, teachers, parents, and administrators — powered by real-time technology."
+
+Call-to-Action: Login to Portal / Enroll Now
+
+Background: School-related image or illustration.
+
+3. Key Features Section
+Multi-Role Portals
+
+Advanced Enrollment
+
+Grades & Assignments
+
+Chat & Meetings
+
+Document Sharing
+
+Payment Tracking
+
+4. About the System
+Short paragraph describing the system’s purpose and benefits.
+
+5. Enrollment Highlight
+“How to Enroll Online” step-by-step process with icons.
+
+6. Organizational Chart Section
+Title: "Our Organizational Structure"
+
+Description:
+
+"Our school’s leadership and staff work together to provide quality education and seamless operations."
+
+Chart Layout:
+
+Top Level: School Director / Principal
+
+Second Level:
+
+Vice Principal (Academic Affairs)
+
+Vice Principal (Administration)
+
+Third Level:
+
+Under Academic Affairs: Department Heads, Teachers
+
+Under Administration: Registrar, Accounting, Guidance, IT Support
+
+Other Roles: Student Council, Parent-Teacher Association
+
+Design:
+
+Flowchart-style boxes connected with lines
+
+Responsive for mobile viewing
+
+Icons or photos for each role
+
+Optional: Expandable nodes so visitors can click to see responsibilities.
+
+7. Portal Access Preview
+Screenshots or icons for Student, Teacher, Parent, and Admin portals with short role descriptions.
+
+8. Testimonials
+Quotes from parents, teachers, and students.
+
+9. Contact Section
+School address, phone, email, contact form, Google Map.
+
+10. Footer
+Quick links, social media icons, copyright.

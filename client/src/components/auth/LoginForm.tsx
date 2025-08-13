@@ -9,9 +9,10 @@ import { useToast } from '../../hooks/use-toast';
 
 interface LoginFormProps {
   onEnrollmentClick: () => void;
+  onBackToLanding?: () => void;
 }
 
-export const LoginForm: React.FC<LoginFormProps> = ({ onEnrollmentClick }) => {
+export const LoginForm: React.FC<LoginFormProps> = ({ onEnrollmentClick, onBackToLanding }) => {
   const { login, loading } = useAuth();
   const { toast } = useToast();
   const [formData, setFormData] = useState({
@@ -121,7 +122,17 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onEnrollmentClick }) => {
               </Button>
             </form>
 
-            <div className="mt-6 text-center">
+            <div className="mt-6 text-center space-y-2">
+              {onBackToLanding && (
+                <Button 
+                  variant="ghost" 
+                  onClick={onBackToLanding}
+                  className="text-gray-600 hover:text-gray-700 font-medium w-full"
+                  data-testid="button-back-landing"
+                >
+                  ← Back to Home
+                </Button>
+              )}
               <Button 
                 variant="link" 
                 onClick={onEnrollmentClick}

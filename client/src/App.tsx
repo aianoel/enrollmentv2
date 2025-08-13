@@ -8,13 +8,14 @@ import { ChatProvider } from "./contexts/ChatContext";
 import { LoginForm } from "./components/auth/LoginForm";
 import { EnrollmentPortal } from "./components/enrollment/EnrollmentPortal";
 import { MainLayout } from "./components/layout/MainLayout";
+import { LandingPage } from "./pages/LandingPage";
 import { useAuth } from "./contexts/AuthContext";
 import { useState, useEffect } from "react";
 import NotFound from "@/pages/not-found";
 
 function AppContent() {
   const { user, userProfile, loading } = useAuth();
-  const [showEnrollment, setShowEnrollment] = useState(false);
+  const [currentView, setCurrentView] = useState<'landing' | 'login' | 'enrollment'>('landing');
 
   // Show loading spinner while checking authentication
   if (loading) {
@@ -25,29 +26,40 @@ function AppContent() {
     );
   }
 
+  // Show main application with chat provider for authenticated users
+  if (user && userProfile) {
+    return (
+      <ChatProvider>
+        <MainLayout />
+      </ChatProvider>
+    );
+  }
+
   // Show enrollment portal if requested
-  if (showEnrollment && !user) {
+  if (currentView === 'enrollment') {
     return (
       <EnrollmentPortal 
-        onBackToLogin={() => setShowEnrollment(false)} 
+        onBackToLogin={() => setCurrentView('landing')} 
       />
     );
   }
 
-  // Show login form if not authenticated
-  if (!user || !userProfile) {
+  // Show login form if requested
+  if (currentView === 'login') {
     return (
       <LoginForm 
-        onEnrollmentClick={() => setShowEnrollment(true)} 
+        onEnrollmentClick={() => setCurrentView('enrollment')}
+        onBackToLanding={() => setCurrentView('landing')}
       />
     );
   }
 
-  // Show main application with chat provider for authenticated users
+  // Show landing page by default
   return (
-    <ChatProvider>
-      <MainLayout />
-    </ChatProvider>
+    <LandingPage 
+      onLoginClick={() => setCurrentView('login')}
+      onEnrollmentClick={() => setCurrentView('enrollment')}
+    />
   );
 }
 
