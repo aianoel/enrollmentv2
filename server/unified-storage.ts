@@ -643,6 +643,152 @@ export class DatabaseStorage implements IStorage {
       throw error;
     }
   }
+
+  // Chat System Methods (simplified approach using existing messages table)
+  async getUserConversations(userId: number): Promise<any[]> {
+    try {
+      const conversations = [];
+      
+      // Get all messages involving this user
+      const allMessages = await db.select().from(messages);
+      const userMessages = allMessages.filter(m => 
+        m.senderId === userId || m.recipientId === userId
+      );
+      
+      // Get unique partner IDs
+      const partnerIds = new Set();
+      userMessages.forEach(message => {
+        if (message.senderId === userId && message.recipientId) {
+          partnerIds.add(message.recipientId);
+        } else if (message.recipientId === userId && message.senderId) {
+          partnerIds.add(message.senderId);
+        }
+      });
+      
+      // Build conversations
+      for (const partnerId of partnerIds) {
+        if (partnerId !== userId) {
+          const partner = await this.getUser(partnerId);
+          if (partner) {
+            const conversationMessages = userMessages.filter(m => 
+              (m.senderId === userId && m.recipientId === partnerId) ||
+              (m.senderId === partnerId && m.recipientId === userId)
+            ).sort((a, b) => new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime());
+            
+            const lastMessage = conversationMessages[0];
+            const unreadCount = conversationMessages.filter(m => 
+              m.senderId === partnerId && !m.isRead
+            ).length;
+            
+            conversations.push({
+              id: `conv_${partnerId}_${userId}`,
+              partnerId,
+              partnerName: partner.firstName + ' ' + partner.lastName,
+              partnerRole: partner.roleId,
+              lastMessage: lastMessage?.messageText || '',
+              lastMessageTime: lastMessage?.createdAt,
+              unreadCount
+            });
+          }
+        }
+      }
+      
+      return conversations;
+    } catch (error) {
+      console.error('Error getting user conversations:', error);
+      return [];
+    }
+  }
+
+  async getConversationMessages(userId: number, partnerId: number, limit: number = 50): Promise<any[]> {
+    try {
+      // Get all messages between these two users
+      const allMessages = await db.select().from(messages);
+      const conversationMessages = allMessages.filter(m => 
+        (m.senderId === userId && m.recipientId === partnerId) ||
+        (m.senderId === partnerId && m.recipientId === userId)
+      ).sort((a, b) => new Date(a.createdAt!).getTime() - new Date(b.createdAt!).getTime());
+      
+      return conversationMessages.slice(-limit).map(msg => ({
+        id: msg.id,
+        senderId: msg.senderId,
+        recipientId: msg.recipientId,
+        message: msg.messageText,
+        createdAt: msg.createdAt,
+        isRead: msg.isRead
+      }));
+    } catch (error) {
+      console.error('Error getting conversation messages:', error);
+      return [];
+    }
+  }
+
+  async createMessage(data: any): Promise<any> {
+    try {
+      const [message] = await db.insert(messages).values({
+        senderId: data.senderId,
+        recipientId: data.recipientId,
+        messageText: data.content,
+        createdAt: new Date(),
+        isRead: false
+      }).returning();
+      
+      return {
+        id: message.id,
+        senderId: message.senderId,
+        recipientId: message.recipientId,
+        message: message.messageText,
+        createdAt: message.createdAt,
+        isRead: message.isRead
+      };
+    } catch (error) {
+      console.error('Error creating message:', error);
+      throw error;
+    }
+  }
+
+  async markMessageAsRead(messageId: number): Promise<void> {
+    await db.update(messages).set({ isRead: true }).where(eq(messages.id, messageId));
+  }
+
+  async updateUserOnlineStatus(userId: number, isOnline: boolean): Promise<void> {
+    try {
+      // Check if onlineStatus record exists
+      const existing = await db.select().from(onlineStatus).where(eq(onlineStatus.userId, userId)).limit(1);
+      
+      if (existing.length > 0) {
+        await db.update(onlineStatus).set({
+          isOnline,
+          lastSeen: new Date()
+        }).where(eq(onlineStatus.userId, userId));
+      } else {
+        await db.insert(onlineStatus).values({
+          userId,
+          isOnline,
+          lastSeen: new Date()
+        });
+      }
+    } catch (error) {
+      console.error('Error updating user online status:', error);
+    }
+  }
+
+  async getOnlineUsers(): Promise<any[]> {
+    try {
+      const allUsers = await db.select().from(users);
+      return allUsers.map(user => ({
+        id: user.id,
+        name: user.firstName + ' ' + user.lastName,
+        email: user.email,
+        role: user.roleId,
+        isOnline: false, // Simple fallback for now
+        lastSeen: new Date()
+      }));
+    } catch (error) {
+      console.error('Error getting online users:', error);
+      return [];
+    }
+  }
 }
 
 export const storage = new DatabaseStorage();

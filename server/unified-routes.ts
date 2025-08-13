@@ -707,17 +707,149 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  // Chat API Routes
+  app.get("/api/chat/conversations", async (req, res) => {
+    try {
+      const userId = parseInt(req.query.userId as string);
+      if (!userId) {
+        return res.status(400).json({ error: "User ID is required" });
+      }
+      
+      const conversations = await storage.getUserConversations(userId);
+      res.json(conversations);
+    } catch (error) {
+      console.error("Error fetching conversations:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.get("/api/chat/messages", async (req, res) => {
+    try {
+      const userId = parseInt(req.query.userId as string);
+      const partnerId = parseInt(req.query.partnerId as string);
+      
+      if (!userId || !partnerId) {
+        return res.status(400).json({ error: "User ID and Partner ID are required" });
+      }
+      
+      const messages = await storage.getConversationMessages(userId, partnerId);
+      res.json(messages);
+    } catch (error) {
+      console.error("Error fetching messages:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.post("/api/chat/messages", async (req, res) => {
+    try {
+      const { senderId, recipientId, content } = req.body;
+      
+      if (!senderId || !recipientId || !content) {
+        return res.status(400).json({ error: "Sender ID, Recipient ID, and content are required" });
+      }
+      
+      const message = await storage.createMessage({
+        senderId,
+        recipientId,
+        content
+      });
+      
+      // Emit the message via Socket.IO for real-time updates
+      const sender = await storage.getUser(senderId);
+      io.emit("new_message", {
+        ...message,
+        senderName: sender?.name || 'Unknown'
+      });
+      
+      res.status(201).json(message);
+    } catch (error) {
+      console.error("Error creating message:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.get("/api/chat/online-users", async (req, res) => {
+    try {
+      const onlineUsers = await storage.getOnlineUsers();
+      res.json(onlineUsers);
+    } catch (error) {
+      console.error("Error fetching online users:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.put("/api/chat/user-status", async (req, res) => {
+    try {
+      const { userId, isOnline } = req.body;
+      
+      if (!userId || typeof isOnline !== 'boolean') {
+        return res.status(400).json({ error: "User ID and online status are required" });
+      }
+      
+      await storage.updateUserOnlineStatus(userId, isOnline);
+      
+      // Emit status update via Socket.IO
+      io.emit("user_status_update", { userId, isOnline });
+      
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error updating user status:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
   // Socket.io for real-time features
   io.on('connection', (socket) => {
     console.log('User connected:', socket.id);
 
+    // Handle user joining with their ID
+    socket.on('join_user', async (userId) => {
+      socket.join(`user_${userId}`);
+      await storage.updateUserOnlineStatus(userId, true);
+      
+      // Broadcast that user is online
+      io.emit('user_status_update', { userId, isOnline: true });
+      console.log(`User ${userId} joined and is now online`);
+    });
+
+    // Handle sending messages
+    socket.on('send_message', async (data) => {
+      try {
+        const message = await storage.createMessage(data);
+        const sender = await storage.getUser(data.senderId);
+        
+        // Emit to recipient
+        io.to(`user_${data.recipientId}`).emit('new_message', {
+          ...message,
+          senderName: sender?.name || 'Unknown'
+        });
+        
+        // Confirm to sender
+        socket.emit('message_sent', message);
+      } catch (error) {
+        console.error('Error handling socket message:', error);
+        socket.emit('message_error', { error: 'Failed to send message' });
+      }
+    });
+
+    // Handle typing indicators
+    socket.on('typing_start', (data) => {
+      io.to(`user_${data.recipientId}`).emit('user_typing', {
+        userId: data.senderId,
+        isTyping: true
+      });
+    });
+
+    socket.on('typing_stop', (data) => {
+      io.to(`user_${data.recipientId}`).emit('user_typing', {
+        userId: data.senderId,
+        isTyping: false
+      });
+    });
+
     socket.on('join_room', (roomId: string) => {
       socket.join(roomId);
       console.log(`User ${socket.id} joined room ${roomId}`);
-    });
-
-    socket.on('send_message', (data) => {
-      socket.to(data.roomId).emit('receive_message', data);
     });
 
     socket.on('disconnect', () => {

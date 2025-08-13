@@ -1,5 +1,7 @@
-import React, { createContext, useContext, ReactNode, useState } from 'react';
+import React, { createContext, useContext, ReactNode, useState, useEffect } from 'react';
 import { useAuth } from './AuthContext';
+import { apiRequest } from '@/lib/queryClient';
+import { io, Socket } from 'socket.io-client';
 
 interface ChatMessage {
   id: string;
@@ -25,6 +27,10 @@ interface ChatContextType {
   sendMessage: (message: string, recipientId?: string) => Promise<void>;
   markAsOnline: () => void;
   markAsOffline: () => void;
+  conversations: any[];
+  loadConversation: (partnerId: number) => Promise<void>;
+  selectedConversation: any;
+  setSelectedConversation: (conversation: any) => void;
 }
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined);
@@ -45,38 +51,147 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
   const { user } = useAuth();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [onlineUsers, setOnlineUsers] = useState<OnlineUser[]>([]);
+  const [conversations, setConversations] = useState<any[]>([]);
+  const [selectedConversation, setSelectedConversation] = useState<any>(null);
   const [isOpen, setIsOpen] = useState(false);
+  const [socket, setSocket] = useState<Socket | null>(null);
 
-  // Placeholder functions for PostgreSQL chat implementation
-  const sendMessage = async (message: string, recipientId?: string): Promise<void> => {
+  // Initialize Socket.IO connection
+  useEffect(() => {
+    if (user) {
+      const newSocket = io();
+      setSocket(newSocket);
+
+      // Join user room for receiving messages
+      newSocket.emit('join_user', user.id);
+
+      // Listen for new messages
+      newSocket.on('new_message', (message) => {
+        setMessages(prev => [...prev, {
+          id: message.id.toString(),
+          senderId: message.senderId.toString(),
+          senderName: message.senderName,
+          message: message.message,
+          timestamp: message.createdAt,
+          recipientId: message.recipientId?.toString()
+        }]);
+      });
+
+      // Listen for user status updates
+      newSocket.on('user_status_update', (data) => {
+        setOnlineUsers(prev => prev.map(user => 
+          user.id === data.userId.toString() 
+            ? { ...user, isOnline: data.isOnline }
+            : user
+        ));
+      });
+
+      return () => {
+        newSocket.disconnect();
+      };
+    }
+  }, [user]);
+
+  // Load conversations
+  useEffect(() => {
+    if (user) {
+      loadConversations();
+      loadOnlineUsers();
+    }
+  }, [user]);
+
+  const loadConversations = async () => {
     if (!user) return;
+    try {
+      const response = await apiRequest(`/api/chat/conversations?userId=${user.id}`);
+      setConversations(response);
+    } catch (error) {
+      console.error('Error loading conversations:', error);
+    }
+  };
+
+  const loadOnlineUsers = async () => {
+    try {
+      const response = await apiRequest('/api/chat/online-users');
+      setOnlineUsers(response.map((user: any) => ({
+        id: user.id.toString(),
+        name: user.name,
+        role: user.role,
+        isOnline: user.isOnline
+      })));
+    } catch (error) {
+      console.error('Error loading online users:', error);
+    }
+  };
+
+  const loadConversation = async (partnerId: number) => {
+    if (!user) return;
+    try {
+      const response = await apiRequest(`/api/chat/messages?userId=${user.id}&partnerId=${partnerId}`);
+      setMessages(response.map((msg: any) => ({
+        id: msg.id.toString(),
+        senderId: msg.senderId.toString(),
+        senderName: msg.senderName || 'Unknown',
+        message: msg.message,
+        timestamp: msg.createdAt,
+        recipientId: msg.recipientId?.toString()
+      })));
+    } catch (error) {
+      console.error('Error loading conversation:', error);
+    }
+  };
+
+  const sendMessage = async (message: string, recipientId?: string): Promise<void> => {
+    if (!user || !recipientId) return;
     
-    // TODO: Implement PostgreSQL chat message sending
-    console.log('Chat message (PostgreSQL not yet implemented):', message);
-    
-    // For now, add message locally for testing
-    const newMessage: ChatMessage = {
-      id: Date.now().toString(),
-      senderId: user.id.toString(),
-      senderName: user.name,
-      message,
-      timestamp: new Date().toISOString(),
-      recipientId
-    };
-    
-    setMessages(prev => [...prev, newMessage]);
+    try {
+      await apiRequest('/api/chat/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          senderId: user.id,
+          recipientId: parseInt(recipientId),
+          content: message
+        })
+      });
+
+      // Also emit via socket for real-time updates
+      if (socket) {
+        socket.emit('send_message', {
+          senderId: user.id,
+          recipientId: parseInt(recipientId),
+          content: message
+        });
+      }
+    } catch (error) {
+      console.error('Error sending message:', error);
+    }
   };
 
   const markAsOnline = () => {
     if (!user) return;
-    // TODO: Implement PostgreSQL presence tracking
-    console.log('User marked as online (PostgreSQL not yet implemented)');
+    updateUserStatus(true);
   };
 
   const markAsOffline = () => {
     if (!user) return;
-    // TODO: Implement PostgreSQL presence tracking  
-    console.log('User marked as offline (PostgreSQL not yet implemented)');
+    updateUserStatus(false);
+  };
+
+  const updateUserStatus = async (isOnline: boolean) => {
+    if (!user) return;
+    try {
+      await apiRequest('/api/chat/user-status', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: user.id,
+          isOnline
+        })
+      });
+    } catch (error) {
+      console.error('Error updating user status:', error);
+    }
   };
 
   const value = {
@@ -87,6 +202,10 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
     sendMessage,
     markAsOnline,
     markAsOffline,
+    conversations,
+    loadConversation,
+    selectedConversation,
+    setSelectedConversation,
   };
 
   return (
