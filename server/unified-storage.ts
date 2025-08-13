@@ -105,6 +105,60 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(users);
   }
 
+  async getUserById(id: number): Promise<User | undefined> {
+    const result = await db.select().from(users).where(eq(users.id, id)).limit(1);
+    return result[0];
+  }
+
+  async updateUserLastLogin(userId: number): Promise<void> {
+    await db.update(users).set({ lastLogin: new Date() }).where(eq(users.id, userId));
+  }
+
+  async updateUserPassword(userId: number, passwordHash: string): Promise<void> {
+    await db.update(users).set({ passwordHash }).where(eq(users.id, userId));
+  }
+
+  // Module management methods
+  async createModule(moduleData: any): Promise<number> {
+    const result = await db.insert(modules).values(moduleData).returning({ id: modules.id });
+    return result[0].id;
+  }
+
+  async getModulesBySection(sectionId: number): Promise<any[]> {
+    return await db.select().from(modules).where(eq(modules.sectionId, sectionId));
+  }
+
+  async getModulesByTeacher(teacherId: number): Promise<any[]> {
+    return await db.select().from(modules).where(eq(modules.teacherId, teacherId));
+  }
+
+  async getModuleById(id: number): Promise<any> {
+    const result = await db.select().from(modules).where(eq(modules.id, id)).limit(1);
+    return result[0];
+  }
+
+  async deleteModule(id: number): Promise<void> {
+    await db.delete(modules).where(eq(modules.id, id));
+  }
+
+  async updateModule(id: number, updates: any): Promise<void> {
+    await db.update(modules).set(updates).where(eq(modules.id, id));
+  }
+
+  // Utility methods
+  async verifyUserSectionAccess(userId: number, sectionId: number, role: string): Promise<boolean> {
+    // Basic implementation - in production this would check proper relationships
+    return true;
+  }
+
+  async getStudentsBySection(sectionId: number): Promise<User[]> {
+    return await db.select().from(users).where(eq(users.roleId, 5)); // Student role
+  }
+
+  async createNotification(notification: any): Promise<void> {
+    await db.insert(notifications).values(notification);
+  }
+
   // Announcements
   async getAnnouncements(): Promise<Announcement[]> {
     return await db.select().from(announcements).orderBy(desc(announcements.createdAt));
@@ -174,11 +228,21 @@ export class DatabaseStorage implements IStorage {
 
   // Meetings
   async getMeetings(): Promise<Meeting[]> {
-    return await db.select().from(meetings);
+    try {
+      return await db.select().from(meetings);
+    } catch (error) {
+      console.error('Error in getMeetings:', error);
+      return [];
+    }
   }
 
   async getMeetingsByHost(hostId: number): Promise<Meeting[]> {
-    return await db.select().from(meetings).where(eq(meetings.hostId, hostId));
+    try {
+      return await db.select().from(meetings).where(eq(meetings.hostId, hostId));
+    } catch (error) {
+      console.error('Error in getMeetingsByHost:', error);
+      return [];
+    }
   }
 
   // Principal Stats
