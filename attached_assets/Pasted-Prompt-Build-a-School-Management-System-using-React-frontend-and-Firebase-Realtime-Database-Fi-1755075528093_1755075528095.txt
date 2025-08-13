@@ -1,0 +1,84 @@
+Prompt:
+
+Build a School Management System using React (frontend) and Firebase Realtime Database + Firebase Storage (no other database). The system should have role-based portals:
+
+Student Portal: View enrolled subjects, grades by quarter, assignments, uploaded modules, announcements, chat with online users (teachers, classmates), join meetings.
+
+Guidance Portal: Access student records, handle counseling notes, send announcements, chat.
+
+Teacher Portal: Encode grades by quarter for each student in assigned sections, create tasks (tests, assignments), upload learning modules (PDF, DOC, video), schedule and host meetings (link-based), chat with online users, view and manage class list.
+
+Admin Portal: Manage all accounts (create, edit, delete for students, teachers, parents, guidance, registrar, accounting), assign sections, manage announcements.
+
+Registrar Portal: Handle enrollment requests, approve/reject students, update academic records.
+
+Accounting Portal: Track tuition payments, issue receipts, update payment status.
+
+Parent Portal: View child’s grades, attendance, announcements, chat with teachers/guidance.
+
+Advanced Enrollment Portal:
+
+Online application form for new and returning students with upload fields for required documents (birth certificate, report card, ID).
+
+Step-by-step enrollment process with progress tracking (e.g., 1. Personal Info → 2. Academic Info → 3. Documents Upload → 4. Payment → 5. Approval).
+
+Payment verification linked with the Accounting Portal.
+
+Automatic notification to the Registrar when a student submits an application.
+
+Status tracking for students (“Pending Review”, “Under Verification”, “Approved”, “Rejected”).
+
+Option for students to select desired strand/track/year level.
+
+Auto-assign student to section upon registrar’s approval.
+
+Key Features:
+
+Role-based Authentication (Firebase Auth: email/password login + role stored in DB).
+
+Realtime Chat System (chat with online users, show online status using Realtime Database presence).
+
+Grades Management: Teacher can input grades by quarter, students/parents can view them.
+
+Tasks & Assignments: Teachers can create, update, delete assignments; students can view & submit.
+
+Modules Upload: Teachers can upload PDFs, Word docs, videos to Firebase Storage; students can download.
+
+Meetings: Teacher can create meeting links (Zoom/Google Meet) and select sections to join.
+
+Advanced Enrollment Workflow: From application to approval with payment and document verification.
+
+Realtime Updates: All portals reflect changes instantly using Firebase Realtime Database.
+
+Responsive UI: Mobile and desktop friendly.
+
+Tech Requirements:
+
+Frontend: React + Tailwind CSS for styling.
+
+State Management: React Context API or Redux.
+
+Database: Firebase Realtime Database (structured by collections for users, sections, grades, assignments, chats, etc.).
+
+File Storage: Firebase Storage for modules, assignments, enrollment documents.
+
+Authentication: Firebase Auth (role-based access control).
+
+Deployment: Firebase Hosting.
+
+UI Notes:
+
+Dashboard per role with quick links.
+
+Chat interface with real-time presence indicators.
+
+Gradebook interface for teachers.
+
+Assignment list with deadlines.
+
+Section and student list for each teacher.
+
+Mobile-friendly navigation.
+
+Enrollment tracking page for students.
+
