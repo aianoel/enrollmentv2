@@ -1,0 +1,276 @@
+import { pgTable, serial, text, timestamp, integer, boolean, numeric } from "drizzle-orm/pg-core";
+import { createInsertSchema } from "drizzle-zod";
+import { z } from "zod";
+
+// =====================
+// USERS & ROLES
+// =====================
+export const roles = pgTable("roles", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull().unique(),
+});
+
+export const users = pgTable("users", {
+  id: serial("id").primaryKey(),
+  roleId: integer("role_id").references(() => roles.id, { onDelete: "cascade" }),
+  firstName: text("first_name").notNull(),
+  lastName: text("last_name").notNull(),
+  email: text("email").notNull().unique(),
+  passwordHash: text("password_hash").notNull(),
+  profileImage: text("profile_image"),
+  createdAt: timestamp("created_at").defaultNow(),
+  lastLogin: timestamp("last_login"),
+});
+
+// =====================
+// SECTIONS & SUBJECTS
+// =====================
+export const sections = pgTable("sections", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  gradeLevel: text("grade_level").notNull(),
+});
+
+export const subjects = pgTable("subjects", {
+  id: serial("id").primaryKey(),
+  sectionId: integer("section_id").references(() => sections.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  description: text("description"),
+});
+
+// =====================
+// ENROLLMENT PROGRESS
+// =====================
+export const enrollmentProgress = pgTable("enrollment_progress", {
+  id: serial("id").primaryKey(),
+  studentId: integer("student_id").references(() => users.id, { onDelete: "cascade" }),
+  currentStatus: text("current_status").notNull(),
+  remarks: text("remarks"),
+  lastUpdated: timestamp("last_updated").defaultNow(),
+});
+
+// =====================
+// TEACHER MODULES
+// =====================
+export const modules = pgTable("modules", {
+  id: serial("id").primaryKey(),
+  teacherId: integer("teacher_id").references(() => users.id, { onDelete: "cascade" }),
+  sectionId: integer("section_id").references(() => sections.id, { onDelete: "cascade" }),
+  title: text("title").notNull(),
+  description: text("description"),
+  fileUrl: text("file_url").notNull(),
+  uploadedAt: timestamp("uploaded_at").defaultNow(),
+});
+
+// =====================
+// TASKS
+// =====================
+export const tasks = pgTable("tasks", {
+  id: serial("id").primaryKey(),
+  teacherId: integer("teacher_id").references(() => users.id, { onDelete: "cascade" }),
+  sectionId: integer("section_id").references(() => sections.id, { onDelete: "cascade" }),
+  title: text("title").notNull(),
+  description: text("description"),
+  taskType: text("task_type").notNull(),
+  timerMinutes: integer("timer_minutes"),
+  dueDate: timestamp("due_date"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// =====================
+// MEETINGS
+// =====================
+export const meetings = pgTable("meetings", {
+  id: serial("id").primaryKey(),
+  hostId: integer("host_id").references(() => users.id, { onDelete: "cascade" }),
+  sectionId: integer("section_id").references(() => sections.id, { onDelete: "cascade" }),
+  title: text("title").notNull(),
+  meetingLink: text("meeting_link").notNull(),
+  scheduledAt: timestamp("scheduled_at").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// =====================
+// CHAT SYSTEM
+// =====================
+export const messages = pgTable("messages", {
+  id: serial("id").primaryKey(),
+  senderId: integer("sender_id").references(() => users.id, { onDelete: "cascade" }),
+  receiverId: integer("receiver_id").references(() => users.id, { onDelete: "cascade" }),
+  message: text("message").notNull(),
+  sentAt: timestamp("sent_at").defaultNow(),
+  isRead: boolean("is_read").default(false),
+});
+
+export const onlineStatus = pgTable("online_status", {
+  userId: integer("user_id").primaryKey().references(() => users.id, { onDelete: "cascade" }),
+  isOnline: boolean("is_online").default(false),
+  lastSeen: timestamp("last_seen"),
+});
+
+// =====================
+// ANNOUNCEMENTS & EVENTS
+// =====================
+export const announcements = pgTable("announcements", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  content: text("content").notNull(),
+  postedBy: integer("posted_by").references(() => users.id, { onDelete: "set null" }),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const events = pgTable("events", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  description: text("description"),
+  startDate: timestamp("start_date").notNull(),
+  endDate: timestamp("end_date"),
+  createdBy: integer("created_by").references(() => users.id, { onDelete: "set null" }),
+});
+
+// =====================
+// ACCOUNTING
+// =====================
+export const fees = pgTable("fees", {
+  id: serial("id").primaryKey(),
+  studentId: integer("student_id").references(() => users.id, { onDelete: "cascade" }),
+  feeType: text("fee_type").notNull(),
+  amount: numeric("amount", { precision: 10, scale: 2 }).notNull(),
+  dueDate: timestamp("due_date"),
+  status: text("status").default("Unpaid"),
+});
+
+export const payments = pgTable("payments", {
+  id: serial("id").primaryKey(),
+  feeId: integer("fee_id").references(() => fees.id, { onDelete: "cascade" }),
+  amountPaid: numeric("amount_paid", { precision: 10, scale: 2 }).notNull(),
+  paymentDate: timestamp("payment_date").defaultNow(),
+  paymentMethod: text("payment_method"),
+  recordedBy: integer("recorded_by").references(() => users.id, { onDelete: "set null" }),
+});
+
+// =====================
+// GUIDANCE
+// =====================
+export const guidanceReports = pgTable("guidance_reports", {
+  id: serial("id").primaryKey(),
+  studentId: integer("student_id").references(() => users.id, { onDelete: "cascade" }),
+  counselorId: integer("counselor_id").references(() => users.id, { onDelete: "set null" }),
+  report: text("report").notNull(),
+  reportDate: timestamp("report_date").defaultNow(),
+});
+
+// =====================
+// GRADES
+// =====================
+export const grades = pgTable("grades", {
+  id: serial("id").primaryKey(),
+  studentId: integer("student_id").references(() => users.id, { onDelete: "cascade" }),
+  subjectId: integer("subject_id").references(() => subjects.id, { onDelete: "cascade" }),
+  teacherId: integer("teacher_id").references(() => users.id, { onDelete: "cascade" }),
+  grade: numeric("grade", { precision: 5, scale: 2 }).notNull(),
+  quarter: integer("quarter").notNull(),
+  schoolYear: text("school_year").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// =====================
+// NEWS
+// =====================
+export const news = pgTable("news", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  summary: text("summary"),
+  content: text("content"),
+  postedBy: integer("posted_by").references(() => users.id, { onDelete: "set null" }),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// =====================
+// ZOD SCHEMAS
+// =====================
+
+// Roles
+export const insertRoleSchema = createInsertSchema(roles);
+export type InsertRole = z.infer<typeof insertRoleSchema>;
+export type Role = typeof roles.$inferSelect;
+
+// Users
+export const insertUserSchema = createInsertSchema(users);
+export type InsertUser = z.infer<typeof insertUserSchema>;
+export type User = typeof users.$inferSelect;
+
+// Sections
+export const insertSectionSchema = createInsertSchema(sections);
+export type InsertSection = z.infer<typeof insertSectionSchema>;
+export type Section = typeof sections.$inferSelect;
+
+// Subjects
+export const insertSubjectSchema = createInsertSchema(subjects);
+export type InsertSubject = z.infer<typeof insertSubjectSchema>;
+export type Subject = typeof subjects.$inferSelect;
+
+// Enrollment Progress
+export const insertEnrollmentProgressSchema = createInsertSchema(enrollmentProgress);
+export type InsertEnrollmentProgress = z.infer<typeof insertEnrollmentProgressSchema>;
+export type EnrollmentProgress = typeof enrollmentProgress.$inferSelect;
+
+// Modules
+export const insertModuleSchema = createInsertSchema(modules);
+export type InsertModule = z.infer<typeof insertModuleSchema>;
+export type Module = typeof modules.$inferSelect;
+
+// Tasks
+export const insertTaskSchema = createInsertSchema(tasks);
+export type InsertTask = z.infer<typeof insertTaskSchema>;
+export type Task = typeof tasks.$inferSelect;
+
+// Meetings
+export const insertMeetingSchema = createInsertSchema(meetings);
+export type InsertMeeting = z.infer<typeof insertMeetingSchema>;
+export type Meeting = typeof meetings.$inferSelect;
+
+// Messages
+export const insertMessageSchema = createInsertSchema(messages);
+export type InsertMessage = z.infer<typeof insertMessageSchema>;
+export type Message = typeof messages.$inferSelect;
+
+// Online Status
+export const insertOnlineStatusSchema = createInsertSchema(onlineStatus);
+export type InsertOnlineStatus = z.infer<typeof insertOnlineStatusSchema>;
+export type OnlineStatus = typeof onlineStatus.$inferSelect;
+
+// Announcements
+export const insertAnnouncementSchema = createInsertSchema(announcements);
+export type InsertAnnouncement = z.infer<typeof insertAnnouncementSchema>;
+export type Announcement = typeof announcements.$inferSelect;
+
+// Events
+export const insertEventSchema = createInsertSchema(events);
+export type InsertEvent = z.infer<typeof insertEventSchema>;
+export type Event = typeof events.$inferSelect;
+
+// Fees
+export const insertFeeSchema = createInsertSchema(fees);
+export type InsertFee = z.infer<typeof insertFeeSchema>;
+export type Fee = typeof fees.$inferSelect;
+
+// Payments
+export const insertPaymentSchema = createInsertSchema(payments);
+export type InsertPayment = z.infer<typeof insertPaymentSchema>;
+export type Payment = typeof payments.$inferSelect;
+
+// Guidance Reports
+export const insertGuidanceReportSchema = createInsertSchema(guidanceReports);
+export type InsertGuidanceReport = z.infer<typeof insertGuidanceReportSchema>;
+export type GuidanceReport = typeof guidanceReports.$inferSelect;
+
+// Grades
+export const insertGradeSchema = createInsertSchema(grades);
+export type InsertGrade = z.infer<typeof insertGradeSchema>;
+export type Grade = typeof grades.$inferSelect;
+
+// News
+export const insertNewsSchema = createInsertSchema(news);
+export type InsertNews = z.infer<typeof insertNewsSchema>;
+export type News = typeof news.$inferSelect;

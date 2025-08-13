@@ -43,8 +43,13 @@ import {
   type ConversationMember, type InsertConversationMember,
   type Message, type InsertMessage,
   type UserStatus, type InsertUserStatus
-} from "@shared/schema";
+} from "@shared/unified-schema";
 import { db } from "./db";
+import {
+  roles, users, sections, subjects, grades, tasks, meetings, modules,
+  announcements, events, news, messages, onlineStatus, fees, payments,
+  guidanceReports, enrollmentProgress
+} from "@shared/unified-schema";
 import { eq, desc, and, not, gte, lte } from "drizzle-orm";
 
 // modify the interface with any CRUD methods
