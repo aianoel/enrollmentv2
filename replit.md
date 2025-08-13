@@ -8,6 +8,24 @@ EduManage is a comprehensive school management system built with React (frontend
 
 Preferred communication style: Simple, everyday language.
 
+## Recent Changes
+
+**August 13, 2025 - Database Setup & Login Fix**:
+- Fixed DATABASE_URL configuration issue by creating PostgreSQL database
+- Pushed database schema to PostgreSQL using Drizzle migrations
+- Created demo user accounts for all 7 roles with proper password hashing
+- Verified login functionality working for all demo accounts
+- Application now running successfully on port 5000
+
+**Demo Accounts Available**:
+- Admin: admin@school.edu / admin123456
+- Teacher: teacher@school.edu / teacher123
+- Student: student@school.edu / student123
+- Parent: parent@school.edu / parent123
+- Guidance: guidance@school.edu / guidance123
+- Registrar: registrar@school.edu / registrar123
+- Accounting: accounting@school.edu / accounting123
+
 ## System Architecture
 
 ### Frontend Architecture
