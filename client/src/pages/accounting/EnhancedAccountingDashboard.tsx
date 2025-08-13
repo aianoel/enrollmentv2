@@ -76,6 +76,7 @@ import type {
   Scholarship, 
   SchoolExpense 
 } from "@shared/schema";
+import { EnhancedPaymentManagement } from "@/components/accounting/EnhancedPaymentManagement";
 
 // Form schemas
 const feeStructureFormSchema = z.object({
@@ -686,6 +687,7 @@ export function EnhancedAccountingDashboard() {
         <TabsList>
           <TabsTrigger value="invoices">Invoices & Billing</TabsTrigger>
           <TabsTrigger value="payments">Payments</TabsTrigger>
+          <TabsTrigger value="payment-management">Payment Management</TabsTrigger>
           <TabsTrigger value="fee-structures">Fee Structures</TabsTrigger>
           <TabsTrigger value="scholarships">Scholarships</TabsTrigger>
           <TabsTrigger value="expenses">School Expenses</TabsTrigger>
@@ -784,6 +786,10 @@ export function EnhancedAccountingDashboard() {
               </Table>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="payment-management" className="space-y-4">
+          <EnhancedPaymentManagement />
         </TabsContent>
 
         <TabsContent value="fee-structures" className="space-y-4">

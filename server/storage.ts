@@ -216,8 +216,19 @@ export interface IStorage {
   deleteInvoiceItem(id: number): Promise<void>;
   
   getPayments(invoiceId?: number): Promise<Payment[]>;
+  getPayment(id: number): Promise<Payment>;
   createPayment(payment: InsertPayment): Promise<Payment>;
   updatePayment(id: number, updates: Partial<InsertPayment>): Promise<Payment>;
+  
+  // Enhanced fee management
+  getFees(): Promise<Fee[]>;
+  getFee(id: number): Promise<Fee>;
+  createFee(fee: InsertFee): Promise<Fee>;
+  updateFee(id: number, updates: Partial<InsertFee>): Promise<Fee>;
+  deleteFee(id: number): Promise<void>;
+  
+  // User role lookup
+  getUsersByRole(role: string): Promise<User[]>;
   
   getScholarships(studentId?: number): Promise<Scholarship[]>;
   createScholarship(scholarship: InsertScholarship): Promise<Scholarship>;
@@ -1221,6 +1232,45 @@ export class DatabaseStorage implements IStorage {
         curriculumProgress: 0
       };
     }
+  }
+
+  // Enhanced payment management methods
+  async getPayment(id: number): Promise<Payment> {
+    const [payment] = await db.select().from(payments).where(eq(payments.id, id));
+    if (!payment) throw new Error("Payment not found");
+    return payment;
+  }
+
+  async getFees(): Promise<Fee[]> {
+    return await db.select().from(fees);
+  }
+
+  async getFee(id: number): Promise<Fee> {
+    const [fee] = await db.select().from(fees).where(eq(fees.id, id));
+    if (!fee) throw new Error("Fee not found");
+    return fee;
+  }
+
+  async createFee(fee: InsertFee): Promise<Fee> {
+    const [newFee] = await db.insert(fees).values(fee).returning();
+    return newFee;
+  }
+
+  async updateFee(id: number, updates: Partial<InsertFee>): Promise<Fee> {
+    const [updatedFee] = await db
+      .update(fees)
+      .set(updates)
+      .where(eq(fees.id, id))
+      .returning();
+    return updatedFee;
+  }
+
+  async deleteFee(id: number): Promise<void> {
+    await db.delete(fees).where(eq(fees.id, id));
+  }
+
+  async getUsersByRole(role: string): Promise<User[]> {
+    return await db.select().from(users).where(eq(users.role, role));
   }
 }
 

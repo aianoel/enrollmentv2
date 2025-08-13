@@ -1716,6 +1716,209 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Enhanced Payment Management API Routes
+  app.get("/api/accounting/unpaid-fees", async (req, res) => {
+    try {
+      const fees = await storage.getFees();
+      const unpaidFees = fees.filter((fee: any) => fee.status === "Unpaid");
+      
+      // Fetch student details for each fee
+      const feesWithStudents = await Promise.all(
+        unpaidFees.map(async (fee: any) => {
+          const student = await storage.getUser(fee.studentId);
+          return {
+            ...fee,
+            student: student ? {
+              id: student.id,
+              name: student.name,
+              email: student.email,
+              gradeLevel: student.gradeLevel
+            } : null
+          };
+        })
+      );
+      
+      res.json(feesWithStudents);
+    } catch (error) {
+      console.error("Error fetching unpaid fees:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.get("/api/accounting/pending-payments", async (req, res) => {
+    try {
+      const payments = await storage.getPayments();
+      const pendingPayments = payments.filter((payment: any) => payment.paymentStatus === "pending");
+      
+      // Fetch student and fee details for each payment
+      const paymentsWithDetails = await Promise.all(
+        pendingPayments.map(async (payment: any) => {
+          const student = await storage.getUser(payment.studentId);
+          const fee = await storage.getFee(payment.feeId);
+          return {
+            ...payment,
+            student: student ? {
+              id: student.id,
+              name: student.name,
+              email: student.email
+            } : null,
+            fee: fee
+          };
+        })
+      );
+      
+      res.json(paymentsWithDetails);
+    } catch (error) {
+      console.error("Error fetching pending payments:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.patch("/api/accounting/payments/:id/verify", async (req, res) => {
+    try {
+      const paymentId = parseInt(req.params.id);
+      const { status, notes } = req.body;
+      
+      const updates: any = {
+        paymentStatus: status,
+        verifiedAt: new Date(),
+        // In a real app, you'd get this from the authenticated user
+        verifiedBy: 1 // Assuming accounting user ID 1
+      };
+      
+      if (notes) {
+        updates.notes = notes;
+      }
+      
+      const updatedPayment = await storage.updatePayment(paymentId, updates);
+      
+      // If payment is verified, update fee status
+      if (status === "verified") {
+        const payment = await storage.getPayment(paymentId);
+        const fee = await storage.getFee(payment.feeId);
+        
+        if (parseFloat(payment.amountPaid) >= parseFloat(fee.amount)) {
+          await storage.updateFee(payment.feeId, { status: "Paid" });
+        } else {
+          await storage.updateFee(payment.feeId, { status: "Partial" });
+        }
+        
+        // Notify student about payment verification
+        await storage.createNotification({
+          recipientId: payment.studentId,
+          message: `Your payment of ₱${payment.amountPaid} has been verified and processed.`,
+          link: `/student/payments`,
+        });
+      } else if (status === "rejected") {
+        // Notify student about payment rejection
+        const payment = await storage.getPayment(paymentId);
+        await storage.createNotification({
+          recipientId: payment.studentId,
+          message: `Your payment of ₱${payment.amountPaid} was rejected. Please contact the accounting office.`,
+          link: `/student/payments`,
+        });
+      }
+      
+      res.json(updatedPayment);
+    } catch (error) {
+      console.error("Error verifying payment:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  // Student Payment Portal API Routes
+  app.get("/api/student/fees", async (req, res) => {
+    try {
+      const studentId = req.query.studentId ? parseInt(req.query.studentId as string) : undefined;
+      
+      if (!studentId) {
+        return res.status(400).json({ error: "Student ID is required" });
+      }
+      
+      const fees = await storage.getFees();
+      const studentFees = fees.filter((fee: any) => 
+        fee.studentId === studentId && fee.status === "Unpaid"
+      );
+      
+      res.json(studentFees);
+    } catch (error) {
+      console.error("Error fetching student fees:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.get("/api/student/payments", async (req, res) => {
+    try {
+      const studentId = req.query.studentId ? parseInt(req.query.studentId as string) : undefined;
+      
+      if (!studentId) {
+        return res.status(400).json({ error: "Student ID is required" });
+      }
+      
+      const payments = await storage.getPayments();
+      const studentPayments = payments.filter((payment: any) => payment.studentId === studentId);
+      
+      // Fetch fee details for each payment
+      const paymentsWithFees = await Promise.all(
+        studentPayments.map(async (payment: any) => {
+          const fee = await storage.getFee(payment.feeId);
+          return {
+            ...payment,
+            fee: fee
+          };
+        })
+      );
+      
+      res.json(paymentsWithFees);
+    } catch (error) {
+      console.error("Error fetching student payments:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.post("/api/student/payments", async (req, res) => {
+    try {
+      const { feeId, amountPaid, paymentMethod, referenceNumber, notes } = req.body;
+      
+      // Get fee details to extract studentId
+      const fee = await storage.getFee(parseInt(feeId));
+      if (!fee) {
+        return res.status(404).json({ error: "Fee not found" });
+      }
+      
+      // Create payment record
+      const paymentData = {
+        feeId: parseInt(feeId),
+        studentId: fee.studentId,
+        amountPaid: parseFloat(amountPaid),
+        paymentMethod,
+        paymentStatus: "pending",
+        referenceNumber: referenceNumber || null,
+        notes: notes || null,
+        receiptUrl: null, // Will be updated if file upload is implemented
+      };
+      
+      const newPayment = await storage.createPayment(paymentData);
+      
+      // Notify accounting office about new payment submission
+      const student = await storage.getUser(fee.studentId);
+      const accountingUsers = await storage.getUsersByRole("accounting");
+      
+      for (const accountingUser of accountingUsers) {
+        await storage.createNotification({
+          recipientId: accountingUser.id,
+          message: `New payment submitted by ${student?.name} - ₱${amountPaid} for ${fee.feeType}`,
+          link: `/accounting/payments/${newPayment.id}`,
+        });
+      }
+      
+      res.status(201).json(newPayment);
+    } catch (error) {
+      console.error("Error creating student payment:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
   const httpServer = createServer(app);
   
   // Initialize Socket.IO

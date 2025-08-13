@@ -143,10 +143,17 @@ export const fees = pgTable("fees", {
 export const payments = pgTable("payments", {
   id: serial("id").primaryKey(),
   feeId: integer("fee_id").references(() => fees.id, { onDelete: "cascade" }),
+  studentId: integer("student_id").references(() => users.id, { onDelete: "cascade" }),
   amountPaid: numeric("amount_paid", { precision: 10, scale: 2 }).notNull(),
   paymentDate: timestamp("payment_date").defaultNow(),
-  paymentMethod: text("payment_method"),
+  paymentMethod: text("payment_method"), // 'cash', 'online', 'promissory_note'
+  paymentStatus: text("payment_status").default("pending"), // 'pending', 'verified', 'rejected'
+  referenceNumber: text("reference_number"),
+  receiptUrl: text("receipt_url"),
+  notes: text("notes"),
   recordedBy: integer("recorded_by").references(() => users.id, { onDelete: "set null" }),
+  verifiedBy: integer("verified_by").references(() => users.id, { onDelete: "set null" }),
+  verifiedAt: timestamp("verified_at"),
 });
 
 // =====================

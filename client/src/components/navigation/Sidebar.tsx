@@ -8,16 +8,16 @@ interface SidebarProps {
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({ currentSection, onSectionChange }) => {
-  const { userProfile, logout } = useAuth();
+  const { user, logout } = useAuth();
 
-  if (!userProfile) return null;
+  if (!user) return null;
 
   const getNavigationItems = () => {
     const baseItems = [
       { id: 'dashboard', label: 'Dashboard', icon: 'fas fa-home' }
     ];
 
-    switch (userProfile.role) {
+    switch (user.role) {
       case 'student':
         return [
           ...baseItems,
@@ -25,6 +25,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentSection, onSectionChang
           { id: 'assignments', label: 'Assignments', icon: 'fas fa-tasks' },
           { id: 'modules', label: 'Learning Modules', icon: 'fas fa-book' },
           { id: 'meetings', label: 'Meetings', icon: 'fas fa-video' },
+          { id: 'payments', label: 'My Payments', icon: 'fas fa-credit-card' },
           { id: 'announcements', label: 'Announcements', icon: 'fas fa-bullhorn' },
         ];
       case 'teacher':

@@ -22,6 +22,7 @@ import { AccountingDashboard } from '../../pages/accounting/AccountingDashboard'
 import { EnhancedAccountingDashboard } from '../../pages/accounting/EnhancedAccountingDashboard';
 import { PrincipalDashboard } from '../../pages/principal/PrincipalDashboard';
 import { AcademicCoordinatorDashboard } from '../../pages/academic/AcademicCoordinatorDashboard';
+import { StudentPaymentPage } from '../../pages/student/StudentPaymentPage';
 import { EnhancedChatSystem } from '../chat/EnhancedChatSystem';
 import { useAuth } from '../../contexts/AuthContext';
 import { useChat } from '../../contexts/ChatContext';
@@ -72,6 +73,9 @@ export const MainLayout: React.FC = () => {
         return <Meetings />;
       case 'announcements':
         return <Announcements />;
+      case 'payments':
+        // Student payments portal
+        return user.role === 'student' ? <StudentPaymentPage /> : <Dashboard />;
       // Role-specific sections can be added here
       case 'classes':
         return <TeacherDashboard />; // For now, redirect to teacher dashboard
