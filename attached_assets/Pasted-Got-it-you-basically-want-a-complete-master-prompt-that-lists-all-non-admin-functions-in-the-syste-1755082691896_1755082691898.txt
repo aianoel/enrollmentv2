@@ -1,0 +1,115 @@
+Got it — you basically want a complete master prompt that lists all non-admin functions in the system and tells the AI to build everything so it all works together.
+
+Here’s the ready-to-use prompt that covers:
+
+Roles & their functions (Teacher, Student, Parent, Guidance, Registrar, Accounting)
+
+Features
+
+Requirement that all features work end-to-end with PostgreSQL, React, and TailwindCSS
+
+📌 Master Prompt (Non-Admin Functions)
+Build a School Enrollment & Management System using React (frontend), Node.js/Express (backend), PostgreSQL (database), and TailwindCSS.
+This prompt covers non-admin roles: Teacher, Student, Parent, Guidance, Registrar, Accounting.
+
+General Requirements:
+
+Use PostgreSQL as the only database (no Firebase, no other DB).
+
+Fully implement authentication & role-based access control.
+
+Ensure all features are fully functional (CRUD operations, redirects, validations).
+
+All data should be editable via each role’s assigned permissions.
+
+Design must be responsive with TailwindCSS.
+
+Role-Specific Functions:
+
+1. Teacher Portal
+
+Encode grades by quarter per student.
+
+Create assignments, quizzes, and tests (upload files if needed).
+
+Upload learning modules per subject.
+
+Schedule online meetings for assigned sections.
+
+Chat with students and parents in their sections.
+
+2. Student Portal
+
+View assigned subjects, grades, and announcements.
+
+Submit assignments/tests online.
+
+Download learning modules.
+
+Join scheduled meetings.
+
+Chat with teachers and classmates.
+
+3. Parent Portal
+
+View child’s grades, attendance, and assignments.
+
+Receive announcements and school events.
+
+Chat with teachers and school staff.
+
+View billing and payment status.
+
+4. Guidance Portal
+
+Access student profiles for counseling.
+
+Record behavioral reports and interventions.
+
+View academic performance summaries.
+
+Send private messages to students or parents.
+
+5. Registrar Portal
+
+Manage and update student academic records.
+
+Approve or reject enrollment applications.
+
+Assign students to sections.
+
+Generate academic transcripts and certificates.
+
+6. Accounting Portal
+
+Create and manage tuition fee records per grade level.
+
+Record payments and track balances.
+
+Generate financial reports.
+
+Send payment reminders to parents.
+
+Other System-Wide Features:
+
+Real-time chat system.
+
+News & events board (viewable by all).
+
+Announcement board (role-based visibility).
+
+File uploads for modules, assignments, and official documents.
+
+Secure login with JWT-based authentication and refresh tokens.
+
+Deliverables:
+
+PostgreSQL database schema with all tables for these roles and features.
+
+Backend API endpoints for all functions above.
+
+React frontend pages for each role’s portal.
+
+Role-based routing that redirects to the correct dashboard after login.
+
+TailwindCSS styling for a clean and responsive UI.
