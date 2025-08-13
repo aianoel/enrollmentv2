@@ -20,6 +20,7 @@ import { RegistrarDashboard } from '../../pages/registrar/RegistrarDashboard';
 import { EnhancedRegistrarDashboard } from '../../pages/registrar/EnhancedRegistrarDashboard';
 import { AccountingDashboard } from '../../pages/accounting/AccountingDashboard';
 import { EnhancedAccountingDashboard } from '../../pages/accounting/EnhancedAccountingDashboard';
+import { EnhancedChatSystem } from '../chat/EnhancedChatSystem';
 import { useAuth } from '../../contexts/AuthContext';
 import { useChat } from '../../contexts/ChatContext';
 

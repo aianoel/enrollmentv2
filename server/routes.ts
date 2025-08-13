@@ -1,5 +1,6 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
+import { Server as SocketIOServer } from "socket.io";
 import { storage } from "./storage";
 import bcrypt from "bcryptjs";
 import { 
@@ -1530,7 +1531,228 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Enhanced Chat System API Routes
+  app.get("/api/chat/conversations", async (req, res) => {
+    try {
+      const userId = req.query.userId ? parseInt(req.query.userId as string) : undefined;
+      if (!userId) {
+        return res.status(400).json({ error: "User ID is required" });
+      }
+      const conversations = await storage.getConversations(userId);
+      res.json(conversations);
+    } catch (error) {
+      console.error("Error fetching conversations:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.post("/api/chat/conversations", async (req, res) => {
+    try {
+      const conversationData = req.body;
+      const newConversation = await storage.createConversation(conversationData);
+      
+      // Add members to the conversation
+      if (conversationData.memberIds && Array.isArray(conversationData.memberIds)) {
+        for (const memberId of conversationData.memberIds) {
+          await storage.addConversationMember({
+            conversationId: newConversation.id,
+            userId: memberId
+          });
+        }
+      }
+      
+      res.status(201).json(newConversation);
+    } catch (error) {
+      console.error("Error creating conversation:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.get("/api/chat/conversations/:id/messages", async (req, res) => {
+    try {
+      const conversationId = parseInt(req.params.id);
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : 50;
+      const messages = await storage.getMessages(conversationId, limit);
+      res.json(messages);
+    } catch (error) {
+      console.error("Error fetching messages:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.post("/api/chat/messages", async (req, res) => {
+    try {
+      const messageData = req.body;
+      const newMessage = await storage.createMessage(messageData);
+      
+      // Emit message to connected clients via WebSocket
+      if (global.io) {
+        global.io.to(`conversation_${messageData.conversationId}`).emit('new_message', newMessage);
+      }
+      
+      res.status(201).json(newMessage);
+    } catch (error) {
+      console.error("Error creating message:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.patch("/api/chat/conversations/:id/read", async (req, res) => {
+    try {
+      const conversationId = parseInt(req.params.id);
+      const { userId } = req.body;
+      await storage.markConversationAsRead(conversationId, userId);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error marking conversation as read:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.get("/api/chat/users/online", async (req, res) => {
+    try {
+      const onlineUsers = await storage.getOnlineUsers();
+      res.json(onlineUsers);
+    } catch (error) {
+      console.error("Error fetching online users:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.patch("/api/chat/users/:id/status", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const statusData = req.body;
+      const updatedStatus = await storage.updateUserStatus(userId, statusData);
+      res.json(updatedStatus);
+    } catch (error) {
+      console.error("Error updating user status:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.get("/api/chat/users", async (req, res) => {
+    try {
+      const users = await storage.getAllUsers();
+      const chatUsers = users.map((user: any) => ({
+        id: user.id,
+        name: user.name,
+        role: user.role,
+        email: user.email
+      }));
+      res.json(chatUsers);
+    } catch (error) {
+      console.error("Error fetching chat users:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
   const httpServer = createServer(app);
+  
+  // Initialize Socket.IO
+  const io = new SocketIOServer(httpServer, {
+    cors: {
+      origin: "*",
+      methods: ["GET", "POST"]
+    }
+  });
+
+  // Make io available globally for route handlers
+  (global as any).io = io;
+
+  // Socket.IO connection handling
+  io.on('connection', (socket) => {
+    console.log('User connected:', socket.id);
+
+    // Handle user joining
+    socket.on('join_user', async (userId: number) => {
+      try {
+        // Update user status to online
+        await storage.updateUserStatus(userId, { isOnline: true });
+        
+        // Join user-specific room
+        socket.join(`user_${userId}`);
+        
+        // Get user's conversations and join conversation rooms
+        const conversations = await storage.getConversations(userId);
+        for (const conversation of conversations) {
+          socket.join(`conversation_${conversation.id}`);
+        }
+        
+        // Broadcast user online status
+        socket.broadcast.emit('user_online', { userId, isOnline: true });
+        
+        console.log(`User ${userId} joined and marked online`);
+      } catch (error) {
+        console.error('Error handling user join:', error);
+      }
+    });
+
+    // Handle joining specific conversation
+    socket.on('join_conversation', (conversationId: number) => {
+      socket.join(`conversation_${conversationId}`);
+      console.log(`Socket ${socket.id} joined conversation ${conversationId}`);
+    });
+
+    // Handle leaving conversation
+    socket.on('leave_conversation', (conversationId: number) => {
+      socket.leave(`conversation_${conversationId}`);
+      console.log(`Socket ${socket.id} left conversation ${conversationId}`);
+    });
+
+    // Handle new message
+    socket.on('send_message', async (messageData: any) => {
+      try {
+        const newMessage = await storage.createMessage(messageData);
+        
+        // Emit to all users in the conversation
+        io.to(`conversation_${messageData.conversationId}`).emit('new_message', newMessage);
+        
+        console.log(`Message sent to conversation ${messageData.conversationId}`);
+      } catch (error) {
+        console.error('Error handling message:', error);
+        socket.emit('message_error', { error: 'Failed to send message' });
+      }
+    });
+
+    // Handle typing indicators
+    socket.on('typing_start', (data: { conversationId: number, userId: number, userName: string }) => {
+      socket.to(`conversation_${data.conversationId}`).emit('user_typing', data);
+    });
+
+    socket.on('typing_stop', (data: { conversationId: number, userId: number }) => {
+      socket.to(`conversation_${data.conversationId}`).emit('user_stop_typing', data);
+    });
+
+    // Handle marking messages as read
+    socket.on('mark_read', async (data: { conversationId: number, userId: number }) => {
+      try {
+        await storage.markConversationAsRead(data.conversationId, data.userId);
+        socket.to(`conversation_${data.conversationId}`).emit('messages_read', data);
+      } catch (error) {
+        console.error('Error marking messages as read:', error);
+      }
+    });
+
+    // Handle disconnect
+    socket.on('disconnect', async () => {
+      console.log('User disconnected:', socket.id);
+      
+      // Note: We can't easily get userId from socket.id without additional tracking
+      // In a production app, you'd maintain a userId -> socketId mapping
+    });
+
+    // Handle user going offline
+    socket.on('user_offline', async (userId: number) => {
+      try {
+        await storage.updateUserStatus(userId, { isOnline: false });
+        socket.broadcast.emit('user_offline', { userId, isOnline: false });
+        console.log(`User ${userId} marked offline`);
+      } catch (error) {
+        console.error('Error handling user offline:', error);
+      }
+    });
+  });
 
   return httpServer;
 }

@@ -1,0 +1,89 @@
+Got it — you want to add a real-time chat system inside your school management system that works with PostgreSQL, detects online users, and lets all roles (admin, teacher, student, parent, guidance, etc.) send and receive messages.
+
+Since PostgreSQL is not real-time by itself like Firebase, we’ll use:
+
+PostgreSQL tables for storing chat history
+
+WebSocket or Socket.IO in your backend for real-time updates
+
+An online status table to track active users
+
+PostgreSQL Schema – Chat & Online Status
+sql
+Copy
+Edit
+-- ===============================
+-- 1. Chat Conversations
+-- ===============================
+CREATE TABLE conversations (
+    id SERIAL PRIMARY KEY,
+    conversation_type VARCHAR(20) DEFAULT 'private', -- private, group
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ===============================
+-- 2. Conversation Members
+-- ===============================
+CREATE TABLE conversation_members (
+    id SERIAL PRIMARY KEY,
+    conversation_id INT REFERENCES conversations(id) ON DELETE CASCADE,
+    user_id INT REFERENCES users(id) ON DELETE CASCADE,
+    joined_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ===============================
+-- 3. Chat Messages
+-- ===============================
+CREATE TABLE messages (
+    id SERIAL PRIMARY KEY,
+    conversation_id INT REFERENCES conversations(id) ON DELETE CASCADE,
+    sender_id INT REFERENCES users(id) ON DELETE CASCADE,
+    message_text TEXT,
+    attachment_url TEXT, -- Optional for file/image
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    is_read BOOLEAN DEFAULT FALSE
+);
+
+-- ===============================
+-- 4. Online Status
+-- ===============================
+CREATE TABLE user_status (
+    user_id INT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+    is_online BOOLEAN DEFAULT FALSE,
+    last_seen TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+💡 How the Feature Works
+Online Detection
+
+When a user logs in, is_online = TRUE in user_status.
+
+When they log out or disconnect, is_online = FALSE and last_seen updates.
+
+Private & Group Chats
+
+Private Chat → 1 conversation, 2 members.
+
+Group Chat → 1 conversation, multiple members.
+
+Real-Time Messaging
+
+Backend listens for new messages (WebSocket/Socket.IO).
+
+Sends updates instantly to other connected users.
+
+Message Read Receipts
+
+When a recipient views a message, is_read = TRUE.
+
+Attachment Support
+
+Messages can have attachment_url for uploaded files/images.
+
+🔗 Integration with the System
+Teachers → Students: Share assignments & updates in chat.
+
+Admin → All Users: Send announcements instantly.
+
+Parents → Guidance: Discuss student concerns privately.
+
+Academic Coordinator → Teachers: Schedule meetings.

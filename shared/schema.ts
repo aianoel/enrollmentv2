@@ -236,6 +236,36 @@ export const schoolExpenses = pgTable('school_expenses', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
+// Real-time chat system features
+export const conversations = pgTable('conversations', {
+  id: serial('id').primaryKey(),
+  conversationType: varchar('conversation_type', { length: 20 }).default('private').notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+export const conversationMembers = pgTable('conversation_members', {
+  id: serial('id').primaryKey(),
+  conversationId: integer('conversation_id').notNull().references(() => conversations.id),
+  userId: integer('user_id').notNull().references(() => users.id),
+  joinedAt: timestamp('joined_at').defaultNow().notNull(),
+});
+
+export const messages = pgTable('messages', {
+  id: serial('id').primaryKey(),
+  conversationId: integer('conversation_id').notNull().references(() => conversations.id),
+  senderId: integer('sender_id').notNull().references(() => users.id),
+  messageText: text('message_text'),
+  attachmentUrl: text('attachment_url'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  isRead: boolean('is_read').default(false).notNull(),
+});
+
+export const userStatus = pgTable('user_status', {
+  userId: integer('user_id').primaryKey().references(() => users.id),
+  isOnline: boolean('is_online').default(false).notNull(),
+  lastSeen: timestamp('last_seen').defaultNow().notNull(),
+});
+
 // Legacy assignments table (keeping for compatibility)
 export const assignments = pgTable('assignments', {
   id: serial('id').primaryKey(),
@@ -551,6 +581,16 @@ export const selectScholarshipSchema = createSelectSchema(scholarships);
 export const insertSchoolExpenseSchema = createInsertSchema(schoolExpenses).omit({ id: true, createdAt: true });
 export const selectSchoolExpenseSchema = createSelectSchema(schoolExpenses);
 
+// Real-time chat system schemas
+export const insertConversationSchema = createInsertSchema(conversations).omit({ id: true, createdAt: true });
+export const selectConversationSchema = createSelectSchema(conversations);
+export const insertConversationMemberSchema = createInsertSchema(conversationMembers).omit({ id: true, joinedAt: true });
+export const selectConversationMemberSchema = createSelectSchema(conversationMembers);
+export const insertMessageSchema = createInsertSchema(messages).omit({ id: true, createdAt: true });
+export const selectMessageSchema = createSelectSchema(messages);
+export const insertUserStatusSchema = createInsertSchema(userStatus);
+export const selectUserStatusSchema = createSelectSchema(userStatus);
+
 // Inferred types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -632,6 +672,16 @@ export type Scholarship = typeof scholarships.$inferSelect;
 export type InsertScholarship = z.infer<typeof insertScholarshipSchema>;
 export type SchoolExpense = typeof schoolExpenses.$inferSelect;
 export type InsertSchoolExpense = z.infer<typeof insertSchoolExpenseSchema>;
+
+// Real-time chat system types
+export type Conversation = typeof conversations.$inferSelect;
+export type InsertConversation = z.infer<typeof insertConversationSchema>;
+export type ConversationMember = typeof conversationMembers.$inferSelect;
+export type InsertConversationMember = z.infer<typeof insertConversationMemberSchema>;
+export type Message = typeof messages.$inferSelect;
+export type InsertMessage = z.infer<typeof insertMessageSchema>;
+export type UserStatus = typeof userStatus.$inferSelect;
+export type InsertUserStatus = z.infer<typeof insertUserStatusSchema>;
 
 // User roles enum for validation
 export const UserRoles = ['admin', 'teacher', 'student', 'parent', 'guidance', 'registrar', 'accounting'] as const;

@@ -5,6 +5,7 @@ import {
   guidanceBehaviorRecords, guidanceCounselingSessions, guidanceWellnessPrograms, guidanceProgramParticipants,
   registrarEnrollmentRequests, registrarSubjects, academicRecords, graduationCandidates, transcriptRequests,
   feeStructures, invoices, invoiceItems, payments, scholarships, schoolExpenses,
+  conversations, conversationMembers, messages, userStatus,
   type User, type InsertUser, 
   type Announcement, type InsertAnnouncement, 
   type News, type InsertNews, 
@@ -37,7 +38,11 @@ import {
   type InvoiceItem, type InsertInvoiceItem,
   type Payment, type InsertPayment,
   type Scholarship, type InsertScholarship,
-  type SchoolExpense, type InsertSchoolExpense
+  type SchoolExpense, type InsertSchoolExpense,
+  type Conversation, type InsertConversation,
+  type ConversationMember, type InsertConversationMember,
+  type Message, type InsertMessage,
+  type UserStatus, type InsertUserStatus
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and } from "drizzle-orm";
@@ -218,6 +223,24 @@ export interface IStorage {
   createSchoolExpense(expense: InsertSchoolExpense): Promise<SchoolExpense>;
   updateSchoolExpense(id: number, updates: Partial<InsertSchoolExpense>): Promise<SchoolExpense>;
   deleteSchoolExpense(id: number): Promise<void>;
+  
+  // Real-time chat system features
+  getConversations(userId: number): Promise<Conversation[]>;
+  createConversation(conversation: InsertConversation): Promise<Conversation>;
+  deleteConversation(id: number): Promise<void>;
+  
+  getConversationMembers(conversationId: number): Promise<ConversationMember[]>;
+  addConversationMember(member: InsertConversationMember): Promise<ConversationMember>;
+  removeConversationMember(conversationId: number, userId: number): Promise<void>;
+  
+  getMessages(conversationId: number, limit?: number): Promise<Message[]>;
+  createMessage(message: InsertMessage): Promise<Message>;
+  markMessageAsRead(messageId: number): Promise<void>;
+  markConversationAsRead(conversationId: number, userId: number): Promise<void>;
+  
+  getUserStatus(userId: number): Promise<UserStatus | null>;
+  updateUserStatus(userId: number, status: Partial<InsertUserStatus>): Promise<UserStatus>;
+  getOnlineUsers(): Promise<UserStatus[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -909,6 +932,88 @@ export class DatabaseStorage implements IStorage {
 
   async deleteSchoolExpense(id: number): Promise<void> {
     await db.delete(schoolExpenses).where(eq(schoolExpenses.id, id));
+  }
+
+  // Real-time chat system implementations
+  async getConversations(userId: number): Promise<Conversation[]> {
+    const userConversations = await db
+      .select({ conversation: conversations })
+      .from(conversations)
+      .innerJoin(conversationMembers, eq(conversations.id, conversationMembers.conversationId))
+      .where(eq(conversationMembers.userId, userId))
+      .orderBy(desc(conversations.createdAt));
+    
+    return userConversations.map(row => row.conversation);
+  }
+
+  async createConversation(conversation: InsertConversation): Promise<Conversation> {
+    const [newConversation] = await db.insert(conversations).values(conversation).returning();
+    return newConversation;
+  }
+
+  async deleteConversation(id: number): Promise<void> {
+    await db.delete(conversations).where(eq(conversations.id, id));
+  }
+
+  async getConversationMembers(conversationId: number): Promise<ConversationMember[]> {
+    return await db.select().from(conversationMembers).where(eq(conversationMembers.conversationId, conversationId));
+  }
+
+  async addConversationMember(member: InsertConversationMember): Promise<ConversationMember> {
+    const [newMember] = await db.insert(conversationMembers).values(member).returning();
+    return newMember;
+  }
+
+  async removeConversationMember(conversationId: number, userId: number): Promise<void> {
+    await db.delete(conversationMembers).where(
+      and(eq(conversationMembers.conversationId, conversationId), eq(conversationMembers.userId, userId))
+    );
+  }
+
+  async getMessages(conversationId: number, limit: number = 50): Promise<Message[]> {
+    return await db
+      .select()
+      .from(messages)
+      .where(eq(messages.conversationId, conversationId))
+      .orderBy(desc(messages.createdAt))
+      .limit(limit);
+  }
+
+  async createMessage(message: InsertMessage): Promise<Message> {
+    const [newMessage] = await db.insert(messages).values(message).returning();
+    return newMessage;
+  }
+
+  async markMessageAsRead(messageId: number): Promise<void> {
+    await db.update(messages).set({ isRead: true }).where(eq(messages.id, messageId));
+  }
+
+  async markConversationAsRead(conversationId: number, userId: number): Promise<void> {
+    await db
+      .update(messages)
+      .set({ isRead: true })
+      .where(and(eq(messages.conversationId, conversationId), not(eq(messages.senderId, userId))));
+  }
+
+  async getUserStatus(userId: number): Promise<UserStatus | null> {
+    const [status] = await db.select().from(userStatus).where(eq(userStatus.userId, userId));
+    return status || null;
+  }
+
+  async updateUserStatus(userId: number, status: Partial<InsertUserStatus>): Promise<UserStatus> {
+    const [updatedStatus] = await db
+      .insert(userStatus)
+      .values({ userId, ...status })
+      .onConflictDoUpdate({
+        target: userStatus.userId,
+        set: { ...status, lastSeen: new Date() }
+      })
+      .returning();
+    return updatedStatus;
+  }
+
+  async getOnlineUsers(): Promise<UserStatus[]> {
+    return await db.select().from(userStatus).where(eq(userStatus.isOnline, true));
   }
 }
 
