@@ -274,6 +274,54 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(users).where(eq(users.roleId, roleResult[0].id));
   }
 
+  // Enhanced teacher methods
+  async getAllTeachers(): Promise<any[]> {
+    const result = await db.execute(`
+      SELECT 
+        u.id,
+        u.first_name,
+        u.last_name,
+        u.email,
+        u.created_at,
+        u.last_login,
+        u.profile_image,
+        COUNT(DISTINCT ta.section_id) as sections_count,
+        COUNT(DISTINCT ta.subject_id) as subjects_count,
+        COUNT(DISTINCT t.id) as tasks_count,
+        COUNT(DISTINCT m.id) as meetings_count,
+        ARRAY_AGG(DISTINCT s.name) FILTER (WHERE s.name IS NOT NULL) as sections,
+        ARRAY_AGG(DISTINCT subj.name) FILTER (WHERE subj.name IS NOT NULL) as subjects
+      FROM users u
+      LEFT JOIN teacher_assignments ta ON u.id = ta.teacher_id
+      LEFT JOIN sections s ON ta.section_id = s.id
+      LEFT JOIN subjects subj ON ta.subject_id = subj.id
+      LEFT JOIN tasks t ON u.id = t.teacher_id
+      LEFT JOIN meetings m ON u.id = m.host_id
+      WHERE u.role_id = 4
+      GROUP BY u.id, u.first_name, u.last_name, u.email, u.created_at, u.last_login, u.profile_image
+      ORDER BY u.last_name, u.first_name
+    `);
+    return result.rows || [];
+  }
+
+  async getTeacherPerformanceStats(): Promise<any> {
+    const result = await db.execute(`
+      SELECT 
+        COUNT(DISTINCT u.id) as total_teachers,
+        COUNT(DISTINCT CASE WHEN u.last_login > NOW() - INTERVAL '7 days' THEN u.id END) as active_teachers,
+        COUNT(DISTINCT t.id) as total_tasks,
+        COUNT(DISTINCT m.id) as total_meetings,
+        AVG(CASE WHEN ts.score IS NOT NULL THEN ts.score END) as avg_task_score,
+        COUNT(DISTINCT ts.id) as total_submissions
+      FROM users u
+      LEFT JOIN tasks t ON u.id = t.teacher_id
+      LEFT JOIN meetings m ON u.id = m.host_id
+      LEFT JOIN task_submissions ts ON t.id = ts.task_id
+      WHERE u.role_id = 4
+    `);
+    return result.rows?.[0] || {};
+  }
+
   // Announcements
   async getAnnouncements(): Promise<Announcement[]> {
     return await db.select().from(announcements).orderBy(desc(announcements.createdAt));

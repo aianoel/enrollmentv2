@@ -279,6 +279,50 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  // Enhanced Academic Coordinator - Teachers API
+  app.get("/api/academic/teachers", async (req, res) => {
+    try {
+      const teachers = await storage.getAllTeachers();
+      const formattedTeachers = teachers.map(teacher => ({
+        id: teacher.id,
+        name: `${teacher.first_name} ${teacher.last_name}`,
+        email: teacher.email,
+        sectionsCount: parseInt(teacher.sections_count) || 0,
+        subjectsCount: parseInt(teacher.subjects_count) || 0,
+        tasksCount: parseInt(teacher.tasks_count) || 0,
+        meetingsCount: parseInt(teacher.meetings_count) || 0,
+        sections: teacher.sections || [],
+        subjects: teacher.subjects || [],
+        lastLogin: teacher.last_login,
+        createdAt: teacher.created_at,
+        status: teacher.last_login && new Date(teacher.last_login) > new Date(Date.now() - 7*24*60*60*1000) ? 'Active' : 'Inactive',
+        profileImage: teacher.profile_image
+      }));
+      res.json(formattedTeachers);
+    } catch (error) {
+      console.error("Error fetching teachers:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.get("/api/academic/teachers/stats", async (req, res) => {
+    try {
+      const stats = await storage.getTeacherPerformanceStats();
+      res.json({
+        totalTeachers: parseInt(stats.total_teachers) || 0,
+        activeTeachers: parseInt(stats.active_teachers) || 0,
+        totalTasks: parseInt(stats.total_tasks) || 0,
+        totalMeetings: parseInt(stats.total_meetings) || 0,
+        avgTaskScore: parseFloat(stats.avg_task_score) || 0,
+        totalSubmissions: parseInt(stats.total_submissions) || 0,
+        activityRate: stats.total_teachers > 0 ? (parseInt(stats.active_teachers) / parseInt(stats.total_teachers) * 100) : 0
+      });
+    } catch (error) {
+      console.error("Error fetching teacher stats:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
   // Student routes
   app.get("/api/student/grades", async (req, res) => {
     try {
