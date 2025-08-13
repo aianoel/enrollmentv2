@@ -86,34 +86,39 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentSection, onSectionChang
   const navigationItems = getNavigationItems();
 
   return (
-    <aside className="w-64 bg-white shadow-sm border-r border-gray-200 h-full">
-      <nav className="p-4 space-y-2">
+    <aside className="w-48 bg-white/90 backdrop-blur-sm shadow-lg border-r border-gray-200/50 h-full">
+      <div className="p-3 border-b border-gray-200/50">
+        <h2 className="text-lg font-bold text-gray-800">EduManage</h2>
+        <p className="text-xs text-gray-600 capitalize">{user.role}</p>
+      </div>
+      
+      <nav className="p-2 space-y-1">
         {navigationItems.map((item) => (
           <Button
             key={item.id}
             variant={currentSection === item.id ? 'default' : 'ghost'}
-            className={`flex items-center space-x-3 w-full justify-start ${
+            className={`flex items-center space-x-2 w-full justify-start h-8 text-sm ${
               currentSection === item.id
-                ? 'bg-primary-50 text-primary-600 hover:bg-primary-100'
-                : 'text-gray-700 hover:bg-gray-100'
+                ? 'bg-primary-50 text-primary-600 hover:bg-primary-100 border-r-2 border-primary-500'
+                : 'text-gray-700 hover:bg-gray-100/70'
             }`}
             onClick={() => onSectionChange(item.id)}
             data-testid={`nav-${item.id}`}
           >
-            <i className={`${item.icon} w-5`}></i>
-            <span className="font-medium">{item.label}</span>
+            <i className={`${item.icon} w-4 text-xs`}></i>
+            <span className="text-xs font-medium">{item.label}</span>
           </Button>
         ))}
 
-        <div className="pt-4 border-t border-gray-200">
+        <div className="pt-3 border-t border-gray-200/50">
           <Button
             variant="ghost"
-            className="flex items-center space-x-3 w-full justify-start text-gray-700 hover:bg-gray-100"
+            className="flex items-center space-x-2 w-full justify-start text-gray-700 hover:bg-gray-100/70 h-8 text-sm"
             onClick={logout}
             data-testid="nav-logout"
           >
-            <i className="fas fa-sign-out-alt w-5"></i>
-            <span>Logout</span>
+            <i className="fas fa-sign-out-alt w-4 text-xs"></i>
+            <span className="text-xs">Logout</span>
           </Button>
         </div>
       </nav>

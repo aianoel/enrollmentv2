@@ -440,6 +440,32 @@ export function EnhancedChatSystem() {
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input placeholder="Search conversations..." className="pl-9" />
           </div>
+          
+          {/* Online Users Section */}
+          <div className="mt-4 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border">
+            <div className="flex items-center gap-2 mb-2">
+              <Circle className="h-2 w-2 fill-green-500 text-green-500" />
+              <span className="text-sm font-medium text-green-700 dark:text-green-300">
+                Online Users ({onlineUsers.length})
+              </span>
+            </div>
+            <div className="flex flex-wrap gap-1">
+              {onlineUsers.slice(0, 6).map((status) => {
+                const onlineUser = users.find((u: User) => u.id === status.userId);
+                return onlineUser ? (
+                  <div key={onlineUser.id} className="flex items-center gap-1 bg-white dark:bg-gray-800 rounded-full px-2 py-1 text-xs">
+                    <Circle className="h-1.5 w-1.5 fill-green-500 text-green-500" />
+                    <span className="truncate max-w-20">{onlineUser.name}</span>
+                  </div>
+                ) : null;
+              })}
+              {onlineUsers.length > 6 && (
+                <div className="bg-gray-100 dark:bg-gray-700 rounded-full px-2 py-1 text-xs">
+                  +{onlineUsers.length - 6} more
+                </div>
+              )}
+            </div>
+          </div>
         </div>
         
         <ScrollArea className="flex-1">

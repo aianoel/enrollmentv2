@@ -8,6 +8,9 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { DashboardBackground } from "@/components/ui/dashboard-background";
+import { EnhancedCard } from "@/components/ui/enhanced-card";
+import { EnhancedButton } from "@/components/ui/enhanced-button";
 import { 
   GraduationCap,
   Users,
@@ -17,7 +20,8 @@ import {
   Bell,
   Settings,
   BarChart3,
-  DollarSign
+  DollarSign,
+  Crown
 } from "lucide-react";
 
 export function PrincipalDashboard() {

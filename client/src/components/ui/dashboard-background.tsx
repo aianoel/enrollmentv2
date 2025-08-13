@@ -102,7 +102,10 @@ export function DashboardBackground({ children, userRole, className = '' }: Dash
     backgroundSize: 'cover',
     backgroundPosition: 'center',
     backgroundRepeat: 'no-repeat',
+    backgroundAttachment: 'fixed',
     position: 'relative' as const,
+    minHeight: '100vh',
+    minWidth: '100vw',
   } : {};
 
   return (

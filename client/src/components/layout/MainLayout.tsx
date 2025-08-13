@@ -87,18 +87,25 @@ export const MainLayout: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Header />
-      <div className="flex">
-        <Sidebar 
-          currentSection={currentSection} 
-          onSectionChange={setCurrentSection} 
-        />
-        <main className={`flex-1 p-6 transition-all duration-300 ${isOpen ? 'mr-80' : ''}`}>
+    <div className="flex h-screen bg-gradient-to-br from-gray-50 to-gray-100 overflow-hidden">
+      <Sidebar 
+        currentSection={currentSection} 
+        onSectionChange={setCurrentSection} 
+      />
+      <div className="flex-1 flex flex-col min-w-0">
+        <Header />
+        <main className="flex-1 overflow-y-auto">
           {renderContent()}
         </main>
-        <ChatPanel />
       </div>
+      
+      {/* Enhanced Chat panel with real-time users */}
+      {isOpen && (
+        <div className="w-80 border-l border-gray-200/50 bg-white/95 backdrop-blur-sm shadow-xl">
+          <EnhancedChatSystem />
+        </div>
+      )}
+      <ChatPanel />
     </div>
   );
 };

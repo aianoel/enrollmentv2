@@ -4,6 +4,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useQuery } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
+import { DashboardBackground } from '@/components/ui/dashboard-background';
+import { EnhancedCard } from '@/components/ui/enhanced-card';
+import { EnhancedButton } from '@/components/ui/enhanced-button';
+import { FileText, Users, UserPlus, UserCheck } from 'lucide-react';
 
 export const RegistrarDashboard: React.FC = () => {
   const { user } = useAuth();
@@ -33,27 +37,37 @@ export const RegistrarDashboard: React.FC = () => {
   const rejectedEnrollments = enrollments.filter((e: any) => e.status === 'rejected');
 
   return (
-    <div className="space-y-6">
-      {/* Welcome Header */}
-      <div className="bg-gradient-to-r from-indigo-600 to-indigo-700 rounded-xl p-6 text-white">
-        <h2 className="text-2xl font-bold mb-2" data-testid="welcome-message">
-          Welcome back, {user.name}!
-        </h2>
-        <p className="opacity-90">Manage student records and enrollment processes efficiently.</p>
-      </div>
+    <DashboardBackground userRole="registrar" className="p-6">
+      <div className="space-y-6">
+        {/* Welcome Header */}
+        <EnhancedCard 
+          variant="gradient" 
+          className="bg-gradient-to-r from-indigo-600 to-indigo-700 text-white border-0"
+          data-testid="welcome-header"
+        >
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-2xl font-bold mb-2" data-testid="welcome-message">
+                Welcome back, {user.name}!
+              </h2>
+              <p className="opacity-90">Manage student records and enrollment processes efficiently.</p>
+            </div>
+            <FileText className="h-16 w-16 opacity-20" />
+          </div>
+        </EnhancedCard>
 
-      {/* Quick Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Students</CardTitle>
-            <i className="fas fa-users text-indigo-600"></i>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{allStudents.length}</div>
-            <p className="text-xs text-muted-foreground">Enrolled students</p>
-          </CardContent>
-        </Card>
+        {/* Quick Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <EnhancedCard className="hover:shadow-lg transition-all duration-200">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Students</CardTitle>
+              <Users className="h-4 w-4 text-indigo-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{allStudents.length}</div>
+              <p className="text-xs text-muted-foreground">Enrolled students</p>
+            </CardContent>
+          </EnhancedCard>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
