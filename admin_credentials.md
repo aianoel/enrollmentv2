@@ -40,6 +40,16 @@
 - **Password**: accounting123456
 - **Role**: accounting
 
+#### Principal Account:
+- **Email**: principal@school.edu
+- **Password**: admin123456
+- **Role**: principal
+
+#### Academic Coordinator Account:
+- **Email**: academic@school.edu
+- **Password**: admin123456
+- **Role**: academic_coordinator
+
 ## Database Setup
 
 The PostgreSQL database has been set up with:

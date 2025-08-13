@@ -1,0 +1,217 @@
+Alright — let’s wire up your Principal and Academic Coordinator dashboards to a PostgreSQL API so that all announcements, events, and reports are fetched in real time instead of hardcoded.
+
+We’ll use:
+
+PostgreSQL for storage
+
+Express.js + Node.js as the API backend
+
+React + TailwindCSS for the dashboards
+
+pg npm package to connect Node.js to PostgreSQL
+
+1️⃣ PostgreSQL Tables Needed
+sql
+Copy
+Edit
+-- Announcements
+CREATE TABLE announcements (
+    id SERIAL PRIMARY KEY,
+    title TEXT NOT NULL,
+    content TEXT NOT NULL,
+    role_access TEXT[], -- Roles allowed to view, e.g. ['Principal', 'Academic Coordinator', 'Teacher']
+    created_by INT REFERENCES users(id),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Events
+CREATE TABLE events (
+    id SERIAL PRIMARY KEY,
+    title TEXT NOT NULL,
+    description TEXT NOT NULL,
+    event_date DATE NOT NULL,
+    created_by INT REFERENCES users(id),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Reports (Academic/Financial/etc.)
+CREATE TABLE reports (
+    id SERIAL PRIMARY KEY,
+    report_type TEXT NOT NULL, -- e.g. 'Academic', 'Financial', 'Attendance'
+    content TEXT NOT NULL,
+    created_by INT REFERENCES users(id),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Users
+CREATE TABLE users (
+    id SERIAL PRIMARY KEY,
+    username TEXT NOT NULL UNIQUE,
+    password TEXT NOT NULL,
+    role TEXT NOT NULL -- 'Principal', 'Academic Coordinator', etc.
+);
+2️⃣ Backend API (Node.js + Express + PostgreSQL)
+server.js
+
+javascript
+Copy
+Edit
+import express from "express";
+import pkg from "pg";
+import cors from "cors";
+
+const { Pool } = pkg;
+
+const app = express();
+app.use(cors());
+app.use(express.json());
+
+// PostgreSQL Connection
+const pool = new Pool({
+  user: "postgres",
+  host: "localhost",
+  database: "school_system",
+  password: "your_password",
+  port: 5432,
+});
+
+// Get Announcements for Role
+app.get("/announcements/:role", async (req, res) => {
+  try {
+    const { role } = req.params;
+    const result = await pool.query(
+      "SELECT * FROM announcements WHERE $1 = ANY(role_access) ORDER BY created_at DESC",
+      [role]
+    );
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Get Events
+app.get("/events", async (req, res) => {
+  try {
+    const result = await pool.query(
+      "SELECT * FROM events ORDER BY event_date ASC"
+    );
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Get Reports for Role
+app.get("/reports/:role", async (req, res) => {
+  try {
+    const { role } = req.params;
+    const result = await pool.query(
+      "SELECT * FROM reports WHERE report_type = $1 OR report_type = 'General' ORDER BY created_at DESC",
+      [role]
+    );
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.listen(5000, () => console.log("Server running on port 5000"));
+3️⃣ React Integration for Principal Dashboard
+PrincipalDashboard.jsx
+
+jsx
+Copy
+Edit
+import { useEffect, useState } from "react";
+import axios from "axios";
+
+export default function PrincipalDashboard() {
+  const [announcements, setAnnouncements] = useState([]);
+  const [events, setEvents] = useState([]);
+  const [reports, setReports] = useState([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const ann = await axios.get("http://localhost:5000/announcements/Principal");
+      setAnnouncements(ann.data);
+
+      const ev = await axios.get("http://localhost:5000/events");
+      setEvents(ev.data);
+
+      const rep = await axios.get("http://localhost:5000/reports/Academic");
+      setReports(rep.data);
+    };
+    fetchData();
+  }, []);
+
+  return (
+    <div className="min-h-screen bg-gray-100 p-4">
+      <div className="flex justify-between items-center bg-white p-4 rounded shadow">
+        <h1 className="text-2xl font-bold">Principal Dashboard</h1>
+        <button
+          onClick={() => {
+            localStorage.removeItem("user");
+            window.location.href = "/login";
+          }}
+          className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+        >
+          Logout
+        </button>
+      </div>
+
+      {/* Announcements */}
+      <div className="bg-white p-4 rounded shadow mt-4">
+        <h2 className="font-bold text-lg">Announcements</h2>
+        <ul>
+          {announcements.map(a => (
+            <li key={a.id}>
+              <strong>{a.title}</strong> - {a.content}
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      {/* Events */}
+      <div className="bg-white p-4 rounded shadow mt-4">
+        <h2 className="font-bold text-lg">Events</h2>
+        <ul>
+          {events.map(e => (
+            <li key={e.id}>
+              {e.title} - {e.event_date}
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      {/* Reports */}
+      <div className="bg-white p-4 rounded shadow mt-4">
+        <h2 className="font-bold text-lg">Reports</h2>
+        <ul>
+          {reports.map(r => (
+            <li key={r.id}>
+              <strong>{r.report_type}</strong> - {r.content}
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  );
+}
+4️⃣ Academic Coordinator Dashboard (Real-time Data)
+Same approach as above, but fetch with:
+
+javascript
+Copy
+Edit
+axios.get("http://localhost:5000/announcements/Academic Coordinator")
+axios.get("http://localhost:5000/events")
+axios.get("http://localhost:5000/reports/Academic")
+✅ Now both dashboards:
+
+Fetch announcements filtered by role.
+
+Fetch upcoming events from DB.
+
+Fetch reports relevant to their role.
+
+Automatically update when the DB changes (if using frontend polling or WebSocket).

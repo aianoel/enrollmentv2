@@ -20,6 +20,8 @@ import { RegistrarDashboard } from '../../pages/registrar/RegistrarDashboard';
 import { EnhancedRegistrarDashboard } from '../../pages/registrar/EnhancedRegistrarDashboard';
 import { AccountingDashboard } from '../../pages/accounting/AccountingDashboard';
 import { EnhancedAccountingDashboard } from '../../pages/accounting/EnhancedAccountingDashboard';
+import { PrincipalDashboard } from '../../pages/principal/PrincipalDashboard';
+import { AcademicCoordinatorDashboard } from '../../pages/academic/AcademicCoordinatorDashboard';
 import { EnhancedChatSystem } from '../chat/EnhancedChatSystem';
 import { useAuth } from '../../contexts/AuthContext';
 import { useChat } from '../../contexts/ChatContext';
@@ -37,6 +39,10 @@ export const MainLayout: React.FC = () => {
       switch (user.role) {
         case 'admin':
           return <AdminDashboard />;
+        case 'principal':
+          return <PrincipalDashboard />;
+        case 'academic_coordinator':
+          return <AcademicCoordinatorDashboard />;
         case 'teacher':
           return <EnhancedTeacherDashboard />;
         case 'student':

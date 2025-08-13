@@ -1647,6 +1647,58 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Principal Dashboard Routes
+  app.get('/api/principal/stats', async (req, res) => {
+    try {
+      const stats = await storage.getPrincipalStats();
+      res.json(stats);
+    } catch (error) {
+      console.error('Error fetching principal stats:', error);
+      res.status(500).json({ error: 'Failed to fetch principal statistics' });
+    }
+  });
+
+  app.get('/api/principal/financial', async (req, res) => {
+    try {
+      const financialData = await storage.getPrincipalFinancialOverview();
+      res.json(financialData);
+    } catch (error) {
+      console.error('Error fetching principal financial data:', error);
+      res.status(500).json({ error: 'Failed to fetch financial overview' });
+    }
+  });
+
+  // Academic Coordinator Dashboard Routes
+  app.get('/api/academic/curriculum', async (req, res) => {
+    try {
+      const curriculumData = await storage.getAcademicCurriculumData();
+      res.json(curriculumData);
+    } catch (error) {
+      console.error('Error fetching curriculum data:', error);
+      res.status(500).json({ error: 'Failed to fetch curriculum data' });
+    }
+  });
+
+  app.get('/api/academic/teacher-performance', async (req, res) => {
+    try {
+      const teacherData = await storage.getTeacherPerformanceData();
+      res.json(teacherData);
+    } catch (error) {
+      console.error('Error fetching teacher performance data:', error);
+      res.status(500).json({ error: 'Failed to fetch teacher performance data' });
+    }
+  });
+
+  app.get('/api/academic/stats', async (req, res) => {
+    try {
+      const stats = await storage.getAcademicStats();
+      res.json(stats);
+    } catch (error) {
+      console.error('Error fetching academic stats:', error);
+      res.status(500).json({ error: 'Failed to fetch academic statistics' });
+    }
+  });
+
   const httpServer = createServer(app);
   
   // Initialize Socket.IO

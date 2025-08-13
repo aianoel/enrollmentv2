@@ -186,6 +186,8 @@ export function UserManagement() {
   const getRoleBadgeColor = (role: string) => {
     const colors: Record<string, string> = {
       admin: "bg-red-100 text-red-800",
+      principal: "bg-indigo-100 text-indigo-800",
+      academic_coordinator: "bg-cyan-100 text-cyan-800",
       teacher: "bg-blue-100 text-blue-800",
       student: "bg-green-100 text-green-800",
       parent: "bg-purple-100 text-purple-800",
@@ -287,6 +289,8 @@ export function UserManagement() {
                                 </FormControl>
                                 <SelectContent>
                                   <SelectItem value="admin">Administrator</SelectItem>
+                                  <SelectItem value="principal">Principal</SelectItem>
+                                  <SelectItem value="academic_coordinator">Academic Coordinator</SelectItem>
                                   <SelectItem value="teacher">Teacher</SelectItem>
                                   <SelectItem value="student">Student</SelectItem>
                                   <SelectItem value="parent">Parent</SelectItem>
