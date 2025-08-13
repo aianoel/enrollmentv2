@@ -461,7 +461,7 @@ export function SystemConfiguration() {
                                   step="0.01"
                                   placeholder="Enter fee amount"
                                   {...field}
-                                  onChange={(e) => field.onChange(parseFloat(e.target.value))}
+                                  onChange={(e) => field.onChange(e.target.value)}
                                 />
                               </FormControl>
                               <FormMessage />

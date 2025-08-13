@@ -300,7 +300,7 @@ export function AcademicSetup() {
                           render={({ field }) => (
                             <FormItem>
                               <FormLabel>Grade Level</FormLabel>
-                              <Select onValueChange={(value) => field.onChange(parseInt(value))} defaultValue={field.value ? field.value.toString() : "1"}>
+                              <Select onValueChange={(value) => field.onChange(parseInt(value))} value={field.value ? field.value.toString() : "1"}>
                                 <FormControl>
                                   <SelectTrigger>
                                     <SelectValue placeholder="Select grade level" />
@@ -324,7 +324,7 @@ export function AcademicSetup() {
                           render={({ field }) => (
                             <FormItem>
                               <FormLabel>Adviser (Optional)</FormLabel>
-                              <Select onValueChange={(value) => field.onChange(value ? parseInt(value) : undefined)} defaultValue={field.value ? field.value.toString() : ""}>
+                              <Select onValueChange={(value) => field.onChange(value ? parseInt(value) : undefined)} value={field.value ? field.value.toString() : ""}>
                                 <FormControl>
                                   <SelectTrigger>
                                     <SelectValue placeholder="Select adviser" />
@@ -453,7 +453,7 @@ export function AcademicSetup() {
                           render={({ field }) => (
                             <FormItem>
                               <FormLabel>Grade Level</FormLabel>
-                              <Select onValueChange={(value) => field.onChange(parseInt(value))} defaultValue={field.value ? field.value.toString() : "1"}>
+                              <Select onValueChange={(value) => field.onChange(parseInt(value))} value={field.value ? field.value.toString() : "1"}>
                                 <FormControl>
                                   <SelectTrigger>
                                     <SelectValue placeholder="Select grade level" />
@@ -552,7 +552,7 @@ export function AcademicSetup() {
                           render={({ field }) => (
                             <FormItem>
                               <FormLabel>Teacher</FormLabel>
-                              <Select onValueChange={(value) => field.onChange(parseInt(value))} defaultValue={field.value ? field.value.toString() : ""}>
+                              <Select onValueChange={(value) => field.onChange(parseInt(value))} value={field.value ? field.value.toString() : ""}>
                                 <FormControl>
                                   <SelectTrigger>
                                     <SelectValue placeholder="Select teacher" />
@@ -576,7 +576,7 @@ export function AcademicSetup() {
                           render={({ field }) => (
                             <FormItem>
                               <FormLabel>Section</FormLabel>
-                              <Select onValueChange={(value) => field.onChange(parseInt(value))} defaultValue={field.value ? field.value.toString() : ""}>
+                              <Select onValueChange={(value) => field.onChange(parseInt(value))} value={field.value ? field.value.toString() : ""}>
                                 <FormControl>
                                   <SelectTrigger>
                                     <SelectValue placeholder="Select section" />
@@ -600,7 +600,7 @@ export function AcademicSetup() {
                           render={({ field }) => (
                             <FormItem>
                               <FormLabel>Subject</FormLabel>
-                              <Select onValueChange={(value) => field.onChange(parseInt(value))} defaultValue={field.value ? field.value.toString() : ""}>
+                              <Select onValueChange={(value) => field.onChange(parseInt(value))} value={field.value ? field.value.toString() : ""}>
                                 <FormControl>
                                   <SelectTrigger>
                                     <SelectValue placeholder="Select subject" />

@@ -58,12 +58,9 @@ export function CommunicationTools() {
 
   // Mutations
   const sendMessageMutation = useMutation({
-    mutationFn: (data: MessageFormData) => apiRequest("/api/admin/chat-messages", {
-      method: "POST",
-      body: JSON.stringify({
-        ...data,
-        senderId: 1, // Admin user ID - this should come from auth context
-      }),
+    mutationFn: (data: MessageFormData) => apiRequest("/api/admin/chat-messages", "POST", {
+      ...data,
+      senderId: 1, // Admin user ID - this should come from auth context
     }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/chat-messages"] });
@@ -77,9 +74,7 @@ export function CommunicationTools() {
   });
 
   const deleteMessageMutation = useMutation({
-    mutationFn: (id: number) => apiRequest(`/api/admin/chat-messages/${id}`, {
-      method: "DELETE",
-    }),
+    mutationFn: (id: number) => apiRequest(`/api/admin/chat-messages/${id}`, "DELETE"),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/chat-messages"] });
       toast({ title: "Message deleted successfully" });
@@ -185,7 +180,7 @@ export function CommunicationTools() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Recipient</FormLabel>
-                      <Select onValueChange={(value) => field.onChange(parseInt(value))} defaultValue={field.value.toString()}>
+                      <Select onValueChange={(value) => field.onChange(parseInt(value))} value={field.value.toString()}>
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Select recipient" />
