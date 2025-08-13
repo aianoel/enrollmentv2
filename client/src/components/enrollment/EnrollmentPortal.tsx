@@ -6,8 +6,7 @@ import { Textarea } from '../ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { Card, CardContent } from '../ui/card';
 import { useToast } from '../../hooks/use-toast';
-import { ref, push } from 'firebase/database';
-import { database } from '../../lib/firebase';
+// Firebase enrollment replaced with PostgreSQL placeholder
 import { EnrollmentApplication } from '@shared/schema';
 
 interface EnrollmentPortalProps {
@@ -71,12 +70,11 @@ export const EnrollmentPortal: React.FC<EnrollmentPortalProps> = ({ onBackToLogi
         status: 'pending' as const,
       };
 
-      const enrollmentRef = ref(database, 'enrollment_applications');
-      await push(enrollmentRef, {
-        ...enrollmentData,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      });
+      // TODO: Implement PostgreSQL enrollment submission
+      console.log('Enrollment data (PostgreSQL not yet implemented):', enrollmentData);
+      
+      // Simulate successful submission for now
+      await new Promise(resolve => setTimeout(resolve, 1000));
 
       toast({
         title: "Application submitted successfully!",

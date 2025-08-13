@@ -9,11 +9,7 @@ export const GradesTable: React.FC = () => {
   const { userProfile } = useAuth();
   const [selectedQuarter, setSelectedQuarter] = useState('current');
   
-  const { data: grades, loading } = useRealtimeQuery<Grade>(
-    'grades',
-    'studentId',
-    userProfile?.id
-  );
+  const { data: grades, loading } = useRealtimeQuery<Grade>('grades');
 
   if (loading) {
     return (

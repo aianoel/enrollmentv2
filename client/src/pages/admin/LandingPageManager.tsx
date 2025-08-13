@@ -5,9 +5,7 @@ import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import { Textarea } from '../../components/ui/textarea';
 import { useToast } from '../../hooks/use-toast';
-import { ref, push, set, remove } from 'firebase/database';
-import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { database, storage } from '../../lib/firebase';
+// Firebase admin functions replaced with PostgreSQL placeholders
 import { useLandingPageData } from '../../hooks/useLandingPageData';
 import { Plus, Trash2, Upload, Eye } from 'lucide-react';
 import { initializeSampleData } from '../../utils/sampleData';

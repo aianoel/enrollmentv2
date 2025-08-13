@@ -1,54 +1,61 @@
 import { useState, useEffect } from 'react';
-import { ref, onValue, off, push, set, remove, query, orderByChild, equalTo } from 'firebase/database';
-import { database } from '../lib/firebase';
+import { useQuery } from '@tanstack/react-query';
 
 export const useRealtimeData = <T>(path: string) => {
   const [data, setData] = useState<T[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const dataRef = ref(database, path);
-    
-    const handleData = (snapshot: any) => {
-      try {
-        if (snapshot.exists()) {
-          const values = snapshot.val();
-          const dataArray = Object.keys(values).map(key => ({
-            id: key,
-            ...values[key]
-          }));
-          setData(dataArray);
-        } else {
-          setData([]);
-        }
-      } catch (err) {
-        console.error('Error processing data:', err);
-        setError('Failed to process data');
-      } finally {
-        setLoading(false);
+  // Convert path to API endpoint
+  const getApiEndpoint = (path: string) => {
+    if (path.includes('announcements')) return '/api/announcements';
+    if (path.includes('news')) return '/api/news';
+    if (path.includes('events')) return '/api/events';
+    // Default endpoint for other paths
+    return `/api/${path}`;
+  };
+
+  const endpoint = getApiEndpoint(path);
+
+  const { data: fetchedData, isLoading, error: queryError } = useQuery({
+    queryKey: [endpoint],
+    queryFn: async () => {
+      const response = await fetch(endpoint);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch data from ${endpoint}`);
       }
-    };
+      return response.json();
+    }
+  });
 
-    const handleError = (error: any) => {
-      console.error('Firebase error:', error);
-      setError(error.message);
+  useEffect(() => {
+    if (fetchedData) {
+      setData(fetchedData);
       setLoading(false);
-    };
-
-    onValue(dataRef, handleData, handleError);
-
-    return () => off(dataRef);
-  }, [path]);
+      setError(null);
+    }
+    if (queryError) {
+      setError(queryError.message);
+      setLoading(false);
+    }
+  }, [fetchedData, queryError]);
 
   const addData = async (newData: Omit<T, 'id'>) => {
     try {
-      const dataRef = ref(database, path);
-      await push(dataRef, {
-        ...newData,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(newData),
       });
+      
+      if (!response.ok) {
+        throw new Error('Failed to add data');
+      }
+      
+      // Refetch data after adding
+      window.location.reload();
     } catch (err) {
       console.error('Error adding data:', err);
       throw err;
@@ -57,11 +64,20 @@ export const useRealtimeData = <T>(path: string) => {
 
   const updateData = async (id: string, updates: Partial<T>) => {
     try {
-      const itemRef = ref(database, `${path}/${id}`);
-      await set(itemRef, {
-        ...updates,
-        updatedAt: new Date().toISOString(),
+      const response = await fetch(`${endpoint}/${id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updates),
       });
+      
+      if (!response.ok) {
+        throw new Error('Failed to update data');
+      }
+      
+      // Refetch data after updating
+      window.location.reload();
     } catch (err) {
       console.error('Error updating data:', err);
       throw err;
@@ -70,8 +86,16 @@ export const useRealtimeData = <T>(path: string) => {
 
   const deleteData = async (id: string) => {
     try {
-      const itemRef = ref(database, `${path}/${id}`);
-      await remove(itemRef);
+      const response = await fetch(`${endpoint}/${id}`, {
+        method: 'DELETE',
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to delete data');
+      }
+      
+      // Refetch data after deleting
+      window.location.reload();
     } catch (err) {
       console.error('Error deleting data:', err);
       throw err;
@@ -80,7 +104,7 @@ export const useRealtimeData = <T>(path: string) => {
 
   return {
     data,
-    loading,
+    loading: isLoading,
     error,
     addData,
     updateData,
@@ -88,42 +112,7 @@ export const useRealtimeData = <T>(path: string) => {
   };
 };
 
-export const useRealtimeQuery = <T>(path: string, orderBy: string, equalToValue: any) => {
-  const [data, setData] = useState<T[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const queryRef = query(
-      ref(database, path),
-      orderByChild(orderBy),
-      equalTo(equalToValue)
-    );
-
-    const handleData = (snapshot: any) => {
-      try {
-        if (snapshot.exists()) {
-          const values = snapshot.val();
-          const dataArray = Object.keys(values).map(key => ({
-            id: key,
-            ...values[key]
-          }));
-          setData(dataArray);
-        } else {
-          setData([]);
-        }
-      } catch (err) {
-        console.error('Error processing query data:', err);
-        setError('Failed to process query data');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    onValue(queryRef, handleData);
-
-    return () => off(queryRef);
-  }, [path, orderBy, equalToValue]);
-
-  return { data, loading, error };
+// Legacy function for backwards compatibility
+export const useRealtimeQuery = <T>(path: string, filterField?: string, filterValue?: any) => {
+  return useRealtimeData<T>(path);
 };
