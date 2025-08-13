@@ -64,10 +64,11 @@ export const EnrollmentPortal: React.FC<EnrollmentPortalProps> = ({ onBackToLogi
     try {
       const enrollmentData: Omit<EnrollmentApplication, 'id' | 'createdAt' | 'updatedAt'> = {
         ...formData,
+        gender: formData.gender as 'male' | 'female' | 'other',
         previousGPA: formData.previousGPA ? parseFloat(formData.previousGPA) : undefined,
         documents: [],
-        paymentStatus: 'unpaid',
-        status: 'pending',
+        paymentStatus: 'unpaid' as const,
+        status: 'pending' as const,
       };
 
       const enrollmentRef = ref(database, 'enrollment_applications');
