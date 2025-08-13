@@ -717,6 +717,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Additional endpoints needed by role-specific dashboards
+  
+  // Grades by student (non-admin endpoint)
+  app.get("/api/grades/student/:studentId", async (req, res) => {
+    try {
+      const studentId = parseInt(req.params.studentId);
+      const grades = await storage.getGradesByStudent(studentId);
+      res.json(grades);
+    } catch (error) {
+      console.error("Error fetching student grades:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  // Users endpoint (non-admin)
+  app.get("/api/users", async (req, res) => {
+    try {
+      const users = await storage.getAllUsers();
+      res.json(users);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  // Sections endpoint (non-admin)
+  app.get("/api/sections", async (req, res) => {
+    try {
+      const sections = await storage.getSections();
+      res.json(sections);
+    } catch (error) {
+      console.error("Error fetching sections:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  // Tuition fees endpoint (non-admin)
+  app.get("/api/tuition-fees", async (req, res) => {
+    try {
+      const fees = await storage.getTuitionFees();
+      res.json(fees);
+    } catch (error) {
+      console.error("Error fetching tuition fees:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
   const httpServer = createServer(app);
 
   return httpServer;

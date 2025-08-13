@@ -10,6 +10,11 @@ import { Meetings } from '../../pages/Meetings';
 import { Announcements } from '../../pages/Announcements';
 import { TeacherDashboard } from '../../pages/teacher/TeacherDashboard';
 import { AdminDashboard } from '../../pages/admin/AdminDashboard';
+import { StudentDashboard } from '../../pages/student/StudentDashboard';
+import { ParentDashboard } from '../../pages/parent/ParentDashboard';
+import { GuidanceDashboard } from '../../pages/guidance/GuidanceDashboard';
+import { RegistrarDashboard } from '../../pages/registrar/RegistrarDashboard';
+import { AccountingDashboard } from '../../pages/accounting/AccountingDashboard';
 import { useAuth } from '../../contexts/AuthContext';
 import { useChat } from '../../contexts/ChatContext';
 
@@ -24,10 +29,20 @@ export const MainLayout: React.FC = () => {
     // Role-specific dashboard routing
     if (currentSection === 'dashboard') {
       switch (user.role) {
-        case 'teacher':
-          return <TeacherDashboard />;
         case 'admin':
           return <AdminDashboard />;
+        case 'teacher':
+          return <TeacherDashboard />;
+        case 'student':
+          return <StudentDashboard />;
+        case 'parent':
+          return <ParentDashboard />;
+        case 'guidance':
+          return <GuidanceDashboard />;
+        case 'registrar':
+          return <RegistrarDashboard />;
+        case 'accounting':
+          return <AccountingDashboard />;
         default:
           return <Dashboard />;
       }

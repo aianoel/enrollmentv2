@@ -3,7 +3,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ADMIN_CREDENTIALS } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -45,9 +44,19 @@ export function LoginForm({ onLogin }: LoginFormProps) {
     }
   };
 
-  const handleQuickLogin = () => {
-    setEmail(ADMIN_CREDENTIALS.email);
-    setPassword(ADMIN_CREDENTIALS.password);
+  const demoAccounts = [
+    { role: 'Admin', email: 'admin@school.edu', password: 'admin123456' },
+    { role: 'Teacher', email: 'teacher@school.edu', password: 'teacher123' },
+    { role: 'Student', email: 'student@school.edu', password: 'student123' },
+    { role: 'Parent', email: 'parent@school.edu', password: 'parent123' },
+    { role: 'Guidance', email: 'guidance@school.edu', password: 'guidance123' },
+    { role: 'Registrar', email: 'registrar@school.edu', password: 'registrar123' },
+    { role: 'Accounting', email: 'accounting@school.edu', password: 'accounting123' },
+  ];
+
+  const handleQuickLogin = (email: string, password: string) => {
+    setEmail(email);
+    setPassword(password);
   };
 
   return (
@@ -89,17 +98,21 @@ export function LoginForm({ onLogin }: LoginFormProps) {
           </form>
           
           <div className="mt-4 pt-4 border-t">
-            <Button 
-              variant="outline" 
-              className="w-full" 
-              onClick={handleQuickLogin}
-              type="button"
-            >
-              Quick Login (Admin Demo)
-            </Button>
-            <p className="text-xs text-muted-foreground mt-2 text-center">
-              Email: admin@school.edu | Password: admin123456
-            </p>
+            <p className="text-sm font-medium text-center mb-3">Demo Accounts</p>
+            <div className="grid grid-cols-1 gap-2">
+              {demoAccounts.map((account) => (
+                <Button 
+                  key={account.role}
+                  variant="outline" 
+                  className="w-full text-xs h-8" 
+                  onClick={() => handleQuickLogin(account.email, account.password)}
+                  type="button"
+                  data-testid={`login-${account.role.toLowerCase()}`}
+                >
+                  {account.role} - {account.email}
+                </Button>
+              ))}
+            </div>
           </div>
         </CardContent>
       </Card>
