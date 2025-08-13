@@ -63,8 +63,11 @@ export const EnrollmentPortal: React.FC<EnrollmentPortalProps> = ({ onBackToLogi
     setLoading(true);
     try {
       // Create enrollment application
-      const applicationResponse = await apiRequest('/api/enrollment/applications', {
+      const response = await fetch('/api/enrollment/applications', {
         method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
         body: JSON.stringify({
           schoolYear: '2024-2025',
           studentInfo: {
@@ -76,11 +79,16 @@ export const EnrollmentPortal: React.FC<EnrollmentPortalProps> = ({ onBackToLogi
           }
         })
       });
+      
+      const applicationResponse = await response.json();
 
       if (applicationResponse.id) {
         // Submit the application immediately for review
-        await apiRequest(`/api/enrollment/applications/${applicationResponse.id}/submit`, {
-          method: 'PATCH'
+        await fetch(`/api/enrollment/applications/${applicationResponse.id}/submit`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json'
+          }
         });
 
         toast({

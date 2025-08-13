@@ -68,15 +68,15 @@ export function registerRoutes(app: Express): Server {
     try {
       const { schoolYear, studentInfo } = req.body;
       
-      // Create user first (for enrollment demo)
+      // Create user first (for enrollment demo) - generate unique email
+      const timestamp = Date.now();
       const hashedPassword = await bcrypt.hash('student123', 12);
       const user = await storage.createUser({
         roleId: 5, // Student role
         firstName: studentInfo.firstName,
         lastName: studentInfo.lastName,
-        email: `${studentInfo.firstName.toLowerCase()}.${studentInfo.lastName.toLowerCase()}@student.edu`,
+        email: `${studentInfo.firstName.toLowerCase()}.${studentInfo.lastName.toLowerCase()}.${timestamp}@student.edu`,
         passwordHash: hashedPassword,
-        isActive: true,
         createdAt: new Date()
       });
 
