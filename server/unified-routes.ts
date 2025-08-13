@@ -4,6 +4,59 @@ import { Server as SocketIOServer } from "socket.io";
 import { storage } from "./unified-storage";
 import bcrypt from "bcryptjs";
 
+// SMS Service using Semaphore API
+class SMSService {
+  private apiKey = "ad7e27a483935c25d4960577a031a52e";
+  private baseUrl = "https://api.semaphore.co";
+
+  async sendSMS(phoneNumber: string, message: string): Promise<boolean> {
+    try {
+      // Format phone number (ensure it starts with +63)
+      const formattedPhone = phoneNumber.startsWith('+63') 
+        ? phoneNumber 
+        : phoneNumber.startsWith('09') 
+          ? '+63' + phoneNumber.substring(1)
+          : '+63' + phoneNumber;
+
+      const response = await fetch(`${this.baseUrl}/api/v4/messages`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          apikey: this.apiKey,
+          number: formattedPhone,
+          message: message
+        })
+      });
+
+      const result = await response.json();
+      console.log("SMS API Response:", result);
+      return response.ok;
+    } catch (error) {
+      console.error("SMS sending error:", error);
+      return false;
+    }
+  }
+
+  // Generate random password
+  generatePassword(): string {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    let password = '';
+    for (let i = 0; i < 8; i++) {
+      password += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return password;
+  }
+
+  // Create login credentials message
+  createLoginMessage(email: string, password: string, name: string): string {
+    return `Welcome to EduManage School System!\n\nHi ${name},\n\nYour enrollment is complete! Here are your login credentials:\n\nEmail: ${email}\nPassword: ${password}\n\nYou can now log in to access your student portal.\n\n- EduManage Team`;
+  }
+}
+
+const smsService = new SMSService();
+
 export function registerRoutes(app: Express): Server {
   const server = createServer(app);
   const io = new SocketIOServer(server, {
@@ -68,14 +121,20 @@ export function registerRoutes(app: Express): Server {
     try {
       const { schoolYear, studentInfo } = req.body;
       
-      // Create user first (for enrollment demo) - generate unique email
+      // Generate automatic login credentials
       const timestamp = Date.now();
-      const hashedPassword = await bcrypt.hash('student123', 12);
+      const generatedPassword = smsService.generatePassword();
+      const generatedEmail = `${studentInfo.firstName.toLowerCase()}.${studentInfo.lastName.toLowerCase()}.${timestamp}@student.edu`;
+      
+      // Hash the generated password
+      const hashedPassword = await bcrypt.hash(generatedPassword, 12);
+      
+      // Create user account with generated credentials
       const user = await storage.createUser({
         roleId: 5, // Student role
         firstName: studentInfo.firstName,
         lastName: studentInfo.lastName,
-        email: `${studentInfo.firstName.toLowerCase()}.${studentInfo.lastName.toLowerCase()}.${timestamp}@student.edu`,
+        email: generatedEmail,
         passwordHash: hashedPassword,
         createdAt: new Date()
       });
@@ -84,11 +143,32 @@ export function registerRoutes(app: Express): Server {
       const application = await storage.createEnrollmentApplication({
         studentId: user.id,
         schoolYear,
-        status: 'Draft',
+        status: 'Submitted', // Set as submitted since SMS will be sent
         createdAt: new Date()
       });
 
-      res.status(201).json({ id: application.id, message: 'Application created successfully' });
+      // Send SMS with login credentials if phone number is provided
+      if (studentInfo.phoneNumber) {
+        const studentName = `${studentInfo.firstName} ${studentInfo.lastName}`;
+        const loginMessage = smsService.createLoginMessage(generatedEmail, generatedPassword, studentName);
+        
+        const smsSent = await smsService.sendSMS(studentInfo.phoneNumber, loginMessage);
+        
+        if (smsSent) {
+          console.log(`SMS sent successfully to ${studentInfo.phoneNumber} for ${studentName}`);
+        } else {
+          console.error(`Failed to send SMS to ${studentInfo.phoneNumber} for ${studentName}`);
+        }
+      }
+
+      res.status(201).json({ 
+        id: application.id, 
+        message: 'Enrollment application submitted successfully! Login credentials have been sent to your phone.',
+        credentials: {
+          email: generatedEmail,
+          password: generatedPassword // Include in response as backup
+        }
+      });
     } catch (error) {
       console.error('Create enrollment error:', error);
       res.status(500).json({ error: 'Failed to create application' });

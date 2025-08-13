@@ -75,7 +75,9 @@ export const EnrollmentPortal: React.FC<EnrollmentPortalProps> = ({ onBackToLogi
             lastName: formData.lastName,
             birthDate: formData.dateOfBirth,
             address: formData.address,
-            parentContact: formData.parentPhone
+            parentContact: formData.parentPhone,
+            phoneNumber: formData.phoneNumber,
+            email: formData.email
           }
         })
       });
@@ -92,9 +94,14 @@ export const EnrollmentPortal: React.FC<EnrollmentPortalProps> = ({ onBackToLogi
         });
 
         toast({
-          title: "Application submitted successfully!",
-          description: "Your enrollment application has been submitted for review. Check the registrar dashboard to see your application.",
+          title: "Enrollment Complete!",
+          description: applicationResponse.message || "Your login credentials have been sent via SMS. You can now log in to access your student portal.",
         });
+
+        // Show credentials in console for debugging
+        if (applicationResponse.credentials) {
+          console.log("Generated Login Credentials:", applicationResponse.credentials);
+        }
 
         onBackToLogin();
       } else {
