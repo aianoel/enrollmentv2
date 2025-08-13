@@ -1691,6 +1691,142 @@ export class DatabaseStorage implements IStorage {
     const [notification] = await db.insert(notifications).values(data).returning();
     return notification;
   }
+
+  // Chat System Methods
+  async getUserConversations(userId: number): Promise<any[]> {
+    return await db
+      .select({
+        id: conversations.id,
+        conversationType: conversations.conversationType,
+        createdAt: conversations.createdAt,
+        members: sql<any[]>`COALESCE(
+          (SELECT JSON_AGG(
+            JSON_BUILD_OBJECT(
+              'id', u.id,
+              'name', u.name,
+              'email', u.email,
+              'role', u.role
+            )
+          ) FROM conversation_members cm
+          JOIN users u ON cm.user_id = u.id
+          WHERE cm.conversation_id = ${conversations.id}),
+          '[]'::json
+        )`,
+        lastMessage: sql<any>`(
+          SELECT JSON_BUILD_OBJECT(
+            'id', m.id,
+            'senderId', m.sender_id,
+            'content', m.content,
+            'createdAt', m.created_at
+          )
+          FROM messages m
+          WHERE m.conversation_id = ${conversations.id}
+          ORDER BY m.created_at DESC
+          LIMIT 1
+        )`
+      })
+      .from(conversations)
+      .innerJoin(conversationMembers, eq(conversationMembers.conversationId, conversations.id))
+      .where(eq(conversationMembers.userId, userId))
+      .orderBy(desc(conversations.createdAt));
+  }
+
+  async createConversation(data: any): Promise<any> {
+    const [conversation] = await db.insert(conversations).values({
+      conversationType: data.conversationType,
+      createdAt: new Date()
+    }).returning();
+    
+    // Add members to the conversation
+    if (data.memberIds && data.memberIds.length > 0) {
+      const memberInserts = data.memberIds.map((userId: number) => ({
+        conversationId: conversation.id,
+        userId: userId,
+        joinedAt: new Date()
+      }));
+      await db.insert(conversationMembers).values(memberInserts);
+    }
+    
+    return conversation;
+  }
+
+  async getConversationMessages(conversationId: number, limit: number = 50): Promise<any[]> {
+    return await db
+      .select({
+        id: messages.id,
+        senderId: messages.senderId,
+        content: messages.content,
+        createdAt: messages.createdAt,
+        senderName: users.name
+      })
+      .from(messages)
+      .innerJoin(users, eq(messages.senderId, users.id))
+      .where(eq(messages.conversationId, conversationId))
+      .orderBy(desc(messages.createdAt))
+      .limit(limit);
+  }
+
+  async createMessage(data: any): Promise<any> {
+    const [message] = await db.insert(messages).values({
+      conversationId: data.conversationId,
+      senderId: data.senderId,
+      content: data.content,
+      createdAt: new Date()
+    }).returning();
+    
+    // Get sender information
+    const [sender] = await db.select().from(users).where(eq(users.id, data.senderId));
+    
+    return {
+      ...message,
+      senderName: sender?.name || 'Unknown'
+    };
+  }
+
+  async updateUserStatus(userId: number, statusData: any): Promise<void> {
+    // Check if user status record exists
+    const [existingStatus] = await db
+      .select()
+      .from(userStatus)
+      .where(eq(userStatus.userId, userId));
+
+    if (existingStatus) {
+      await db
+        .update(userStatus)
+        .set({
+          isOnline: statusData.isOnline,
+          lastSeen: new Date()
+        })
+        .where(eq(userStatus.userId, userId));
+    } else {
+      await db.insert(userStatus).values({
+        userId: userId,
+        isOnline: statusData.isOnline,
+        lastSeen: new Date()
+      });
+    }
+  }
+
+  async getOnlineUsers(): Promise<any[]> {
+    return await db
+      .select({
+        id: users.id,
+        name: users.name,
+        email: users.email,
+        role: users.role,
+        isOnline: userStatus.isOnline,
+        lastSeen: userStatus.lastSeen
+      })
+      .from(users)
+      .leftJoin(userStatus, eq(users.id, userStatus.userId))
+      .where(eq(userStatus.isOnline, true));
+  }
+
+  async markConversationAsRead(conversationId: number, userId: number): Promise<void> {
+    // This would typically update a conversation_read_status table
+    // For now, we'll implement a simple version
+    console.log(`Marking conversation ${conversationId} as read for user ${userId}`);
+  }
 }
 
 export const storage = new DatabaseStorage();

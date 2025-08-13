@@ -23,9 +23,10 @@ export const EventsSection: React.FC<EventsSectionProps> = ({ events }) => {
 
   const formatShortDate = (dateString: string) => {
     const date = new Date(dateString);
+    const day = date.getDate();
     return {
       month: date.toLocaleDateString('en-US', { month: 'short' }).toUpperCase(),
-      day: date.getDate()
+      day: isNaN(day) ? '1' : day.toString()
     };
   };
 
