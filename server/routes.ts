@@ -2,6 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { Server as SocketIOServer } from "socket.io";
 import { storage } from "./unified-storage";
+import { db } from "./db";
 import bcrypt from "bcryptjs";
 import { 
   insertUserSchema, insertAnnouncementSchema, insertNewsSchema, insertEventSchema,
@@ -203,8 +204,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Enrollments management
   app.get("/api/admin/enrollments", async (req, res) => {
     try {
-      const enrollments = await storage.getEnrollments();
-      res.json(enrollments);
+      // Fetch enrollment applications with student information
+      const enrollments = await db.execute(`
+        SELECT 
+          ea.id,
+          ea.school_year,
+          ea.status,
+          ea.created_at,
+          ea.submitted_at,
+          u.first_name,
+          u.last_name,
+          u.email,
+          u.id as student_id
+        FROM enrollment_applications ea
+        LEFT JOIN users u ON ea.student_id = u.id
+        ORDER BY ea.created_at DESC
+      `);
+      
+      res.json(enrollments.rows || []);
     } catch (error) {
       console.error("Error fetching enrollments:", error);
       res.status(500).json({ error: "Internal server error" });
