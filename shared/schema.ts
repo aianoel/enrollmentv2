@@ -44,7 +44,53 @@ export const grades = pgTable('grades', {
   teacherId: integer('teacher_id'),
 });
 
-// Assignments table
+// Teacher Tasks (Enhanced Assignments)
+export const teacherTasks = pgTable('teacher_tasks', {
+  id: serial('id').primaryKey(),
+  teacherId: integer('teacher_id').notNull().references(() => users.id),
+  sectionId: integer('section_id').notNull().references(() => sections.id),
+  title: varchar('title', { length: 255 }).notNull(),
+  description: text('description'),
+  taskType: varchar('task_type', { length: 50 }).notNull(), // Assignment, Quiz, Test
+  timerMinutes: integer('timer_minutes'), // NULL if no timer
+  dueDate: timestamp('due_date'),
+  createdAt: timestamp('created_at').defaultNow(),
+});
+
+// Task Submissions
+export const taskSubmissions = pgTable('task_submissions', {
+  id: serial('id').primaryKey(),
+  taskId: integer('task_id').notNull().references(() => teacherTasks.id),
+  studentId: integer('student_id').notNull().references(() => users.id),
+  submittedAt: timestamp('submitted_at').defaultNow(),
+  fileUrl: text('file_url'),
+  score: decimal('score', { precision: 5, scale: 2 }),
+  feedback: text('feedback'),
+});
+
+// Teacher Meetings
+export const teacherMeetings = pgTable('teacher_meetings', {
+  id: serial('id').primaryKey(),
+  teacherId: integer('teacher_id').notNull().references(() => users.id),
+  sectionId: integer('section_id').notNull().references(() => sections.id),
+  title: varchar('title', { length: 255 }).notNull(),
+  meetingUrl: text('meeting_url').notNull(),
+  scheduledAt: timestamp('scheduled_at').notNull(),
+  durationMinutes: integer('duration_minutes').notNull(),
+  createdAt: timestamp('created_at').defaultNow(),
+});
+
+// Notifications
+export const notifications = pgTable('notifications', {
+  id: serial('id').primaryKey(),
+  recipientId: integer('recipient_id').notNull().references(() => users.id),
+  message: text('message').notNull(),
+  link: text('link'),
+  isRead: boolean('is_read').default(false),
+  createdAt: timestamp('created_at').defaultNow(),
+});
+
+// Legacy assignments table (keeping for compatibility)
 export const assignments = pgTable('assignments', {
   id: serial('id').primaryKey(),
   sectionId: integer('section_id').notNull(),
@@ -313,6 +359,16 @@ export const selectSchoolSettingsSchema = createSelectSchema(schoolSettings);
 export const insertTuitionFeeSchema = createInsertSchema(tuitionFees).omit({ id: true });
 export const selectTuitionFeeSchema = createSelectSchema(tuitionFees);
 
+// Enhanced teacher feature schemas
+export const insertTeacherTaskSchema = createInsertSchema(teacherTasks).omit({ id: true, createdAt: true });
+export const selectTeacherTaskSchema = createSelectSchema(teacherTasks);
+export const insertTaskSubmissionSchema = createInsertSchema(taskSubmissions).omit({ id: true, submittedAt: true });
+export const selectTaskSubmissionSchema = createSelectSchema(taskSubmissions);
+export const insertTeacherMeetingSchema = createInsertSchema(teacherMeetings).omit({ id: true, createdAt: true });
+export const selectTeacherMeetingSchema = createSelectSchema(teacherMeetings);
+export const insertNotificationSchema = createInsertSchema(notifications).omit({ id: true, createdAt: true });
+export const selectNotificationSchema = createSelectSchema(notifications);
+
 // Inferred types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -348,6 +404,16 @@ export type SchoolSettings = typeof schoolSettings.$inferSelect;
 export type InsertSchoolSettings = z.infer<typeof insertSchoolSettingsSchema>;
 export type TuitionFee = typeof tuitionFees.$inferSelect;
 export type InsertTuitionFee = z.infer<typeof insertTuitionFeeSchema>;
+
+// Enhanced teacher feature types
+export type TeacherTask = typeof teacherTasks.$inferSelect;
+export type InsertTeacherTask = z.infer<typeof insertTeacherTaskSchema>;
+export type TaskSubmission = typeof taskSubmissions.$inferSelect;
+export type InsertTaskSubmission = z.infer<typeof insertTaskSubmissionSchema>;
+export type TeacherMeeting = typeof teacherMeetings.$inferSelect;
+export type InsertTeacherMeeting = z.infer<typeof insertTeacherMeetingSchema>;
+export type Notification = typeof notifications.$inferSelect;
+export type InsertNotification = z.infer<typeof insertNotificationSchema>;
 
 // User roles enum for validation
 export const UserRoles = ['admin', 'teacher', 'student', 'parent', 'guidance', 'registrar', 'accounting'] as const;

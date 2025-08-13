@@ -1,0 +1,120 @@
+Alright — you want to extend teacher features so that in your PostgreSQL-based school management system, a teacher can:
+
+Create tasks (assignments, quizzes, tests) with customizable timers.
+
+Create meetings like Google Meet.
+
+Assign both tasks and meetings to specific sections.
+
+Notify students so they can join.
+
+I’ll map this into PostgreSQL schema + feature flow for you.
+
+PostgreSQL Tables for Teacher Features
+sql
+Copy
+Edit
+-- ===============================
+-- 1. Tasks (Assignments, Quizzes, Tests)
+-- ===============================
+CREATE TABLE teacher_tasks (
+    id SERIAL PRIMARY KEY,
+    teacher_id INT REFERENCES users(id) ON DELETE CASCADE,
+    section_id INT REFERENCES sections(id) ON DELETE CASCADE,
+    title VARCHAR(255) NOT NULL,
+    description TEXT,
+    task_type VARCHAR(50) NOT NULL, -- Assignment, Quiz, Test
+    timer_minutes INT, -- NULL if no timer
+    due_date TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ===============================
+-- 2. Student Submissions
+-- ===============================
+CREATE TABLE task_submissions (
+    id SERIAL PRIMARY KEY,
+    task_id INT REFERENCES teacher_tasks(id) ON DELETE CASCADE,
+    student_id INT REFERENCES users(id) ON DELETE CASCADE,
+    submitted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    file_url TEXT,
+    score DECIMAL(5,2),
+    feedback TEXT
+);
+
+-- ===============================
+-- 3. Online Meetings
+-- ===============================
+CREATE TABLE teacher_meetings (
+    id SERIAL PRIMARY KEY,
+    teacher_id INT REFERENCES users(id) ON DELETE CASCADE,
+    section_id INT REFERENCES sections(id) ON DELETE CASCADE,
+    title VARCHAR(255) NOT NULL,
+    meeting_url TEXT NOT NULL, -- Google Meet or Zoom link
+    scheduled_at TIMESTAMP NOT NULL,
+    duration_minutes INT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ===============================
+-- 4. Notifications
+-- ===============================
+CREATE TABLE notifications (
+    id SERIAL PRIMARY KEY,
+    recipient_id INT REFERENCES users(id) ON DELETE CASCADE,
+    message TEXT NOT NULL,
+    link TEXT,
+    is_read BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+Feature Flow
+1. Creating a Task
+Teacher logs into dashboard → clicks "Create Task".
+
+Fills in: title, description, type (Assignment/Quiz/Test), section, timer (optional), due date.
+
+Task is saved in teacher_tasks.
+
+Notification is sent to all students in the section via notifications.
+
+2. Student Submission
+Students see tasks in their dashboard with a countdown timer (for timed tests).
+
+After completion, they upload their file or answer → saved in task_submissions.
+
+Teacher reviews and scores the submission → updates score and feedback in the same table.
+
+3. Creating a Meeting
+Teacher clicks "Create Meeting".
+
+Enters title, section, date/time, duration.
+
+Generates meeting_url (could be Google Meet API or manual paste).
+
+Meeting stored in teacher_meetings.
+
+Notifications sent to students in the selected section.
+
+4. Joining a Meeting
+Students see meeting details in their dashboard with Join button.
+
+Clicking opens the meeting_url in a new tab.
+
+Notification Example in Backend (Node + Express + PostgreSQL)
+javascript
+Copy
+Edit
+// sendNotification.js
+async function sendNotification(pool, recipientId, message, link) {
+    await pool.query(
+        `INSERT INTO notifications (recipient_id, message, link) VALUES ($1, $2, $3)`,
+        [recipientId, message, link]
+    );
+}
+✅ With this design:
+
+Teachers have full control over task types & timers.
+
+Meetings work like Google Meet but are just links stored in the DB.
+
+Students are instantly notified of new tasks or meetings.

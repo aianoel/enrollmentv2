@@ -764,6 +764,196 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Enhanced Teacher API Routes
+  app.get("/api/teacher/sections", async (req, res) => {
+    try {
+      const sections = await storage.getSections();
+      res.json(sections);
+    } catch (error) {
+      console.error("Error fetching teacher sections:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.get("/api/teacher/tasks", async (req, res) => {
+    try {
+      const teacherId = req.query.teacherId ? parseInt(req.query.teacherId as string) : undefined;
+      const tasks = await storage.getTeacherTasks(teacherId);
+      res.json(tasks);
+    } catch (error) {
+      console.error("Error fetching teacher tasks:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.post("/api/teacher/tasks", async (req, res) => {
+    try {
+      const taskData = req.body;
+      const newTask = await storage.createTeacherTask(taskData);
+      
+      // Create notifications for all students in the section
+      const users = await storage.getAllUsers();
+      const students = users.filter((u: any) => u.role === 'student');
+      
+      for (const student of students) {
+        await storage.createNotification({
+          recipientId: student.id,
+          message: `New ${taskData.taskType.toLowerCase()}: ${taskData.title}`,
+          link: `/student/tasks/${newTask.id}`,
+        });
+      }
+      
+      res.status(201).json(newTask);
+    } catch (error) {
+      console.error("Error creating teacher task:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.get("/api/teacher/meetings", async (req, res) => {
+    try {
+      const teacherId = req.query.teacherId ? parseInt(req.query.teacherId as string) : undefined;
+      const meetings = await storage.getTeacherMeetings(teacherId);
+      res.json(meetings);
+    } catch (error) {
+      console.error("Error fetching teacher meetings:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.post("/api/teacher/meetings", async (req, res) => {
+    try {
+      const meetingData = req.body;
+      const newMeeting = await storage.createTeacherMeeting(meetingData);
+      
+      // Create notifications for all students in the section
+      const users = await storage.getAllUsers();
+      const students = users.filter((u: any) => u.role === 'student');
+      
+      for (const student of students) {
+        await storage.createNotification({
+          recipientId: student.id,
+          message: `New meeting scheduled: ${meetingData.title}`,
+          link: meetingData.meetingUrl,
+        });
+      }
+      
+      res.status(201).json(newMeeting);
+    } catch (error) {
+      console.error("Error creating teacher meeting:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.get("/api/teacher/submissions", async (req, res) => {
+    try {
+      const taskId = req.query.taskId ? parseInt(req.query.taskId as string) : undefined;
+      const submissions = await storage.getTaskSubmissions(taskId);
+      res.json(submissions);
+    } catch (error) {
+      console.error("Error fetching submissions:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.get("/api/teacher/notifications", async (req, res) => {
+    try {
+      const teacherId = req.query.teacherId ? parseInt(req.query.teacherId as string) : undefined;
+      const notifications = await storage.getNotifications(teacherId);
+      res.json(notifications);
+    } catch (error) {
+      console.error("Error fetching teacher notifications:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.patch("/api/teacher/notifications/:id/read", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.markNotificationAsRead(id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error marking notification as read:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  // Enhanced Student API Routes
+  app.get("/api/student/tasks", async (req, res) => {
+    try {
+      const tasks = await storage.getTeacherTasks();
+      res.json(tasks);
+    } catch (error) {
+      console.error("Error fetching student tasks:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.get("/api/student/meetings", async (req, res) => {
+    try {
+      const meetings = await storage.getTeacherMeetings();
+      res.json(meetings);
+    } catch (error) {
+      console.error("Error fetching student meetings:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.get("/api/student/submissions", async (req, res) => {
+    try {
+      const studentId = req.query.studentId ? parseInt(req.query.studentId as string) : undefined;
+      const submissions = await storage.getTaskSubmissions(undefined, studentId);
+      res.json(submissions);
+    } catch (error) {
+      console.error("Error fetching student submissions:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.post("/api/student/submissions", async (req, res) => {
+    try {
+      const submissionData = req.body;
+      const newSubmission = await storage.createTaskSubmission(submissionData);
+      res.status(201).json(newSubmission);
+    } catch (error) {
+      console.error("Error creating student submission:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.get("/api/student/grades", async (req, res) => {
+    try {
+      const studentId = req.query.studentId ? parseInt(req.query.studentId as string) : undefined;
+      const grades = studentId ? await storage.getGradesByStudent(studentId) : await storage.getGrades();
+      res.json(grades);
+    } catch (error) {
+      console.error("Error fetching student grades:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.get("/api/student/notifications", async (req, res) => {
+    try {
+      const studentId = req.query.studentId ? parseInt(req.query.studentId as string) : undefined;
+      const notifications = await storage.getNotifications(studentId);
+      res.json(notifications);
+    } catch (error) {
+      console.error("Error fetching student notifications:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.patch("/api/student/notifications/:id/read", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.markNotificationAsRead(id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error marking notification as read:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
   const httpServer = createServer(app);
 
   return httpServer;

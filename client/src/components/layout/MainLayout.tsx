@@ -9,8 +9,10 @@ import { Modules } from '../../pages/Modules';
 import { Meetings } from '../../pages/Meetings';
 import { Announcements } from '../../pages/Announcements';
 import { TeacherDashboard } from '../../pages/teacher/TeacherDashboard';
+import { EnhancedTeacherDashboard } from '../../pages/teacher/EnhancedTeacherDashboard';
 import { AdminDashboard } from '../../pages/admin/AdminDashboard';
 import { StudentDashboard } from '../../pages/student/StudentDashboard';
+import { EnhancedStudentDashboard } from '../../pages/student/EnhancedStudentDashboard';
 import { ParentDashboard } from '../../pages/parent/ParentDashboard';
 import { GuidanceDashboard } from '../../pages/guidance/GuidanceDashboard';
 import { RegistrarDashboard } from '../../pages/registrar/RegistrarDashboard';
@@ -32,9 +34,9 @@ export const MainLayout: React.FC = () => {
         case 'admin':
           return <AdminDashboard />;
         case 'teacher':
-          return <TeacherDashboard />;
+          return <EnhancedTeacherDashboard />;
         case 'student':
-          return <StudentDashboard />;
+          return <EnhancedStudentDashboard />;
         case 'parent':
           return <ParentDashboard />;
         case 'guidance':

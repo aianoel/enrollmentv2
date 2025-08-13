@@ -1,6 +1,7 @@
 import { 
   users, announcements, news, events, enrollments, sections, roles, subjects, 
   teacherAssignments, orgChart, schoolSettings, tuitionFees, grades, chatMessages,
+  teacherTasks, taskSubmissions, teacherMeetings, notifications,
   type User, type InsertUser, 
   type Announcement, type InsertAnnouncement, 
   type News, type InsertNews, 
@@ -14,7 +15,11 @@ import {
   type SchoolSettings, type InsertSchoolSettings,
   type TuitionFee, type InsertTuitionFee,
   type Grade, type InsertGrade,
-  type ChatMessage, type InsertChatMessage
+  type ChatMessage, type InsertChatMessage,
+  type TeacherTask, type InsertTeacherTask,
+  type TaskSubmission, type InsertTaskSubmission,
+  type TeacherMeeting, type InsertTeacherMeeting,
+  type Notification, type InsertNotification
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and } from "drizzle-orm";
@@ -102,6 +107,26 @@ export interface IStorage {
   createEvent(event: InsertEvent): Promise<Event>;
   updateEvent(id: number, updates: Partial<InsertEvent>): Promise<Event>;
   deleteEvent(id: number): Promise<void>;
+  
+  // Enhanced teacher features
+  getTeacherTasks(teacherId?: number): Promise<TeacherTask[]>;
+  createTeacherTask(task: InsertTeacherTask): Promise<TeacherTask>;
+  updateTeacherTask(id: number, updates: Partial<InsertTeacherTask>): Promise<TeacherTask>;
+  deleteTeacherTask(id: number): Promise<void>;
+  
+  getTaskSubmissions(taskId?: number, studentId?: number): Promise<TaskSubmission[]>;
+  createTaskSubmission(submission: InsertTaskSubmission): Promise<TaskSubmission>;
+  updateTaskSubmission(id: number, updates: Partial<InsertTaskSubmission>): Promise<TaskSubmission>;
+  
+  getTeacherMeetings(teacherId?: number): Promise<TeacherMeeting[]>;
+  createTeacherMeeting(meeting: InsertTeacherMeeting): Promise<TeacherMeeting>;
+  updateTeacherMeeting(id: number, updates: Partial<InsertTeacherMeeting>): Promise<TeacherMeeting>;
+  deleteTeacherMeeting(id: number): Promise<void>;
+  
+  getNotifications(recipientId?: number): Promise<Notification[]>;
+  createNotification(notification: InsertNotification): Promise<Notification>;
+  markNotificationAsRead(id: number): Promise<void>;
+  deleteNotification(id: number): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -380,6 +405,90 @@ export class DatabaseStorage implements IStorage {
 
   async deleteEvent(id: number): Promise<void> {
     await db.delete(events).where(eq(events.id, id));
+  }
+
+  // Enhanced teacher features implementation
+  async getTeacherTasks(teacherId?: number): Promise<TeacherTask[]> {
+    if (teacherId) {
+      return await db.select().from(teacherTasks).where(eq(teacherTasks.teacherId, teacherId)).orderBy(desc(teacherTasks.createdAt));
+    }
+    return await db.select().from(teacherTasks).orderBy(desc(teacherTasks.createdAt));
+  }
+
+  async createTeacherTask(task: InsertTeacherTask): Promise<TeacherTask> {
+    const [newTask] = await db.insert(teacherTasks).values(task).returning();
+    return newTask;
+  }
+
+  async updateTeacherTask(id: number, updates: Partial<InsertTeacherTask>): Promise<TeacherTask> {
+    const [updatedTask] = await db.update(teacherTasks).set(updates).where(eq(teacherTasks.id, id)).returning();
+    return updatedTask;
+  }
+
+  async deleteTeacherTask(id: number): Promise<void> {
+    await db.delete(teacherTasks).where(eq(teacherTasks.id, id));
+  }
+
+  async getTaskSubmissions(taskId?: number, studentId?: number): Promise<TaskSubmission[]> {
+    if (taskId && studentId) {
+      return await db.select().from(taskSubmissions).where(and(eq(taskSubmissions.taskId, taskId), eq(taskSubmissions.studentId, studentId)));
+    } else if (taskId) {
+      return await db.select().from(taskSubmissions).where(eq(taskSubmissions.taskId, taskId)).orderBy(desc(taskSubmissions.submittedAt));
+    } else if (studentId) {
+      return await db.select().from(taskSubmissions).where(eq(taskSubmissions.studentId, studentId)).orderBy(desc(taskSubmissions.submittedAt));
+    }
+    return await db.select().from(taskSubmissions).orderBy(desc(taskSubmissions.submittedAt));
+  }
+
+  async createTaskSubmission(submission: InsertTaskSubmission): Promise<TaskSubmission> {
+    const [newSubmission] = await db.insert(taskSubmissions).values(submission).returning();
+    return newSubmission;
+  }
+
+  async updateTaskSubmission(id: number, updates: Partial<InsertTaskSubmission>): Promise<TaskSubmission> {
+    const [updatedSubmission] = await db.update(taskSubmissions).set(updates).where(eq(taskSubmissions.id, id)).returning();
+    return updatedSubmission;
+  }
+
+  async getTeacherMeetings(teacherId?: number): Promise<TeacherMeeting[]> {
+    if (teacherId) {
+      return await db.select().from(teacherMeetings).where(eq(teacherMeetings.teacherId, teacherId)).orderBy(desc(teacherMeetings.scheduledAt));
+    }
+    return await db.select().from(teacherMeetings).orderBy(desc(teacherMeetings.scheduledAt));
+  }
+
+  async createTeacherMeeting(meeting: InsertTeacherMeeting): Promise<TeacherMeeting> {
+    const [newMeeting] = await db.insert(teacherMeetings).values(meeting).returning();
+    return newMeeting;
+  }
+
+  async updateTeacherMeeting(id: number, updates: Partial<InsertTeacherMeeting>): Promise<TeacherMeeting> {
+    const [updatedMeeting] = await db.update(teacherMeetings).set(updates).where(eq(teacherMeetings.id, id)).returning();
+    return updatedMeeting;
+  }
+
+  async deleteTeacherMeeting(id: number): Promise<void> {
+    await db.delete(teacherMeetings).where(eq(teacherMeetings.id, id));
+  }
+
+  async getNotifications(recipientId?: number): Promise<Notification[]> {
+    if (recipientId) {
+      return await db.select().from(notifications).where(eq(notifications.recipientId, recipientId)).orderBy(desc(notifications.createdAt));
+    }
+    return await db.select().from(notifications).orderBy(desc(notifications.createdAt));
+  }
+
+  async createNotification(notification: InsertNotification): Promise<Notification> {
+    const [newNotification] = await db.insert(notifications).values(notification).returning();
+    return newNotification;
+  }
+
+  async markNotificationAsRead(id: number): Promise<void> {
+    await db.update(notifications).set({ isRead: true }).where(eq(notifications.id, id));
+  }
+
+  async deleteNotification(id: number): Promise<void> {
+    await db.delete(notifications).where(eq(notifications.id, id));
   }
 }
 
