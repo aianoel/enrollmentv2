@@ -1,0 +1,99 @@
+Got it — here’s a PostgreSQL schema for the Registrar module in your school management system.
+This schema is built so it integrates with your existing users table (from your overall system) and supports student enrollment, academic records, transcripts, and curriculum management.
+
+PostgreSQL Schema – Registrar Functions
+sql
+Copy
+Edit
+-- ===============================
+-- 1. Enrollment Requests
+-- ===============================
+CREATE TABLE registrar_enrollment_requests (
+    id SERIAL PRIMARY KEY,
+    student_id INT REFERENCES users(id) ON DELETE CASCADE,
+    school_year VARCHAR(9) NOT NULL, -- e.g., 2025-2026
+    grade_level VARCHAR(50) NOT NULL,
+    section_id INT REFERENCES sections(id),
+    status VARCHAR(20) DEFAULT 'Pending', -- Pending, Approved, Rejected
+    date_requested TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    date_processed TIMESTAMP
+);
+
+-- ===============================
+-- 2. Sections
+-- ===============================
+CREATE TABLE sections (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(50) NOT NULL,
+    grade_level VARCHAR(50) NOT NULL,
+    adviser_id INT REFERENCES users(id) -- Teacher as adviser
+);
+
+-- ===============================
+-- 3. Subjects / Curriculum
+-- ===============================
+CREATE TABLE subjects (
+    id SERIAL PRIMARY KEY,
+    subject_code VARCHAR(20) UNIQUE NOT NULL,
+    subject_name VARCHAR(255) NOT NULL,
+    description TEXT,
+    grade_level VARCHAR(50),
+    semester VARCHAR(20),
+    prerequisite_id INT REFERENCES subjects(id) -- Optional
+);
+
+-- ===============================
+-- 4. Student Academic Records
+-- ===============================
+CREATE TABLE academic_records (
+    id SERIAL PRIMARY KEY,
+    student_id INT REFERENCES users(id) ON DELETE CASCADE,
+    subject_id INT REFERENCES subjects(id) ON DELETE CASCADE,
+    school_year VARCHAR(9) NOT NULL,
+    quarter1 NUMERIC(5,2),
+    quarter2 NUMERIC(5,2),
+    quarter3 NUMERIC(5,2),
+    quarter4 NUMERIC(5,2),
+    final_grade NUMERIC(5,2),
+    remarks VARCHAR(20), -- Passed, Failed, Incomplete
+    recorded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ===============================
+-- 5. Graduation & Certification
+-- ===============================
+CREATE TABLE graduation_candidates (
+    id SERIAL PRIMARY KEY,
+    student_id INT REFERENCES users(id) ON DELETE CASCADE,
+    school_year VARCHAR(9) NOT NULL,
+    status VARCHAR(20) DEFAULT 'Pending', -- Pending, Cleared, With Deficiencies
+    date_cleared TIMESTAMP
+);
+
+-- ===============================
+-- 6. Transcript Requests
+-- ===============================
+CREATE TABLE transcript_requests (
+    id SERIAL PRIMARY KEY,
+    student_id INT REFERENCES users(id) ON DELETE CASCADE,
+    request_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    status VARCHAR(20) DEFAULT 'Pending', -- Pending, Processing, Released
+    release_date TIMESTAMP
+);
+Feature → Table Mapping
+Registrar Function	Table(s)	Description
+Approve/reject enrollment	registrar_enrollment_requests	Tracks incoming enrollment and approval
+Assign sections	sections	Stores section name, level, and adviser
+Manage curriculum	subjects	Lists subjects with prerequisites
+Maintain academic records	academic_records	Stores grades per subject and quarter
+Graduation eligibility	graduation_candidates	Tracks clearance for graduation
+Issue transcripts	transcript_requests	Handles student TOR requests
+
+✅ With this schema:
+
+Registrar can manage the full student lifecycle from enrollment to graduation.
+
+Teachers can update grades in academic_records.
+
+Students & Parents can see status updates in real-time.
+

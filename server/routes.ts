@@ -1151,6 +1151,215 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Enhanced Registrar Office API Routes
+  app.get("/api/registrar/enrollment-requests", async (req, res) => {
+    try {
+      const status = req.query.status as string | undefined;
+      const requests = await storage.getEnrollmentRequests(status);
+      res.json(requests);
+    } catch (error) {
+      console.error("Error fetching enrollment requests:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.post("/api/registrar/enrollment-requests", async (req, res) => {
+    try {
+      const requestData = req.body;
+      const newRequest = await storage.createEnrollmentRequest(requestData);
+      
+      // Notify registrar staff about new enrollment
+      const users = await storage.getAllUsers();
+      const registrars = users.filter((u: any) => u.role === 'registrar');
+      
+      for (const registrar of registrars) {
+        await storage.createNotification({
+          recipientId: registrar.id,
+          message: `New enrollment request from ${requestData.studentName} for ${requestData.gradeLevel}`,
+          link: `/registrar/enrollments/${newRequest.id}`,
+        });
+      }
+      
+      res.status(201).json(newRequest);
+    } catch (error) {
+      console.error("Error creating enrollment request:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.patch("/api/registrar/enrollment-requests/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const updates = req.body;
+      const updatedRequest = await storage.updateEnrollmentRequest(id, updates);
+      
+      // Notify student about enrollment status change
+      if (updates.status && updates.status !== 'Pending') {
+        await storage.createNotification({
+          recipientId: updatedRequest.studentId,
+          message: `Your enrollment request has been ${updates.status.toLowerCase()}`,
+          link: `/student/enrollment/${updatedRequest.id}`,
+        });
+      }
+      
+      res.json(updatedRequest);
+    } catch (error) {
+      console.error("Error updating enrollment request:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.get("/api/registrar/subjects", async (req, res) => {
+    try {
+      const gradeLevel = req.query.gradeLevel as string | undefined;
+      const subjects = await storage.getRegistrarSubjects(gradeLevel);
+      res.json(subjects);
+    } catch (error) {
+      console.error("Error fetching registrar subjects:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.post("/api/registrar/subjects", async (req, res) => {
+    try {
+      const subjectData = req.body;
+      const newSubject = await storage.createRegistrarSubject(subjectData);
+      res.status(201).json(newSubject);
+    } catch (error) {
+      console.error("Error creating subject:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.get("/api/registrar/academic-records", async (req, res) => {
+    try {
+      const studentId = req.query.studentId ? parseInt(req.query.studentId as string) : undefined;
+      const schoolYear = req.query.schoolYear as string | undefined;
+      const records = await storage.getAcademicRecords(studentId, schoolYear);
+      res.json(records);
+    } catch (error) {
+      console.error("Error fetching academic records:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.post("/api/registrar/academic-records", async (req, res) => {
+    try {
+      const recordData = req.body;
+      const newRecord = await storage.createAcademicRecord(recordData);
+      
+      // Notify student about new grade
+      await storage.createNotification({
+        recipientId: recordData.studentId,
+        message: `New grade recorded for ${recordData.subjectName || 'subject'}`,
+        link: `/student/grades`,
+      });
+      
+      res.status(201).json(newRecord);
+    } catch (error) {
+      console.error("Error creating academic record:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.get("/api/registrar/graduation-candidates", async (req, res) => {
+    try {
+      const schoolYear = req.query.schoolYear as string | undefined;
+      const candidates = await storage.getGraduationCandidates(schoolYear);
+      res.json(candidates);
+    } catch (error) {
+      console.error("Error fetching graduation candidates:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.post("/api/registrar/graduation-candidates", async (req, res) => {
+    try {
+      const candidateData = req.body;
+      const newCandidate = await storage.createGraduationCandidate(candidateData);
+      
+      // Notify student about graduation candidacy
+      await storage.createNotification({
+        recipientId: candidateData.studentId,
+        message: `You have been added to graduation candidates for ${candidateData.schoolYear}`,
+        link: `/student/graduation`,
+      });
+      
+      res.status(201).json(newCandidate);
+    } catch (error) {
+      console.error("Error creating graduation candidate:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.get("/api/registrar/transcript-requests", async (req, res) => {
+    try {
+      const studentId = req.query.studentId ? parseInt(req.query.studentId as string) : undefined;
+      const requests = await storage.getTranscriptRequests(studentId);
+      res.json(requests);
+    } catch (error) {
+      console.error("Error fetching transcript requests:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.post("/api/registrar/transcript-requests", async (req, res) => {
+    try {
+      const requestData = req.body;
+      const newRequest = await storage.createTranscriptRequest(requestData);
+      
+      // Notify registrar about new transcript request
+      const users = await storage.getAllUsers();
+      const registrars = users.filter((u: any) => u.role === 'registrar');
+      
+      for (const registrar of registrars) {
+        await storage.createNotification({
+          recipientId: registrar.id,
+          message: `New transcript request from student`,
+          link: `/registrar/transcripts/${newRequest.id}`,
+        });
+      }
+      
+      res.status(201).json(newRequest);
+    } catch (error) {
+      console.error("Error creating transcript request:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.patch("/api/registrar/transcript-requests/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const updates = req.body;
+      const updatedRequest = await storage.updateTranscriptRequest(id, updates);
+      
+      // Notify student about transcript status change
+      if (updates.status) {
+        await storage.createNotification({
+          recipientId: updatedRequest.studentId,
+          message: `Your transcript request status: ${updates.status}`,
+          link: `/student/transcripts/${updatedRequest.id}`,
+        });
+      }
+      
+      res.json(updatedRequest);
+    } catch (error) {
+      console.error("Error updating transcript request:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.get("/api/registrar/students", async (req, res) => {
+    try {
+      const users = await storage.getAllUsers();
+      const students = users.filter((u: any) => u.role === 'student');
+      res.json(students);
+    } catch (error) {
+      console.error("Error fetching students:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
   const httpServer = createServer(app);
 
   return httpServer;

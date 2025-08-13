@@ -197,8 +197,8 @@ export function EnhancedGuidanceDashboard() {
     mutationFn: (data: CounselingSessionFormData) => apiRequest("/api/guidance/counseling-sessions", "POST", {
       ...data,
       counselorId: user?.id,
-      sessionDate: new Date(data.sessionDate).toISOString(),
-      followUpDate: data.followUpDate ? new Date(data.followUpDate).toISOString() : null,
+      sessionDate: data.sessionDate,
+      followUpDate: data.followUpDate || null,
     }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/guidance/counseling-sessions"] });
@@ -212,8 +212,8 @@ export function EnhancedGuidanceDashboard() {
     mutationFn: (data: WellnessProgramFormData) => apiRequest("/api/guidance/wellness-programs", "POST", {
       ...data,
       createdBy: user?.id,
-      startDate: new Date(data.startDate).toISOString(),
-      endDate: new Date(data.endDate).toISOString(),
+      startDate: data.startDate,
+      endDate: data.endDate,
     }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/guidance/wellness-programs"] });

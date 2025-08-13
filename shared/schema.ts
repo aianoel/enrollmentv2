@@ -106,9 +106,9 @@ export const guidanceCounselingSessions = pgTable('guidance_counseling_sessions'
   id: serial('id').primaryKey(),
   studentId: integer('student_id').notNull().references(() => users.id),
   counselorId: integer('counselor_id').notNull().references(() => users.id),
-  sessionDate: timestamp('session_date').notNull(),
+  sessionDate: varchar('session_date', { length: 50 }).notNull(),
   sessionNotes: text('session_notes'),
-  followUpDate: timestamp('follow_up_date'),
+  followUpDate: varchar('follow_up_date', { length: 50 }),
   confidentialityLevel: varchar('confidentiality_level', { length: 50 }).default('Internal').notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
@@ -117,8 +117,8 @@ export const guidanceWellnessPrograms = pgTable('guidance_wellness_programs', {
   id: serial('id').primaryKey(),
   programName: varchar('program_name', { length: 255 }).notNull(),
   description: text('description'),
-  startDate: timestamp('start_date').notNull(),
-  endDate: timestamp('end_date').notNull(),
+  startDate: date('start_date').notNull(),
+  endDate: date('end_date').notNull(),
   createdBy: integer('created_by').notNull().references(() => users.id),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
@@ -128,6 +128,58 @@ export const guidanceProgramParticipants = pgTable('guidance_program_participant
   programId: integer('program_id').notNull().references(() => guidanceWellnessPrograms.id),
   studentId: integer('student_id').notNull().references(() => users.id),
   joinedAt: timestamp('joined_at').defaultNow().notNull(),
+});
+
+// Registrar office features
+export const registrarEnrollmentRequests = pgTable('registrar_enrollment_requests', {
+  id: serial('id').primaryKey(),
+  studentId: integer('student_id').notNull().references(() => users.id),
+  schoolYear: varchar('school_year', { length: 9 }).notNull(),
+  gradeLevel: varchar('grade_level', { length: 50 }).notNull(),
+  sectionId: integer('section_id').references(() => sections.id),
+  status: varchar('status', { length: 20 }).default('Pending').notNull(),
+  dateRequested: timestamp('date_requested').defaultNow().notNull(),
+  dateProcessed: timestamp('date_processed'),
+});
+
+export const registrarSubjects = pgTable('registrar_subjects', {
+  id: serial('id').primaryKey(),
+  subjectCode: varchar('subject_code', { length: 20 }).unique().notNull(),
+  subjectName: varchar('subject_name', { length: 255 }).notNull(),
+  description: text('description'),
+  gradeLevel: varchar('grade_level', { length: 50 }),
+  semester: varchar('semester', { length: 20 }),
+  prerequisiteId: integer('prerequisite_id'),
+});
+
+export const academicRecords = pgTable('academic_records', {
+  id: serial('id').primaryKey(),
+  studentId: integer('student_id').notNull().references(() => users.id),
+  subjectId: integer('subject_id').notNull().references(() => registrarSubjects.id),
+  schoolYear: varchar('school_year', { length: 9 }).notNull(),
+  quarter1: decimal('quarter1', { precision: 5, scale: 2 }),
+  quarter2: decimal('quarter2', { precision: 5, scale: 2 }),
+  quarter3: decimal('quarter3', { precision: 5, scale: 2 }),
+  quarter4: decimal('quarter4', { precision: 5, scale: 2 }),
+  finalGrade: decimal('final_grade', { precision: 5, scale: 2 }),
+  remarks: varchar('remarks', { length: 20 }),
+  recordedAt: timestamp('recorded_at').defaultNow().notNull(),
+});
+
+export const graduationCandidates = pgTable('graduation_candidates', {
+  id: serial('id').primaryKey(),
+  studentId: integer('student_id').notNull().references(() => users.id),
+  schoolYear: varchar('school_year', { length: 9 }).notNull(),
+  status: varchar('status', { length: 20 }).default('Pending').notNull(),
+  dateCleared: timestamp('date_cleared'),
+});
+
+export const transcriptRequests = pgTable('transcript_requests', {
+  id: serial('id').primaryKey(),
+  studentId: integer('student_id').notNull().references(() => users.id),
+  requestDate: timestamp('request_date').defaultNow().notNull(),
+  status: varchar('status', { length: 20 }).default('Pending').notNull(),
+  releaseDate: timestamp('release_date'),
 });
 
 // Legacy assignments table (keeping for compatibility)
@@ -419,6 +471,18 @@ export const selectGuidanceWellnessProgramSchema = createSelectSchema(guidanceWe
 export const insertGuidanceProgramParticipantSchema = createInsertSchema(guidanceProgramParticipants).omit({ id: true, joinedAt: true });
 export const selectGuidanceProgramParticipantSchema = createSelectSchema(guidanceProgramParticipants);
 
+// Registrar office schemas
+export const insertRegistrarEnrollmentRequestSchema = createInsertSchema(registrarEnrollmentRequests).omit({ id: true, dateRequested: true, dateProcessed: true });
+export const selectRegistrarEnrollmentRequestSchema = createSelectSchema(registrarEnrollmentRequests);
+export const insertRegistrarSubjectSchema = createInsertSchema(registrarSubjects).omit({ id: true });
+export const selectRegistrarSubjectSchema = createSelectSchema(registrarSubjects);
+export const insertAcademicRecordSchema = createInsertSchema(academicRecords).omit({ id: true, recordedAt: true });
+export const selectAcademicRecordSchema = createSelectSchema(academicRecords);
+export const insertGraduationCandidateSchema = createInsertSchema(graduationCandidates).omit({ id: true, dateCleared: true });
+export const selectGraduationCandidateSchema = createSelectSchema(graduationCandidates);
+export const insertTranscriptRequestSchema = createInsertSchema(transcriptRequests).omit({ id: true, requestDate: true, releaseDate: true });
+export const selectTranscriptRequestSchema = createSelectSchema(transcriptRequests);
+
 // Inferred types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -474,6 +538,18 @@ export type GuidanceWellnessProgram = typeof guidanceWellnessPrograms.$inferSele
 export type InsertGuidanceWellnessProgram = z.infer<typeof insertGuidanceWellnessProgramSchema>;
 export type GuidanceProgramParticipant = typeof guidanceProgramParticipants.$inferSelect;
 export type InsertGuidanceProgramParticipant = z.infer<typeof insertGuidanceProgramParticipantSchema>;
+
+// Registrar office types
+export type RegistrarEnrollmentRequest = typeof registrarEnrollmentRequests.$inferSelect;
+export type InsertRegistrarEnrollmentRequest = z.infer<typeof insertRegistrarEnrollmentRequestSchema>;
+export type RegistrarSubject = typeof registrarSubjects.$inferSelect;
+export type InsertRegistrarSubject = z.infer<typeof insertRegistrarSubjectSchema>;
+export type AcademicRecord = typeof academicRecords.$inferSelect;
+export type InsertAcademicRecord = z.infer<typeof insertAcademicRecordSchema>;
+export type GraduationCandidate = typeof graduationCandidates.$inferSelect;
+export type InsertGraduationCandidate = z.infer<typeof insertGraduationCandidateSchema>;
+export type TranscriptRequest = typeof transcriptRequests.$inferSelect;
+export type InsertTranscriptRequest = z.infer<typeof insertTranscriptRequestSchema>;
 
 // User roles enum for validation
 export const UserRoles = ['admin', 'teacher', 'student', 'parent', 'guidance', 'registrar', 'accounting'] as const;

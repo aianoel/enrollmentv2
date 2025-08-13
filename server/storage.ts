@@ -3,6 +3,7 @@ import {
   teacherAssignments, orgChart, schoolSettings, tuitionFees, grades, chatMessages,
   teacherTasks, taskSubmissions, teacherMeetings, notifications,
   guidanceBehaviorRecords, guidanceCounselingSessions, guidanceWellnessPrograms, guidanceProgramParticipants,
+  registrarEnrollmentRequests, registrarSubjects, academicRecords, graduationCandidates, transcriptRequests,
   type User, type InsertUser, 
   type Announcement, type InsertAnnouncement, 
   type News, type InsertNews, 
@@ -24,7 +25,12 @@ import {
   type GuidanceBehaviorRecord, type InsertGuidanceBehaviorRecord,
   type GuidanceCounselingSession, type InsertGuidanceCounselingSession,
   type GuidanceWellnessProgram, type InsertGuidanceWellnessProgram,
-  type GuidanceProgramParticipant, type InsertGuidanceProgramParticipant
+  type GuidanceProgramParticipant, type InsertGuidanceProgramParticipant,
+  type RegistrarEnrollmentRequest, type InsertRegistrarEnrollmentRequest,
+  type RegistrarSubject, type InsertRegistrarSubject,
+  type AcademicRecord, type InsertAcademicRecord,
+  type GraduationCandidate, type InsertGraduationCandidate,
+  type TranscriptRequest, type InsertTranscriptRequest
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and } from "drizzle-orm";
@@ -152,6 +158,30 @@ export interface IStorage {
   getProgramParticipants(programId?: number): Promise<GuidanceProgramParticipant[]>;
   addProgramParticipant(participant: InsertGuidanceProgramParticipant): Promise<GuidanceProgramParticipant>;
   removeProgramParticipant(id: number): Promise<void>;
+  
+  // Registrar office features
+  getEnrollmentRequests(status?: string): Promise<RegistrarEnrollmentRequest[]>;
+  createEnrollmentRequest(request: InsertRegistrarEnrollmentRequest): Promise<RegistrarEnrollmentRequest>;
+  updateEnrollmentRequest(id: number, updates: Partial<InsertRegistrarEnrollmentRequest>): Promise<RegistrarEnrollmentRequest>;
+  deleteEnrollmentRequest(id: number): Promise<void>;
+  
+  getRegistrarSubjects(gradeLevel?: string): Promise<RegistrarSubject[]>;
+  createRegistrarSubject(subject: InsertRegistrarSubject): Promise<RegistrarSubject>;
+  updateRegistrarSubject(id: number, updates: Partial<InsertRegistrarSubject>): Promise<RegistrarSubject>;
+  deleteRegistrarSubject(id: number): Promise<void>;
+  
+  getAcademicRecords(studentId?: number, schoolYear?: string): Promise<AcademicRecord[]>;
+  createAcademicRecord(record: InsertAcademicRecord): Promise<AcademicRecord>;
+  updateAcademicRecord(id: number, updates: Partial<InsertAcademicRecord>): Promise<AcademicRecord>;
+  deleteAcademicRecord(id: number): Promise<void>;
+  
+  getGraduationCandidates(schoolYear?: string): Promise<GraduationCandidate[]>;
+  createGraduationCandidate(candidate: InsertGraduationCandidate): Promise<GraduationCandidate>;
+  updateGraduationCandidate(id: number, updates: Partial<InsertGraduationCandidate>): Promise<GraduationCandidate>;
+  
+  getTranscriptRequests(studentId?: number): Promise<TranscriptRequest[]>;
+  createTranscriptRequest(request: InsertTranscriptRequest): Promise<TranscriptRequest>;
+  updateTranscriptRequest(id: number, updates: Partial<InsertTranscriptRequest>): Promise<TranscriptRequest>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -595,6 +625,117 @@ export class DatabaseStorage implements IStorage {
 
   async removeProgramParticipant(id: number): Promise<void> {
     await db.delete(guidanceProgramParticipants).where(eq(guidanceProgramParticipants.id, id));
+  }
+
+  // Registrar office implementations
+  async getEnrollmentRequests(status?: string): Promise<RegistrarEnrollmentRequest[]> {
+    if (status) {
+      return await db.select().from(registrarEnrollmentRequests).where(eq(registrarEnrollmentRequests.status, status)).orderBy(desc(registrarEnrollmentRequests.dateRequested));
+    }
+    return await db.select().from(registrarEnrollmentRequests).orderBy(desc(registrarEnrollmentRequests.dateRequested));
+  }
+
+  async createEnrollmentRequest(request: InsertRegistrarEnrollmentRequest): Promise<RegistrarEnrollmentRequest> {
+    const [newRequest] = await db.insert(registrarEnrollmentRequests).values(request).returning();
+    return newRequest;
+  }
+
+  async updateEnrollmentRequest(id: number, updates: Partial<InsertRegistrarEnrollmentRequest>): Promise<RegistrarEnrollmentRequest> {
+    const [updatedRequest] = await db.update(registrarEnrollmentRequests).set({
+      ...updates,
+      dateProcessed: updates.status && updates.status !== 'Pending' ? new Date() : undefined
+    }).where(eq(registrarEnrollmentRequests.id, id)).returning();
+    return updatedRequest;
+  }
+
+  async deleteEnrollmentRequest(id: number): Promise<void> {
+    await db.delete(registrarEnrollmentRequests).where(eq(registrarEnrollmentRequests.id, id));
+  }
+
+  async getRegistrarSubjects(gradeLevel?: string): Promise<RegistrarSubject[]> {
+    if (gradeLevel) {
+      return await db.select().from(registrarSubjects).where(eq(registrarSubjects.gradeLevel, gradeLevel)).orderBy(registrarSubjects.subjectCode);
+    }
+    return await db.select().from(registrarSubjects).orderBy(registrarSubjects.subjectCode);
+  }
+
+  async createRegistrarSubject(subject: InsertRegistrarSubject): Promise<RegistrarSubject> {
+    const [newSubject] = await db.insert(registrarSubjects).values(subject).returning();
+    return newSubject;
+  }
+
+  async updateRegistrarSubject(id: number, updates: Partial<InsertRegistrarSubject>): Promise<RegistrarSubject> {
+    const [updatedSubject] = await db.update(registrarSubjects).set(updates).where(eq(registrarSubjects.id, id)).returning();
+    return updatedSubject;
+  }
+
+  async deleteRegistrarSubject(id: number): Promise<void> {
+    await db.delete(registrarSubjects).where(eq(registrarSubjects.id, id));
+  }
+
+  async getAcademicRecords(studentId?: number, schoolYear?: string): Promise<AcademicRecord[]> {
+    if (studentId && schoolYear) {
+      return await db.select().from(academicRecords).where(and(eq(academicRecords.studentId, studentId), eq(academicRecords.schoolYear, schoolYear))).orderBy(desc(academicRecords.recordedAt));
+    } else if (studentId) {
+      return await db.select().from(academicRecords).where(eq(academicRecords.studentId, studentId)).orderBy(desc(academicRecords.recordedAt));
+    } else if (schoolYear) {
+      return await db.select().from(academicRecords).where(eq(academicRecords.schoolYear, schoolYear)).orderBy(desc(academicRecords.recordedAt));
+    }
+    return await db.select().from(academicRecords).orderBy(desc(academicRecords.recordedAt));
+  }
+
+  async createAcademicRecord(record: InsertAcademicRecord): Promise<AcademicRecord> {
+    const [newRecord] = await db.insert(academicRecords).values(record).returning();
+    return newRecord;
+  }
+
+  async updateAcademicRecord(id: number, updates: Partial<InsertAcademicRecord>): Promise<AcademicRecord> {
+    const [updatedRecord] = await db.update(academicRecords).set(updates).where(eq(academicRecords.id, id)).returning();
+    return updatedRecord;
+  }
+
+  async deleteAcademicRecord(id: number): Promise<void> {
+    await db.delete(academicRecords).where(eq(academicRecords.id, id));
+  }
+
+  async getGraduationCandidates(schoolYear?: string): Promise<GraduationCandidate[]> {
+    if (schoolYear) {
+      return await db.select().from(graduationCandidates).where(eq(graduationCandidates.schoolYear, schoolYear)).orderBy(graduationCandidates.status);
+    }
+    return await db.select().from(graduationCandidates).orderBy(graduationCandidates.status);
+  }
+
+  async createGraduationCandidate(candidate: InsertGraduationCandidate): Promise<GraduationCandidate> {
+    const [newCandidate] = await db.insert(graduationCandidates).values(candidate).returning();
+    return newCandidate;
+  }
+
+  async updateGraduationCandidate(id: number, updates: Partial<InsertGraduationCandidate>): Promise<GraduationCandidate> {
+    const [updatedCandidate] = await db.update(graduationCandidates).set({
+      ...updates,
+      dateCleared: updates.status === 'Cleared' ? new Date() : undefined
+    }).where(eq(graduationCandidates.id, id)).returning();
+    return updatedCandidate;
+  }
+
+  async getTranscriptRequests(studentId?: number): Promise<TranscriptRequest[]> {
+    if (studentId) {
+      return await db.select().from(transcriptRequests).where(eq(transcriptRequests.studentId, studentId)).orderBy(desc(transcriptRequests.requestDate));
+    }
+    return await db.select().from(transcriptRequests).orderBy(desc(transcriptRequests.requestDate));
+  }
+
+  async createTranscriptRequest(request: InsertTranscriptRequest): Promise<TranscriptRequest> {
+    const [newRequest] = await db.insert(transcriptRequests).values(request).returning();
+    return newRequest;
+  }
+
+  async updateTranscriptRequest(id: number, updates: Partial<InsertTranscriptRequest>): Promise<TranscriptRequest> {
+    const [updatedRequest] = await db.update(transcriptRequests).set({
+      ...updates,
+      releaseDate: updates.status === 'Released' ? new Date() : undefined
+    }).where(eq(transcriptRequests.id, id)).returning();
+    return updatedRequest;
   }
 }
 
