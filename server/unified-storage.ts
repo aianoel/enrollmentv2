@@ -159,6 +159,104 @@ export class DatabaseStorage implements IStorage {
     await db.insert(notifications).values(notification);
   }
 
+  // Enhanced enrollment methods
+  async createEnrollmentApplication(data: any): Promise<any> {
+    const result = await db.insert(enrollmentApplications).values(data).returning();
+    return result[0];
+  }
+
+  async getEnrollmentApplication(id: number): Promise<any> {
+    const result = await db.select().from(enrollmentApplications).where(eq(enrollmentApplications.id, id)).limit(1);
+    return result[0];
+  }
+
+  async updateEnrollmentApplication(id: number, updates: any): Promise<void> {
+    await db.update(enrollmentApplications).set(updates).where(eq(enrollmentApplications.id, id));
+  }
+
+  async getEnrollmentApplications(filters: any): Promise<any[]> {
+    let query = db.select().from(enrollmentApplications);
+    if (filters.status) {
+      query = query.where(eq(enrollmentApplications.status, filters.status));
+    }
+    return await query.limit(filters.limit || 20).offset((filters.page - 1) * (filters.limit || 20));
+  }
+
+  async createEnrollmentDocument(data: any): Promise<any> {
+    const result = await db.insert(enrollmentDocuments).values(data).returning();
+    return result[0];
+  }
+
+  async updateEnrollmentProgress(studentId: number, data: any): Promise<void> {
+    await db.insert(enrollmentProgress).values({ studentId, ...data }).onConflictDoUpdate({
+      target: enrollmentProgress.studentId,
+      set: data
+    });
+  }
+
+  async getEnrollmentProgress(studentId: number): Promise<any> {
+    const result = await db.select().from(enrollmentProgress).where(eq(enrollmentProgress.studentId, studentId)).orderBy(desc(enrollmentProgress.lastUpdated)).limit(1);
+    return result[0];
+  }
+
+  // Enhanced task methods
+  async createTask(data: any): Promise<any> {
+    const result = await db.insert(tasks).values(data).returning();
+    return result[0];
+  }
+
+  async createTaskQuestion(data: any): Promise<any> {
+    const result = await db.insert(taskQuestions).values(data).returning();
+    return result[0];
+  }
+
+  async getTaskById(id: number): Promise<any> {
+    const result = await db.select().from(tasks).where(eq(tasks.id, id)).limit(1);
+    return result[0];
+  }
+
+  async getTasksBySection(sectionId: number): Promise<any[]> {
+    return await db.select().from(tasks).where(eq(tasks.sectionId, sectionId));
+  }
+
+  async getTaskQuestions(taskId: number): Promise<any[]> {
+    return await db.select().from(taskQuestions).where(eq(taskQuestions.taskId, taskId));
+  }
+
+  async createTaskSubmission(data: any): Promise<any> {
+    const result = await db.insert(taskSubmissions).values(data).returning();
+    return result[0];
+  }
+
+  async getTaskSubmission(taskId: number, studentId: number): Promise<any> {
+    const result = await db.select().from(taskSubmissions).where(
+      and(eq(taskSubmissions.taskId, taskId), eq(taskSubmissions.studentId, studentId))
+    ).limit(1);
+    return result[0];
+  }
+
+  async getTaskSubmissionById(id: number): Promise<any> {
+    const result = await db.select().from(taskSubmissions).where(eq(taskSubmissions.id, id)).limit(1);
+    return result[0];
+  }
+
+  async updateTaskSubmission(id: number, updates: any): Promise<void> {
+    await db.update(taskSubmissions).set(updates).where(eq(taskSubmissions.id, id));
+  }
+
+  async verifyTeacherSectionAccess(teacherId: number, sectionId: number): Promise<boolean> {
+    const result = await db.select().from(teacherAssignments).where(
+      and(eq(teacherAssignments.teacherId, teacherId), eq(teacherAssignments.sectionId, sectionId))
+    ).limit(1);
+    return result.length > 0;
+  }
+
+  async getUsersByRole(role: string): Promise<User[]> {
+    const roleResult = await db.select().from(roles).where(eq(roles.name, role)).limit(1);
+    if (!roleResult[0]) return [];
+    return await db.select().from(users).where(eq(users.roleId, roleResult[0].id));
+  }
+
   // Announcements
   async getAnnouncements(): Promise<Announcement[]> {
     return await db.select().from(announcements).orderBy(desc(announcements.createdAt));

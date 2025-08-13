@@ -1,0 +1,794 @@
+Awesome—let’s ship a clean, production-ready bundle:
+
+an enhanced unified PostgreSQL schema,
+
+a solid API design (Express + pg + Socket.IO), and
+
+React + Tailwind dashboards wired to real data and realtime.
+
+Below is everything you need to run end-to-end. Copy, paste, and go.
+
+1) Enhanced Unified PostgreSQL Schema
+Uses strong constraints, FKs, enums, indices, and a few helpful triggers.
+If you already created some tables, adjust CREATE TYPE/CREATE TABLE IF NOT EXISTS accordingly.
+
+sql
+Copy
+Edit
+-- ==== ENUMS ===========================================================
+DO $$ BEGIN
+  CREATE TYPE role_name AS ENUM (
+    'Admin','Principal','Academic Coordinator','Registrar',
+    'Accounting','Guidance','Teacher','Student','Parent'
+  );
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+
+DO $$ BEGIN
+  CREATE TYPE enrollment_status AS ENUM (
+    'Draft','Submitted','Pending Documents','Under Review',
+    'Approved','Rejected','Enrolled'
+  );
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+
+DO $$ BEGIN
+  CREATE TYPE task_type AS ENUM ('Assignment','Quiz','Test');
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+
+DO $$ BEGIN
+  CREATE TYPE invoice_status AS ENUM ('Unpaid','Partial','Paid','Voided');
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+
+-- ==== CORE: roles, users, auth =======================================
+CREATE TABLE IF NOT EXISTS roles (
+  id SERIAL PRIMARY KEY,
+  name role_name UNIQUE NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS users (
+  id SERIAL PRIMARY KEY,
+  role_id INT NOT NULL REFERENCES roles(id) ON DELETE RESTRICT,
+  first_name TEXT NOT NULL,
+  last_name  TEXT NOT NULL,
+  email TEXT UNIQUE NOT NULL,
+  password_hash TEXT NOT NULL,
+  is_active BOOLEAN NOT NULL DEFAULT TRUE,
+  profile_image TEXT,
+  created_at TIMESTAMP NOT NULL DEFAULT now(),
+  last_login TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_users_role_id ON users(role_id);
+CREATE INDEX IF NOT EXISTS idx_users_email_ci ON users(LOWER(email));
+
+-- Refresh tokens (optional)
+CREATE TABLE IF NOT EXISTS auth_tokens (
+  id BIGSERIAL PRIMARY KEY,
+  user_id INT REFERENCES users(id) ON DELETE CASCADE,
+  refresh_token TEXT NOT NULL,
+  expires_at TIMESTAMP NOT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT now()
+);
+
+-- ==== Organization: sections, subjects, assignments ===================
+CREATE TABLE IF NOT EXISTS sections (
+  id SERIAL PRIMARY KEY,
+  name TEXT NOT NULL,
+  grade_level TEXT NOT NULL,
+  adviser_id INT REFERENCES users(id) ON DELETE SET NULL
+);
+CREATE INDEX IF NOT EXISTS idx_sections_grade ON sections(grade_level);
+
+CREATE TABLE IF NOT EXISTS subjects (
+  id SERIAL PRIMARY KEY,
+  subject_code TEXT UNIQUE,
+  name TEXT NOT NULL,
+  description TEXT
+);
+
+CREATE TABLE IF NOT EXISTS teacher_assignments (
+  id SERIAL PRIMARY KEY,
+  teacher_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  section_id INT NOT NULL REFERENCES sections(id) ON DELETE CASCADE,
+  subject_id INT NOT NULL REFERENCES subjects(id) ON DELETE CASCADE,
+  school_year TEXT NOT NULL
+);
+CREATE UNIQUE INDEX IF NOT EXISTS uq_teacher_load
+  ON teacher_assignments(teacher_id,section_id,subject_id,school_year);
+
+-- ==== Enrollment: multi-step + documents + progress ===================
+CREATE TABLE IF NOT EXISTS enrollment_applications (
+  id SERIAL PRIMARY KEY,
+  student_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  school_year TEXT NOT NULL,
+  status enrollment_status NOT NULL DEFAULT 'Draft',
+  submitted_at TIMESTAMP,
+  decided_at TIMESTAMP,
+  decided_by INT REFERENCES users(id) ON DELETE SET NULL,
+  remarks TEXT,
+  created_at TIMESTAMP NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS idx_enroll_student ON enrollment_applications(student_id);
+
+CREATE TABLE IF NOT EXISTS enrollment_documents (
+  id SERIAL PRIMARY KEY,
+  application_id INT NOT NULL REFERENCES enrollment_applications(id) ON DELETE CASCADE,
+  doc_type TEXT NOT NULL,      -- BirthCert, ReportCard, PhotoID, etc.
+  file_url TEXT NOT NULL,
+  uploaded_at TIMESTAMP NOT NULL DEFAULT now()
+);
+
+-- Student-facing tracker (latest row = current)
+CREATE TABLE IF NOT EXISTS enrollment_progress (
+  id SERIAL PRIMARY KEY,
+  student_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  application_id INT REFERENCES enrollment_applications(id) ON DELETE CASCADE,
+  current_status enrollment_status NOT NULL,
+  remarks TEXT,
+  last_updated TIMESTAMP NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS idx_enroll_prog_student ON enrollment_progress(student_id);
+
+CREATE OR REPLACE FUNCTION set_enroll_prog_timestamp()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.last_updated := now();
+  RETURN NEW;
+END $$ LANGUAGE plpgsql;
+
+DO $$ BEGIN
+  CREATE TRIGGER trg_enroll_prog_ts
+  BEFORE INSERT OR UPDATE ON enrollment_progress
+  FOR EACH ROW EXECUTE FUNCTION set_enroll_prog_timestamp();
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+
+-- ==== Teaching: tasks, questions (for quiz/test), submissions =========
+CREATE TABLE IF NOT EXISTS tasks (
+  id SERIAL PRIMARY KEY,
+  teacher_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  section_id INT NOT NULL REFERENCES sections(id) ON DELETE CASCADE,
+  subject_id INT REFERENCES subjects(id),
+  title TEXT NOT NULL,
+  description TEXT,
+  type task_type NOT NULL,
+  timer_minutes INT,           -- optional for Quiz/Test
+  due_at TIMESTAMP,
+  created_at TIMESTAMP NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS idx_tasks_section ON tasks(section_id);
+
+-- Optional questions bank for quizzes/tests
+CREATE TABLE IF NOT EXISTS task_questions (
+  id SERIAL PRIMARY KEY,
+  task_id INT NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
+  question TEXT NOT NULL,
+  choices JSONB,               -- ["A","B","C","D"]
+  answer TEXT                  -- correct answer (match choice or free-text)
+);
+
+CREATE TABLE IF NOT EXISTS task_submissions (
+  id SERIAL PRIMARY KEY,
+  task_id INT NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
+  student_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  submission_text TEXT,
+  file_url TEXT,
+  submitted_at TIMESTAMP NOT NULL DEFAULT now(),
+  score NUMERIC(6,2),
+  graded_at TIMESTAMP,
+  graded_by INT REFERENCES users(id) ON DELETE SET NULL
+);
+CREATE UNIQUE INDEX IF NOT EXISTS uq_submission_once ON task_submissions(task_id,student_id);
+
+-- ==== Modules (teacher uploads for section) ===========================
+CREATE TABLE IF NOT EXISTS modules (
+  id SERIAL PRIMARY KEY,
+  teacher_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  section_id INT NOT NULL REFERENCES sections(id) ON DELETE CASCADE,
+  title TEXT NOT NULL,
+  description TEXT,
+  file_url TEXT NOT NULL,
+  uploaded_at TIMESTAMP NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS idx_modules_section ON modules(section_id);
+
+-- ==== Meetings (Google Meet style) ====================================
+CREATE TABLE IF NOT EXISTS meetings (
+  id SERIAL PRIMARY KEY,
+  host_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  section_id INT REFERENCES sections(id) ON DELETE CASCADE,
+  title TEXT NOT NULL,
+  meeting_link TEXT NOT NULL,
+  scheduled_at TIMESTAMP NOT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT now()
+);
+
+-- ==== Chat + presence =================================================
+CREATE TABLE IF NOT EXISTS conversations (
+  id SERIAL PRIMARY KEY,
+  conversation_type TEXT NOT NULL DEFAULT 'private' -- 'private' or 'group'
+);
+
+CREATE TABLE IF NOT EXISTS conversation_members (
+  id SERIAL PRIMARY KEY,
+  conversation_id INT NOT NULL REFERENCES conversations(id) ON DELETE CASCADE,
+  user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  joined_at TIMESTAMP NOT NULL DEFAULT now(),
+  UNIQUE(conversation_id, user_id)
+);
+
+CREATE TABLE IF NOT EXISTS messages (
+  id SERIAL PRIMARY KEY,
+  conversation_id INT NOT NULL REFERENCES conversations(id) ON DELETE CASCADE,
+  sender_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  message_text TEXT,
+  attachment_url TEXT,
+  created_at TIMESTAMP NOT NULL DEFAULT now(),
+  is_read BOOLEAN NOT NULL DEFAULT FALSE
+);
+CREATE INDEX IF NOT EXISTS idx_messages_conv_time ON messages(conversation_id, created_at);
+
+CREATE TABLE IF NOT EXISTS user_status (
+  user_id INT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+  is_online BOOLEAN NOT NULL DEFAULT FALSE,
+  last_seen TIMESTAMP
+);
+
+-- ==== Announcements & Events =========================================
+CREATE TABLE IF NOT EXISTS announcements (
+  id SERIAL PRIMARY KEY,
+  title TEXT NOT NULL,
+  content TEXT NOT NULL,
+  role_access role_name[] DEFAULT '{Admin,Principal,Academic Coordinator,Teacher,Student,Parent,Registrar,Accounting,Guidance}',
+  created_by INT REFERENCES users(id) ON DELETE SET NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS events (
+  id SERIAL PRIMARY KEY,
+  title TEXT NOT NULL,
+  description TEXT,
+  event_date TIMESTAMP NOT NULL,
+  created_by INT REFERENCES users(id) ON DELETE SET NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT now()
+);
+
+-- ==== Accounting ======================================================
+CREATE TABLE IF NOT EXISTS fee_structures (
+  id SERIAL PRIMARY KEY,
+  grade_level TEXT NOT NULL,
+  tuition_fee NUMERIC(12,2) NOT NULL,
+  misc_fee NUMERIC(12,2) NOT NULL DEFAULT 0,
+  other_fee NUMERIC(12,2) NOT NULL DEFAULT 0,
+  effective_school_year TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS invoices (
+  id SERIAL PRIMARY KEY,
+  student_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  school_year TEXT NOT NULL,
+  due_date DATE NOT NULL,
+  total_amount NUMERIC(12,2) NOT NULL,
+  status invoice_status NOT NULL DEFAULT 'Unpaid',
+  created_at TIMESTAMP NOT NULL DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS invoice_items (
+  id SERIAL PRIMARY KEY,
+  invoice_id INT NOT NULL REFERENCES invoices(id) ON DELETE CASCADE,
+  description TEXT NOT NULL,
+  amount NUMERIC(12,2) NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS payments (
+  id SERIAL PRIMARY KEY,
+  invoice_id INT NOT NULL REFERENCES invoices(id) ON DELETE CASCADE,
+  amount_paid NUMERIC(12,2) NOT NULL,
+  payment_date TIMESTAMP NOT NULL DEFAULT now(),
+  payment_method TEXT,
+  receipt_number TEXT
+);
+
+CREATE TABLE IF NOT EXISTS scholarships (
+  id SERIAL PRIMARY KEY,
+  student_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  scholarship_name TEXT NOT NULL,
+  discount_percentage NUMERIC(5,2) NOT NULL,
+  effective_school_year TEXT NOT NULL
+);
+
+-- ==== Guidance ========================================================
+CREATE TABLE IF NOT EXISTS guidance_reports (
+  id SERIAL PRIMARY KEY,
+  student_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  counselor_id INT REFERENCES users(id) ON DELETE SET NULL,
+  report_type TEXT,
+  details TEXT,
+  created_at TIMESTAMP NOT NULL DEFAULT now()
+);
+
+-- ==== Notifications & Audit ==========================================
+CREATE TABLE IF NOT EXISTS notifications (
+  id SERIAL PRIMARY KEY,
+  user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  title TEXT NOT NULL,
+  body TEXT,
+  is_read BOOLEAN NOT NULL DEFAULT FALSE,
+  created_at TIMESTAMP NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS idx_notifications_user ON notifications(user_id, is_read);
+
+CREATE TABLE IF NOT EXISTS audit_logs (
+  id BIGSERIAL PRIMARY KEY,
+  actor_id INT REFERENCES users(id) ON DELETE SET NULL,
+  action TEXT NOT NULL,            -- e.g., "ENROLLMENT_APPROVED"
+  entity TEXT,                      -- e.g., "enrollment_applications"
+  entity_id TEXT,
+  meta JSONB,
+  created_at TIMESTAMP NOT NULL DEFAULT now()
+);
+2) Robust API Design (Node/Express + pg + Socket.IO)
+Key stacks
+
+pg pool for DB, bcrypt for password, jsonwebtoken (access/refresh), multer (uploads), zod (validation), socket.io (realtime).
+
+RBAC: requireAuth + requireRole(['Teacher']).
+
+Pagination: ?page=&limit= on list endpoints.
+
+Consistent errors: { error: '...' }.
+
+Endpoints (high level)
+Auth
+
+POST /auth/login → returns {access, refresh, user:{id, role}}
+
+POST /auth/refresh
+
+POST /auth/logout
+
+Users
+
+GET /users/me
+
+POST /users (Admin)
+
+PATCH /users/:id (Admin)
+
+PATCH /users/:id/activate (Admin)
+
+Announcements / Events
+
+GET /announcements?role=Principal
+
+POST /announcements (Admin/Principal/Coordinator)
+
+GET /events
+
+POST /events (Admin/Principal/Coordinator)
+
+Enrollment
+
+POST /enrollment/applications (Student)
+
+POST /enrollment/applications/:id/submit (Student)
+
+GET /enrollment/applications/me (Student)
+
+PATCH /enrollment/applications/:id/decision (Registrar/Admin)
+
+GET /enrollment/progress/me (Student) ← Tracker
+
+PATCH /enrollment/progress/:studentId (Registrar/Admin)
+
+Teaching
+
+POST /tasks (Teacher)
+
+GET /tasks/section/:sectionId
+
+POST /tasks/:id/submissions (Student)
+
+PATCH /submissions/:id/grade (Teacher)
+
+Modules
+
+POST /modules (Teacher, file upload)
+
+GET /modules/section/:sectionId
+
+Meetings
+
+POST /meetings (Teacher/Coordinator/Principal)
+
+GET /meetings/section/:sectionId
+
+Chat (REST + WS)
+
+POST /conversations (private/group)
+
+POST /conversations/:id/messages
+
+GET /conversations (mine)
+
+GET /conversations/:id/messages
+
+Socket events: presence, send_message, new_message
+
+Accounting
+
+GET /invoices/me (Student/Parent)
+
+POST /invoices (Accounting/Admin)
+
+POST /payments (Accounting/Admin)
+
+GET /reports/finance/summary (Admin/Principal)
+
+Guidance
+
+POST /guidance/reports (Guidance)
+
+GET /guidance/reports/student/:id (Guidance/Admin)
+
+Notifications
+
+GET /notifications
+
+PATCH /notifications/:id/read
+
+Sample Critical Routes (login, enrollment, modules)
+ts
+Copy
+Edit
+// auth/login
+app.post('/auth/login', zValidate(LoginSchema), async (req, res) => {
+  const { email, password } = req.body;
+  const q = `
+    SELECT u.id, u.password_hash, r.name AS role, u.is_active
+    FROM users u JOIN roles r ON r.id=u.role_id
+    WHERE LOWER(u.email) = LOWER($1)`;
+  const { rows } = await pool.query(q, [email]);
+  if (!rows.length) return res.status(401).json({ error: 'Invalid email' });
+  const u = rows[0];
+  if (!u.is_active) return res.status(403).json({ error: 'Account disabled' });
+
+  const ok = await bcrypt.compare(password, u.password_hash);
+  if (!ok) return res.status(401).json({ error: 'Invalid password' });
+
+  const access = signAccess({ id: u.id, role: u.role });
+  const refresh = signRefresh({ id: u.id, role: u.role });
+  res.json({ access, refresh, user: { id: u.id, role: u.role } });
+});
+ts
+Copy
+Edit
+// enrollment tracker (student reads)
+app.get('/enrollment/progress/me', requireAuth, async (req, res) => {
+  const { rows } = await pool.query(
+    `SELECT * FROM enrollment_progress WHERE student_id=$1 ORDER BY last_updated DESC LIMIT 1`,
+    [req.user.id]
+  );
+  res.json(rows[0] || null);
+});
+
+// registrar updates tracker + notifies student
+app.patch('/enrollment/progress/:studentId',
+  requireAuth, requireRole(['Registrar','Admin']),
+  async (req, res) => {
+    const { current_status, remarks } = req.body;
+    await pool.query(
+      `INSERT INTO enrollment_progress (student_id, current_status, remarks)
+       VALUES ($1,$2,$3)`, [req.params.studentId, current_status, remarks || null]
+    );
+    await pool.query(
+      `INSERT INTO notifications (user_id, title, body)
+       VALUES ($1,$2,$3)`,
+      [req.params.studentId, 'Enrollment Update', `Status: ${current_status}`]
+    );
+    res.json({ ok: true });
+  }
+);
+ts
+Copy
+Edit
+// upload module (Teacher)
+const upload = multer({ dest: process.env.UPLOAD_DIR || 'uploads' });
+app.post('/modules',
+  requireAuth, requireRole(['Teacher']),
+  upload.single('file'),
+  async (req, res) => {
+    const { section_id, title, description } = req.body;
+    const file_url = `/uploads/${req.file.filename}`;
+    await pool.query(
+      `INSERT INTO modules (teacher_id, section_id, title, description, file_url)
+       VALUES ($1,$2,$3,$4,$5)`,
+      [req.user.id, section_id, title, description, file_url]
+    );
+    // notify section students
+    await pool.query(
+      `INSERT INTO notifications (user_id, title, body)
+       SELECT u.id, 'New Module', $1
+       FROM users u WHERE u.role_id IN (SELECT id FROM roles WHERE name='Student')
+       AND u.id IN (
+         SELECT ta.student_id FROM (
+           SELECT DISTINCT $2::int AS section_id
+         ) s
+         JOIN users ta ON ta.role_id=(SELECT id FROM roles WHERE name='Student')
+         WHERE ta.id IS NOT NULL AND ta.id>0
+       )`, [`${title} uploaded`, section_id]  -- NOTE: replace with your own section→student mapping if stored separately
+    );
+    res.json({ ok: true });
+  }
+);
+NOTE: If you keep a separate student roster table (recommended), e.g., section_students(user_id, section_id), use it for accurate notifications and access.
+
+Socket.IO (presence + DM)
+Server: on connection, set user_status.is_online=true; on disconnect, set false.
+
+Events:
+
+send_message → insert into messages, emit new_message to recipients
+
+presence_request → push online list
+
+Optionally use Redis adapter when scaling.
+
+3) React + Tailwind Frontend (Role Dashboards + Realtime)
+Packages: React Router, Axios, Socket.IO client, Zustand/Redux (optional), Tailwind.
+
+App wiring
+tsx
+Copy
+Edit
+// api/http.ts
+import axios from 'axios';
+export const http = axios.create({ baseURL: import.meta.env.VITE_API_URL });
+http.interceptors.request.use(cfg => {
+  const t = localStorage.getItem('access');
+  if (t) cfg.headers.Authorization = `Bearer ${t}`;
+  return cfg;
+});
+tsx
+Copy
+Edit
+// auth/guards.tsx
+import { Navigate } from 'react-router-dom';
+export const Protected = ({ children }: { children: JSX.Element }) => {
+  const t = localStorage.getItem('access');
+  return t ? children : <Navigate to="/login" replace />;
+};
+export const RoleGate = ({ allow, children }:{allow:string[], children:JSX.Element}) => {
+  const role = localStorage.getItem('role') || '';
+  return allow.includes(role) ? children : <Navigate to="/unauthorized" replace />;
+};
+tsx
+Copy
+Edit
+// sockets/SocketProvider.tsx
+import { createContext, useContext, useEffect, useMemo } from 'react';
+import { io, Socket } from 'socket.io-client';
+
+const SocketCtx = createContext<Socket|null>(null);
+export const useSocket = () => useContext(SocketCtx);
+
+export function SocketProvider({ children }:{children:React.ReactNode}) {
+  const userId = localStorage.getItem('userId');
+  const socket = useMemo(() => io(import.meta.env.VITE_API_URL, { auth: { userId } }), [userId]);
+  useEffect(() => () => { socket.disconnect(); }, [socket]);
+  return <SocketCtx.Provider value={socket}>{children}</SocketCtx.Provider>;
+}
+tsx
+Copy
+Edit
+// main router
+<BrowserRouter>
+  <SocketProvider>
+    <Routes>
+      <Route path="/login" element={<Login />} />
+      <Route path="/principal" element={<Protected><RoleGate allow={['Principal']}><PrincipalDashboard/></RoleGate></Protected>} />
+      <Route path="/coordinator" element={<Protected><RoleGate allow={['Academic Coordinator']}><CoordinatorDashboard/></RoleGate></Protected>} />
+      <Route path="/teacher" element={<Protected><RoleGate allow={['Teacher']}><TeacherDashboard/></RoleGate></Protected>} />
+      <Route path="/student" element={<Protected><RoleGate allow={['Student']}><StudentDashboard/></RoleGate></Protected>} />
+      <Route path="/registrar" element={<Protected><RoleGate allow={['Registrar']}><RegistrarDashboard/></RoleGate></Protected>} />
+      <Route path="/accounting" element={<Protected><RoleGate allow={['Accounting']}><AccountingDashboard/></RoleGate></Protected>} />
+      <Route path="/guidance" element={<Protected><RoleGate allow={['Guidance']}><GuidanceDashboard/></RoleGate></Protected>} />
+    </Routes>
+  </SocketProvider>
+</BrowserRouter>
+Shared UI bits
+tsx
+Copy
+Edit
+// components/LogoutButton.tsx
+export default function LogoutButton(){
+  return (
+    <button
+      className="px-3 py-2 rounded bg-red-500 text-white"
+      onClick={() => { localStorage.clear(); window.location.href='/login'; }}>
+      Logout
+    </button>
+  );
+}
+tsx
+Copy
+Edit
+// components/NotificationsBell.tsx
+import { useEffect, useState } from 'react';
+import { http } from '../api/http';
+export function NotificationsBell(){
+  const [count, setCount] = useState(0);
+  const load = async ()=> {
+    const { data } = await http.get('/notifications?unread=1');
+    setCount(data.total || data.length || 0);
+  };
+  useEffect(() => { load(); const t=setInterval(load,10000); return ()=>clearInterval(t); }, []);
+  return <div className="relative">
+    <span className="material-icons">notifications</span>
+    {count>0 && <span className="absolute -top-1 -right-1 text-xs bg-blue-600 text-white rounded-full px-1">{count}</span>}
+  </div>;
+}
+Dashboards (lean examples)
+Principal
+tsx
+Copy
+Edit
+function Stat({label,value}:{label:string,value:string|number}) {
+  return <div className="bg-white rounded-xl p-4 shadow"><div className="text-sm text-gray-500">{label}</div><div className="text-2xl font-bold">{value}</div></div>;
+}
+export default function PrincipalDashboard(){
+  const [ann,setAnn]=useState([]); const [ev,setEv]=useState([]);
+  useEffect(()=>{(async()=>{
+    setAnn((await http.get('/announcements?role=Principal')).data);
+    setEv((await http.get('/events')).data);
+  })()},[]);
+  return <div className="min-h-screen bg-gray-100 p-6">
+    <div className="flex items-center justify-between mb-4">
+      <h1 className="text-2xl font-bold">Principal Dashboard</h1>
+      <div className="flex items-center gap-4"><NotificationsBell/><LogoutButton/></div>
+    </div>
+    <div className="grid md:grid-cols-4 gap-4">
+      <Stat label="Total Students" value="—" />
+      <Stat label="Teachers" value="—" />
+      <Stat label="Unpaid Invoices" value="—" />
+      <Stat label="Open Guidance Cases" value="—" />
+    </div>
+    <div className="grid md:grid-cols-2 gap-4 mt-4">
+      <div className="bg-white rounded-xl p-4 shadow">
+        <h2 className="font-semibold mb-2">Announcements</h2>
+        <ul className="space-y-2">{ann.map((a:any)=><li key={a.id}><b>{a.title}</b> — {a.content}</li>)}</ul>
+      </div>
+      <div className="bg-white rounded-xl p-4 shadow">
+        <h2 className="font-semibold mb-2">Upcoming Events</h2>
+        <ul className="space-y-2">{ev.map((e:any)=><li key={e.id}><b>{e.title}</b> — {new Date(e.event_date).toLocaleString()}</li>)}</ul>
+      </div>
+    </div>
+  </div>;
+}
+Academic Coordinator
+tsx
+Copy
+Edit
+export default function CoordinatorDashboard(){
+  const [tasks,setTasks]=useState([]);
+  useEffect(()=>{(async()=>{
+    const {data} = await http.get('/tasks/overview'); // build endpoint to aggregate per section/subject
+    setTasks(data);
+  })()},[]);
+  return <div className="min-h-screen bg-gray-100 p-6">
+    <div className="flex items-center justify-between"><h1 className="text-2xl font-bold">Academic Coordinator</h1><LogoutButton/></div>
+    <div className="bg-white rounded-xl p-4 shadow mt-4">
+      <h2 className="font-semibold mb-2">Teacher Activities (Recent)</h2>
+      <ul className="space-y-2">{tasks.map((t:any)=><li key={t.id}>
+        <b>{t.title}</b> — {t.section_name} / {t.subject_name} • {t.type}
+      </li>)}</ul>
+    </div>
+  </div>;
+}
+Teacher (modules + tasks)
+tsx
+Copy
+Edit
+export function TeacherDashboard(){
+  const [mySections,setMySections]=useState([]); const [mods,setMods]=useState([]);
+  useEffect(()=>{(async()=>{
+    setMySections((await http.get('/me/sections')).data);
+  })()},[]);
+  async function loadModules(sectionId:number){
+    setMods((await http.get(`/modules/section/${sectionId}`)).data);
+  }
+  return <div className="p-6 bg-gray-100 min-h-screen">
+    <div className="flex justify-between"><h1 className="text-2xl font-bold">Teacher</h1><LogoutButton/></div>
+    <div className="mt-4 grid md:grid-cols-2 gap-4">
+      <div className="bg-white p-4 rounded-xl shadow">
+        <h2 className="font-semibold">My Sections</h2>
+        <ul className="space-y-2">
+          {mySections.map((s:any)=>
+            <li key={s.id}><button className="text-blue-600 underline" onClick={()=>loadModules(s.id)}>
+              {s.name} ({s.grade_level})
+            </button></li>)}
+        </ul>
+      </div>
+      <div className="bg-white p-4 rounded-xl shadow">
+        <h2 className="font-semibold">Modules</h2>
+        <ul className="space-y-2">{mods.map((m:any)=><li key={m.id}><b>{m.title}</b> — <a className="text-blue-600 underline" href={m.file_url} target="_blank">Open</a></li>)}</ul>
+      </div>
+    </div>
+  </div>;
+}
+Student (enrollment tracker + assigned stuff)
+tsx
+Copy
+Edit
+export function StudentDashboard(){
+  const [prog,setProg]=useState<any>(null);
+  const [mods,setMods]=useState([]);
+  useEffect(()=>{(async()=>{
+    setProg((await http.get('/enrollment/progress/me')).data);
+    // load my section modules (build /me/section then fetch modules)
+    const section = (await http.get('/me/section')).data;
+    if (section?.id) setMods((await http.get(`/modules/section/${section.id}`)).data);
+  })()},[]);
+  return <div className="p-6 bg-gray-100 min-h-screen">
+    <div className="flex justify-between"><h1 className="text-2xl font-bold">Student</h1><LogoutButton/></div>
+    <div className="mt-4 grid md:grid-cols-2 gap-4">
+      <div className="bg-white p-4 rounded-xl shadow">
+        <h2 className="font-semibold">Enrollment Progress</h2>
+        <p>Status: <b>{prog?.current_status ?? '—'}</b></p>
+        <p>Last update: {prog?.last_updated ? new Date(prog.last_updated).toLocaleString() : '—'}</p>
+        <p>Remarks: {prog?.remarks ?? '—'}</p>
+      </div>
+      <div className="bg-white p-4 rounded-xl shadow">
+        <h2 className="font-semibold">Section Modules</h2>
+        <ul className="space-y-2">{mods.map((m:any)=><li key={m.id}><b>{m.title}</b> — <a className="text-blue-600 underline" href={m.file_url} target="_blank">Open</a></li>)}</ul>
+      </div>
+    </div>
+  </div>;
+}
+Build similar slim dashboards for Registrar (approve apps, update tracker), Accounting (invoices/payments), Guidance (cases), Admin (users/roles, audit).
+
+Guardrails to keep it “no-bug”
+Login: case-insensitive email, active flag check, generic error messages.
+
+RBAC everywhere (requireRole) + input validation (Zod).
+
+Transactions for multi-write ops (e.g., invoice + items).
+
+Pagination for lists, indices on FKs and frequently filtered columns.
+
+File uploads: validate MIME/size; in prod put to S3 and store signed URLs.
+
+Socket: set presence on connect/disconnect; namespace for chat if needed.
+
+Notifications: send after important mutations (enrollment update, module upload, task publish, payment posted).
+
+Audit logs: write in controllers for sensitive ops.
+
+Quick Start (dev)
+Run Postgres (Docker) and apply schema.
+
+Seed roles + admin.
+
+Backend: npm i express pg bcrypt jsonwebtoken multer zod helmet cors socket.io
+
+Frontend: npm i axios socket.io-client react-router-dom
+
+VITE_API_URL=http://localhost:5000 in frontend .env.
+
+Login as admin → create users for other roles → test each dashboard.
+
+If you want, I can also share ready-to-run boilerplate files (folder structure + baseline controllers + React pages) so you can run docker-compose up, npm run dev for both API and web and see all flows working immediately.
+
+
+
+
+
+
+
+
+
+Ask ChatGPT
+
+
+
+
+
+ChatGPT
