@@ -18,7 +18,9 @@ import {
   type EnrollmentProgress, type InsertEnrollmentProgress,
   roles, users, sections, subjects, grades, tasks, meetings, modules,
   announcements, events, news, messages, onlineStatus, fees, payments,
-  guidanceReports, enrollmentProgress
+  guidanceReports, enrollmentProgress, notifications, enrollmentApplications,
+  enrollmentDocuments, taskQuestions, taskSubmissions, teacherAssignments,
+  schedules, learningModules
 } from "@shared/unified-schema";
 import { db } from "./db";
 import { eq, desc, and, not, gte, lte } from "drizzle-orm";

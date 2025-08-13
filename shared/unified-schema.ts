@@ -187,6 +187,105 @@ export const news = pgTable("news", {
 });
 
 // =====================
+// MISSING SCHEMA TABLES
+// =====================
+
+// Enrollment Applications
+export const enrollmentApplications = pgTable("enrollment_applications", {
+  id: serial("id").primaryKey(),
+  studentId: integer("student_id").references(() => users.id, { onDelete: "cascade" }),
+  schoolYear: text("school_year").notNull(),
+  status: text("status").default("Draft"),
+  submittedAt: timestamp("submitted_at"),
+  decidedAt: timestamp("decided_at"),
+  decidedBy: integer("decided_by").references(() => users.id, { onDelete: "set null" }),
+  remarks: text("remarks"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Enrollment Documents
+export const enrollmentDocuments = pgTable("enrollment_documents", {
+  id: serial("id").primaryKey(),
+  applicationId: integer("application_id").references(() => enrollmentApplications.id, { onDelete: "cascade" }),
+  documentType: text("document_type").notNull(),
+  fileName: text("file_name").notNull(),
+  fileUrl: text("file_url").notNull(),
+  uploadedAt: timestamp("uploaded_at").defaultNow(),
+});
+
+// Task Questions
+export const taskQuestions = pgTable("task_questions", {
+  id: serial("id").primaryKey(),
+  taskId: integer("task_id").references(() => tasks.id, { onDelete: "cascade" }),
+  question: text("question").notNull(),
+  questionType: text("question_type").notNull(),
+  options: text("options"),
+  correctAnswer: text("correct_answer"),
+  points: integer("points").default(1),
+});
+
+// Task Submissions
+export const taskSubmissions = pgTable("task_submissions", {
+  id: serial("id").primaryKey(),
+  taskId: integer("task_id").references(() => tasks.id, { onDelete: "cascade" }),
+  studentId: integer("student_id").references(() => users.id, { onDelete: "cascade" }),
+  answers: text("answers"),
+  fileUrls: text("file_urls"),
+  score: numeric("score", { precision: 5, scale: 2 }),
+  feedback: text("feedback"),
+  submittedAt: timestamp("submitted_at").defaultNow(),
+  gradedAt: timestamp("graded_at"),
+});
+
+// Teacher Assignments
+export const teacherAssignments = pgTable("teacher_assignments", {
+  id: serial("id").primaryKey(),
+  teacherId: integer("teacher_id").references(() => users.id, { onDelete: "cascade" }),
+  sectionId: integer("section_id").references(() => sections.id, { onDelete: "cascade" }),
+  subjectId: integer("subject_id").references(() => subjects.id, { onDelete: "cascade" }),
+  assignmentType: text("assignment_type").default("subject"), // "subject" or "advisory"
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Notifications
+export const notifications = pgTable("notifications", {
+  id: serial("id").primaryKey(),
+  recipientId: integer("recipient_id").references(() => users.id, { onDelete: "cascade" }),
+  senderId: integer("sender_id").references(() => users.id, { onDelete: "set null" }),
+  title: text("title").notNull(),
+  message: text("message").notNull(),
+  type: text("type").default("info"),
+  isRead: boolean("is_read").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Schedules
+export const schedules = pgTable("schedules", {
+  id: serial("id").primaryKey(),
+  teacherId: integer("teacher_id").references(() => users.id, { onDelete: "cascade" }),
+  sectionId: integer("section_id").references(() => sections.id, { onDelete: "cascade" }),
+  subjectId: integer("subject_id").references(() => subjects.id, { onDelete: "cascade" }),
+  dayOfWeek: text("day_of_week").notNull(),
+  startTime: text("start_time").notNull(),
+  endTime: text("end_time").notNull(),
+  room: text("room"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Learning Modules
+export const learningModules = pgTable("learning_modules", {
+  id: serial("id").primaryKey(),
+  teacherId: integer("teacher_id").references(() => users.id, { onDelete: "cascade" }),
+  sectionId: integer("section_id").references(() => sections.id, { onDelete: "set null" }),
+  subjectId: integer("subject_id").references(() => subjects.id, { onDelete: "cascade" }),
+  title: text("title").notNull(),
+  description: text("description"),
+  fileUrl: text("file_url").notNull(),
+  isPublic: boolean("is_public").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// =====================
 // ZOD SCHEMAS
 // =====================
 
