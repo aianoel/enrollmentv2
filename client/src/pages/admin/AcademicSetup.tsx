@@ -324,14 +324,14 @@ export function AcademicSetup() {
                           render={({ field }) => (
                             <FormItem>
                               <FormLabel>Adviser (Optional)</FormLabel>
-                              <Select onValueChange={(value) => field.onChange(value ? parseInt(value) : undefined)} value={field.value ? field.value.toString() : ""}>
+                              <Select onValueChange={(value) => field.onChange(value === "none" ? undefined : parseInt(value))} value={field.value ? field.value.toString() : "none"}>
                                 <FormControl>
                                   <SelectTrigger>
                                     <SelectValue placeholder="Select adviser" />
                                   </SelectTrigger>
                                 </FormControl>
                                 <SelectContent>
-                                  <SelectItem value="">No adviser</SelectItem>
+                                  <SelectItem value="none">No adviser</SelectItem>
                                   {teachers.map((teacher: User) => (
                                     <SelectItem key={teacher.id} value={teacher.id.toString()}>
                                       {teacher.name}
