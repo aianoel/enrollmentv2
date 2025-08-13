@@ -94,10 +94,7 @@ export function AcademicSetup() {
 
   // Section mutations
   const createSectionMutation = useMutation({
-    mutationFn: (data: SectionFormData) => apiRequest("/api/admin/sections", {
-      method: "POST",
-      body: JSON.stringify(data),
-    }),
+    mutationFn: (data: SectionFormData) => apiRequest("/api/admin/sections", "POST", data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/sections"] });
       setIsSectionDialogOpen(false);
@@ -111,10 +108,7 @@ export function AcademicSetup() {
 
   const updateSectionMutation = useMutation({
     mutationFn: ({ id, data }: { id: number; data: Partial<SectionFormData> }) =>
-      apiRequest(`/api/admin/sections/${id}`, {
-        method: "PATCH",
-        body: JSON.stringify(data),
-      }),
+      apiRequest(`/api/admin/sections/${id}`, "PATCH", data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/sections"] });
       setIsSectionDialogOpen(false);
@@ -128,9 +122,7 @@ export function AcademicSetup() {
   });
 
   const deleteSectionMutation = useMutation({
-    mutationFn: (id: number) => apiRequest(`/api/admin/sections/${id}`, {
-      method: "DELETE",
-    }),
+    mutationFn: (id: number) => apiRequest(`/api/admin/sections/${id}`, "DELETE"),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/sections"] });
       toast({ title: "Section deleted successfully" });
@@ -142,10 +134,7 @@ export function AcademicSetup() {
 
   // Subject mutations
   const createSubjectMutation = useMutation({
-    mutationFn: (data: SubjectFormData) => apiRequest("/api/admin/subjects", {
-      method: "POST",
-      body: JSON.stringify(data),
-    }),
+    mutationFn: (data: SubjectFormData) => apiRequest("/api/admin/subjects", "POST", data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/subjects"] });
       setIsSubjectDialogOpen(false);
@@ -158,9 +147,7 @@ export function AcademicSetup() {
   });
 
   const deleteSubjectMutation = useMutation({
-    mutationFn: (id: number) => apiRequest(`/api/admin/subjects/${id}`, {
-      method: "DELETE",
-    }),
+    mutationFn: (id: number) => apiRequest(`/api/admin/subjects/${id}`, "DELETE"),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/subjects"] });
       toast({ title: "Subject deleted successfully" });
@@ -172,10 +159,7 @@ export function AcademicSetup() {
 
   // Teacher assignment mutations
   const createAssignmentMutation = useMutation({
-    mutationFn: (data: TeacherAssignmentFormData) => apiRequest("/api/admin/teacher-assignments", {
-      method: "POST",
-      body: JSON.stringify(data),
-    }),
+    mutationFn: (data: TeacherAssignmentFormData) => apiRequest("/api/admin/teacher-assignments", "POST", data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/teacher-assignments"] });
       setIsAssignmentDialogOpen(false);
@@ -188,9 +172,7 @@ export function AcademicSetup() {
   });
 
   const deleteAssignmentMutation = useMutation({
-    mutationFn: (id: number) => apiRequest(`/api/admin/teacher-assignments/${id}`, {
-      method: "DELETE",
-    }),
+    mutationFn: (id: number) => apiRequest(`/api/admin/teacher-assignments/${id}`, "DELETE"),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/teacher-assignments"] });
       toast({ title: "Teacher assignment deleted successfully" });
@@ -318,7 +300,7 @@ export function AcademicSetup() {
                           render={({ field }) => (
                             <FormItem>
                               <FormLabel>Grade Level</FormLabel>
-                              <Select onValueChange={(value) => field.onChange(parseInt(value))} defaultValue={field.value.toString()}>
+                              <Select onValueChange={(value) => field.onChange(parseInt(value))} defaultValue={field.value ? field.value.toString() : "1"}>
                                 <FormControl>
                                   <SelectTrigger>
                                     <SelectValue placeholder="Select grade level" />
@@ -342,7 +324,7 @@ export function AcademicSetup() {
                           render={({ field }) => (
                             <FormItem>
                               <FormLabel>Adviser (Optional)</FormLabel>
-                              <Select onValueChange={(value) => field.onChange(value ? parseInt(value) : undefined)} defaultValue={field.value?.toString()}>
+                              <Select onValueChange={(value) => field.onChange(value ? parseInt(value) : undefined)} defaultValue={field.value ? field.value.toString() : ""}>
                                 <FormControl>
                                   <SelectTrigger>
                                     <SelectValue placeholder="Select adviser" />
@@ -471,7 +453,7 @@ export function AcademicSetup() {
                           render={({ field }) => (
                             <FormItem>
                               <FormLabel>Grade Level</FormLabel>
-                              <Select onValueChange={(value) => field.onChange(parseInt(value))} defaultValue={field.value.toString()}>
+                              <Select onValueChange={(value) => field.onChange(parseInt(value))} defaultValue={field.value ? field.value.toString() : "1"}>
                                 <FormControl>
                                   <SelectTrigger>
                                     <SelectValue placeholder="Select grade level" />
@@ -570,7 +552,7 @@ export function AcademicSetup() {
                           render={({ field }) => (
                             <FormItem>
                               <FormLabel>Teacher</FormLabel>
-                              <Select onValueChange={(value) => field.onChange(parseInt(value))} defaultValue={field.value.toString()}>
+                              <Select onValueChange={(value) => field.onChange(parseInt(value))} defaultValue={field.value ? field.value.toString() : ""}>
                                 <FormControl>
                                   <SelectTrigger>
                                     <SelectValue placeholder="Select teacher" />
@@ -594,7 +576,7 @@ export function AcademicSetup() {
                           render={({ field }) => (
                             <FormItem>
                               <FormLabel>Section</FormLabel>
-                              <Select onValueChange={(value) => field.onChange(parseInt(value))} defaultValue={field.value.toString()}>
+                              <Select onValueChange={(value) => field.onChange(parseInt(value))} defaultValue={field.value ? field.value.toString() : ""}>
                                 <FormControl>
                                   <SelectTrigger>
                                     <SelectValue placeholder="Select section" />
@@ -618,7 +600,7 @@ export function AcademicSetup() {
                           render={({ field }) => (
                             <FormItem>
                               <FormLabel>Subject</FormLabel>
-                              <Select onValueChange={(value) => field.onChange(parseInt(value))} defaultValue={field.value.toString()}>
+                              <Select onValueChange={(value) => field.onChange(parseInt(value))} defaultValue={field.value ? field.value.toString() : ""}>
                                 <FormControl>
                                   <SelectTrigger>
                                     <SelectValue placeholder="Select subject" />
