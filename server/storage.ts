@@ -6,6 +6,7 @@ import {
   registrarEnrollmentRequests, registrarSubjects, academicRecords, graduationCandidates, transcriptRequests,
   feeStructures, invoices, invoiceItems, payments, scholarships, schoolExpenses,
   conversations, conversationMembers, messages, userStatus,
+  academicSubjects, teacherRegistrations, subjectAssignments, advisoryAssignments, classSchedules, teacherEvaluations,
   type User, type InsertUser, 
   type Announcement, type InsertAnnouncement, 
   type News, type InsertNews, 
@@ -122,6 +123,48 @@ export interface IStorage {
   deleteChatMessage(id: number): Promise<void>;
   createChatMessage(message: InsertChatMessage): Promise<ChatMessage>;
   
+  // Academic Management - Teacher Registration
+  getTeacherRegistrations(): Promise<any[]>;
+  getTeacherRegistration(id: number): Promise<any | undefined>;
+  createTeacherRegistration(registration: any): Promise<any>;
+  updateTeacherRegistration(id: number, updates: any): Promise<any>;
+  deleteTeacherRegistration(id: number): Promise<void>;
+  
+  // Academic Management - Academic Subjects
+  getAcademicSubjects(): Promise<any[]>;
+  getAcademicSubject(id: number): Promise<any | undefined>;
+  createAcademicSubject(subject: any): Promise<any>;
+  updateAcademicSubject(id: number, updates: any): Promise<any>;
+  deleteAcademicSubject(id: number): Promise<void>;
+  
+  // Academic Management - Subject Assignments
+  getSubjectAssignments(): Promise<any[]>;
+  getSubjectAssignment(id: number): Promise<any | undefined>;
+  createSubjectAssignment(assignment: any): Promise<any>;
+  updateSubjectAssignment(id: number, updates: any): Promise<any>;
+  deleteSubjectAssignment(id: number): Promise<void>;
+  
+  // Academic Management - Advisory Assignments
+  getAdvisoryAssignments(): Promise<any[]>;
+  getAdvisoryAssignment(id: number): Promise<any | undefined>;
+  createAdvisoryAssignment(assignment: any): Promise<any>;
+  updateAdvisoryAssignment(id: number, updates: any): Promise<any>;
+  deleteAdvisoryAssignment(id: number): Promise<void>;
+  
+  // Academic Management - Class Schedules
+  getClassSchedules(): Promise<any[]>;
+  getClassSchedule(id: number): Promise<any | undefined>;
+  createClassSchedule(schedule: any): Promise<any>;
+  updateClassSchedule(id: number, updates: any): Promise<any>;
+  deleteClassSchedule(id: number): Promise<void>;
+  
+  // Academic Management - Teacher Evaluations
+  getTeacherEvaluations(): Promise<any[]>;
+  getTeacherEvaluation(id: number): Promise<any | undefined>;
+  createTeacherEvaluation(evaluation: any): Promise<any>;
+  updateTeacherEvaluation(id: number, updates: any): Promise<any>;
+  deleteTeacherEvaluation(id: number): Promise<void>;
+
   // Content management
   getAnnouncements(): Promise<Announcement[]>;
   createAnnouncement(announcement: InsertAnnouncement): Promise<Announcement>;
@@ -1271,6 +1314,337 @@ export class DatabaseStorage implements IStorage {
 
   async getUsersByRole(role: string): Promise<User[]> {
     return await db.select().from(users).where(eq(users.role, role));
+  }
+
+  // Academic Management Methods Implementation
+  
+  // Teacher Registration methods
+  async getTeacherRegistrations(): Promise<any[]> {
+    return await db.select({
+      id: teacherRegistrations.id,
+      userId: teacherRegistrations.userId,
+      employeeId: teacherRegistrations.employeeId,
+      specialization: teacherRegistrations.specialization,
+      qualifications: teacherRegistrations.qualifications,
+      experience: teacherRegistrations.experience,
+      isAdvisory: teacherRegistrations.isAdvisory,
+      status: teacherRegistrations.status,
+      dateHired: teacherRegistrations.dateHired,
+      createdAt: teacherRegistrations.createdAt,
+      user: {
+        id: users.id,
+        name: users.name,
+        email: users.email,
+        role: users.role
+      }
+    })
+    .from(teacherRegistrations)
+    .leftJoin(users, eq(teacherRegistrations.userId, users.id))
+    .orderBy(desc(teacherRegistrations.createdAt));
+  }
+
+  async getTeacherRegistration(id: number): Promise<any | undefined> {
+    const [teacher] = await db.select({
+      id: teacherRegistrations.id,
+      userId: teacherRegistrations.userId,
+      employeeId: teacherRegistrations.employeeId,
+      specialization: teacherRegistrations.specialization,
+      qualifications: teacherRegistrations.qualifications,
+      experience: teacherRegistrations.experience,
+      isAdvisory: teacherRegistrations.isAdvisory,
+      status: teacherRegistrations.status,
+      dateHired: teacherRegistrations.dateHired,
+      createdAt: teacherRegistrations.createdAt,
+      user: {
+        id: users.id,
+        name: users.name,
+        email: users.email,
+        role: users.role
+      }
+    })
+    .from(teacherRegistrations)
+    .leftJoin(users, eq(teacherRegistrations.userId, users.id))
+    .where(eq(teacherRegistrations.id, id));
+    return teacher || undefined;
+  }
+
+  async createTeacherRegistration(registration: any): Promise<any> {
+    const [newRegistration] = await db.insert(teacherRegistrations).values(registration).returning();
+    return await this.getTeacherRegistration(newRegistration.id);
+  }
+
+  async updateTeacherRegistration(id: number, updates: any): Promise<any> {
+    await db.update(teacherRegistrations).set(updates).where(eq(teacherRegistrations.id, id));
+    return await this.getTeacherRegistration(id);
+  }
+
+  async deleteTeacherRegistration(id: number): Promise<void> {
+    await db.delete(teacherRegistrations).where(eq(teacherRegistrations.id, id));
+  }
+
+  // Academic Subjects methods
+  async getAcademicSubjects(): Promise<any[]> {
+    const prerequisite = academicSubjects;
+    return await db.select({
+      id: academicSubjects.id,
+      subjectCode: academicSubjects.subjectCode,
+      subjectName: academicSubjects.subjectName,
+      description: academicSubjects.description,
+      gradeLevel: academicSubjects.gradeLevel,
+      semester: academicSubjects.semester,
+      units: academicSubjects.units,
+      prerequisiteSubjectId: academicSubjects.prerequisiteSubjectId,
+      isActive: academicSubjects.isActive,
+      createdAt: academicSubjects.createdAt,
+      prerequisiteSubject: {
+        id: prerequisite.id,
+        subjectName: prerequisite.subjectName,
+        subjectCode: prerequisite.subjectCode
+      }
+    })
+    .from(academicSubjects)
+    .leftJoin(prerequisite, eq(academicSubjects.prerequisiteSubjectId, prerequisite.id))
+    .orderBy(desc(academicSubjects.createdAt));
+  }
+
+  async getAcademicSubject(id: number): Promise<any | undefined> {
+    const [subject] = await db.select().from(academicSubjects).where(eq(academicSubjects.id, id));
+    return subject || undefined;
+  }
+
+  async createAcademicSubject(subject: any): Promise<any> {
+    const [newSubject] = await db.insert(academicSubjects).values(subject).returning();
+    return newSubject;
+  }
+
+  async updateAcademicSubject(id: number, updates: any): Promise<any> {
+    const [updatedSubject] = await db.update(academicSubjects).set(updates).where(eq(academicSubjects.id, id)).returning();
+    return updatedSubject;
+  }
+
+  async deleteAcademicSubject(id: number): Promise<void> {
+    await db.delete(academicSubjects).where(eq(academicSubjects.id, id));
+  }
+
+  // Subject Assignments methods
+  async getSubjectAssignments(): Promise<any[]> {
+    return await db.select({
+      id: subjectAssignments.id,
+      teacherRegistrationId: subjectAssignments.teacherRegistrationId,
+      subjectId: subjectAssignments.subjectId,
+      sectionId: subjectAssignments.sectionId,
+      schoolYear: subjectAssignments.schoolYear,
+      semester: subjectAssignments.semester,
+      isActive: subjectAssignments.isActive,
+      assignedAt: subjectAssignments.assignedAt,
+      teacher: {
+        id: teacherRegistrations.id,
+        employeeId: teacherRegistrations.employeeId,
+        user: {
+          name: users.name,
+          email: users.email
+        }
+      },
+      subject: {
+        id: academicSubjects.id,
+        subjectCode: academicSubjects.subjectCode,
+        subjectName: academicSubjects.subjectName
+      },
+      section: {
+        id: sections.id,
+        name: sections.name,
+        gradeLevel: sections.gradeLevel
+      }
+    })
+    .from(subjectAssignments)
+    .leftJoin(teacherRegistrations, eq(subjectAssignments.teacherRegistrationId, teacherRegistrations.id))
+    .leftJoin(users, eq(teacherRegistrations.userId, users.id))
+    .leftJoin(academicSubjects, eq(subjectAssignments.subjectId, academicSubjects.id))
+    .leftJoin(sections, eq(subjectAssignments.sectionId, sections.id))
+    .orderBy(desc(subjectAssignments.assignedAt));
+  }
+
+  async getSubjectAssignment(id: number): Promise<any | undefined> {
+    const [assignment] = await db.select().from(subjectAssignments).where(eq(subjectAssignments.id, id));
+    return assignment || undefined;
+  }
+
+  async createSubjectAssignment(assignment: any): Promise<any> {
+    const [newAssignment] = await db.insert(subjectAssignments).values(assignment).returning();
+    return newAssignment;
+  }
+
+  async updateSubjectAssignment(id: number, updates: any): Promise<any> {
+    const [updatedAssignment] = await db.update(subjectAssignments).set(updates).where(eq(subjectAssignments.id, id)).returning();
+    return updatedAssignment;
+  }
+
+  async deleteSubjectAssignment(id: number): Promise<void> {
+    await db.delete(subjectAssignments).where(eq(subjectAssignments.id, id));
+  }
+
+  // Advisory Assignments methods
+  async getAdvisoryAssignments(): Promise<any[]> {
+    return await db.select({
+      id: advisoryAssignments.id,
+      teacherRegistrationId: advisoryAssignments.teacherRegistrationId,
+      sectionId: advisoryAssignments.sectionId,
+      schoolYear: advisoryAssignments.schoolYear,
+      isActive: advisoryAssignments.isActive,
+      assignedAt: advisoryAssignments.assignedAt,
+      teacher: {
+        id: teacherRegistrations.id,
+        employeeId: teacherRegistrations.employeeId,
+        user: {
+          name: users.name,
+          email: users.email
+        }
+      },
+      section: {
+        id: sections.id,
+        name: sections.name,
+        gradeLevel: sections.gradeLevel
+      }
+    })
+    .from(advisoryAssignments)
+    .leftJoin(teacherRegistrations, eq(advisoryAssignments.teacherRegistrationId, teacherRegistrations.id))
+    .leftJoin(users, eq(teacherRegistrations.userId, users.id))
+    .leftJoin(sections, eq(advisoryAssignments.sectionId, sections.id))
+    .orderBy(desc(advisoryAssignments.assignedAt));
+  }
+
+  async getAdvisoryAssignment(id: number): Promise<any | undefined> {
+    const [assignment] = await db.select().from(advisoryAssignments).where(eq(advisoryAssignments.id, id));
+    return assignment || undefined;
+  }
+
+  async createAdvisoryAssignment(assignment: any): Promise<any> {
+    const [newAssignment] = await db.insert(advisoryAssignments).values(assignment).returning();
+    return newAssignment;
+  }
+
+  async updateAdvisoryAssignment(id: number, updates: any): Promise<any> {
+    const [updatedAssignment] = await db.update(advisoryAssignments).set(updates).where(eq(advisoryAssignments.id, id)).returning();
+    return updatedAssignment;
+  }
+
+  async deleteAdvisoryAssignment(id: number): Promise<void> {
+    await db.delete(advisoryAssignments).where(eq(advisoryAssignments.id, id));
+  }
+
+  // Class Schedules methods
+  async getClassSchedules(): Promise<any[]> {
+    return await db.select({
+      id: classSchedules.id,
+      subjectAssignmentId: classSchedules.subjectAssignmentId,
+      dayOfWeek: classSchedules.dayOfWeek,
+      startTime: classSchedules.startTime,
+      endTime: classSchedules.endTime,
+      room: classSchedules.room,
+      isActive: classSchedules.isActive,
+      createdAt: classSchedules.createdAt,
+      subjectAssignment: {
+        id: subjectAssignments.id,
+        schoolYear: subjectAssignments.schoolYear,
+        semester: subjectAssignments.semester,
+        subject: {
+          subjectCode: academicSubjects.subjectCode,
+          subjectName: academicSubjects.subjectName
+        },
+        teacher: {
+          employeeId: teacherRegistrations.employeeId,
+          user: {
+            name: users.name
+          }
+        },
+        section: {
+          name: sections.name,
+          gradeLevel: sections.gradeLevel
+        }
+      }
+    })
+    .from(classSchedules)
+    .leftJoin(subjectAssignments, eq(classSchedules.subjectAssignmentId, subjectAssignments.id))
+    .leftJoin(academicSubjects, eq(subjectAssignments.subjectId, academicSubjects.id))
+    .leftJoin(teacherRegistrations, eq(subjectAssignments.teacherRegistrationId, teacherRegistrations.id))
+    .leftJoin(users, eq(teacherRegistrations.userId, users.id))
+    .leftJoin(sections, eq(subjectAssignments.sectionId, sections.id))
+    .orderBy(classSchedules.dayOfWeek, classSchedules.startTime);
+  }
+
+  async getClassSchedule(id: number): Promise<any | undefined> {
+    const [schedule] = await db.select().from(classSchedules).where(eq(classSchedules.id, id));
+    return schedule || undefined;
+  }
+
+  async createClassSchedule(schedule: any): Promise<any> {
+    const [newSchedule] = await db.insert(classSchedules).values(schedule).returning();
+    return newSchedule;
+  }
+
+  async updateClassSchedule(id: number, updates: any): Promise<any> {
+    const [updatedSchedule] = await db.update(classSchedules).set(updates).where(eq(classSchedules.id, id)).returning();
+    return updatedSchedule;
+  }
+
+  async deleteClassSchedule(id: number): Promise<void> {
+    await db.delete(classSchedules).where(eq(classSchedules.id, id));
+  }
+
+  // Teacher Evaluations methods
+  async getTeacherEvaluations(): Promise<any[]> {
+    const evaluatorUsers = users;
+    return await db.select({
+      id: teacherEvaluations.id,
+      teacherRegistrationId: teacherEvaluations.teacherRegistrationId,
+      evaluatorId: teacherEvaluations.evaluatorId,
+      evaluationType: teacherEvaluations.evaluationType,
+      period: teacherEvaluations.period,
+      teachingEffectiveness: teacherEvaluations.teachingEffectiveness,
+      classroomManagement: teacherEvaluations.classroomManagement,
+      studentEngagement: teacherEvaluations.studentEngagement,
+      professionalDevelopment: teacherEvaluations.professionalDevelopment,
+      overallRating: teacherEvaluations.overallRating,
+      comments: teacherEvaluations.comments,
+      recommendations: teacherEvaluations.recommendations,
+      evaluatedAt: teacherEvaluations.evaluatedAt,
+      teacher: {
+        id: teacherRegistrations.id,
+        employeeId: teacherRegistrations.employeeId,
+        user: {
+          name: users.name,
+          email: users.email
+        }
+      },
+      evaluator: {
+        name: evaluatorUsers.name,
+        role: evaluatorUsers.role
+      }
+    })
+    .from(teacherEvaluations)
+    .leftJoin(teacherRegistrations, eq(teacherEvaluations.teacherRegistrationId, teacherRegistrations.id))
+    .leftJoin(users, eq(teacherRegistrations.userId, users.id))
+    .leftJoin(evaluatorUsers, eq(teacherEvaluations.evaluatorId, evaluatorUsers.id))
+    .orderBy(desc(teacherEvaluations.evaluatedAt));
+  }
+
+  async getTeacherEvaluation(id: number): Promise<any | undefined> {
+    const [evaluation] = await db.select().from(teacherEvaluations).where(eq(teacherEvaluations.id, id));
+    return evaluation || undefined;
+  }
+
+  async createTeacherEvaluation(evaluation: any): Promise<any> {
+    const [newEvaluation] = await db.insert(teacherEvaluations).values(evaluation).returning();
+    return newEvaluation;
+  }
+
+  async updateTeacherEvaluation(id: number, updates: any): Promise<any> {
+    const [updatedEvaluation] = await db.update(teacherEvaluations).set(updates).where(eq(teacherEvaluations.id, id)).returning();
+    return updatedEvaluation;
+  }
+
+  async deleteTeacherEvaluation(id: number): Promise<void> {
+    await db.delete(teacherEvaluations).where(eq(teacherEvaluations.id, id));
   }
 }
 

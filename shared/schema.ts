@@ -379,6 +379,77 @@ export const tuitionFees = pgTable('tuition_fees', {
   dueDate: date('due_date'),
 });
 
+// Academic Management Tables
+export const academicSubjects = pgTable('academic_subjects', {
+  id: serial('id').primaryKey(),
+  subjectCode: varchar('subject_code', { length: 20 }).unique().notNull(),
+  subjectName: varchar('subject_name', { length: 255 }).notNull(),
+  description: text('description'),
+  gradeLevel: varchar('grade_level', { length: 50 }).notNull(),
+  semester: varchar('semester', { length: 20 }).notNull(),
+  units: integer('units').notNull(),
+  prerequisiteSubjectId: integer('prerequisite_subject_id'),
+  isActive: boolean('is_active').default(true),
+  createdAt: timestamp('created_at').defaultNow(),
+});
+
+export const teacherRegistrations = pgTable('teacher_registrations', {
+  id: serial('id').primaryKey(),
+  userId: integer('user_id').notNull().references(() => users.id),
+  employeeId: varchar('employee_id', { length: 50 }).unique().notNull(),
+  specialization: varchar('specialization', { length: 255 }),
+  qualifications: text('qualifications'),
+  experience: text('experience'),
+  isAdvisory: boolean('is_advisory').default(false),
+  status: varchar('status', { length: 20 }).default('Active').notNull(),
+  dateHired: date('date_hired'),
+  createdAt: timestamp('created_at').defaultNow(),
+});
+
+export const subjectAssignments = pgTable('subject_assignments', {
+  id: serial('id').primaryKey(),
+  teacherRegistrationId: integer('teacher_registration_id').notNull().references(() => teacherRegistrations.id),
+  subjectId: integer('subject_id').notNull().references(() => academicSubjects.id),
+  sectionId: integer('section_id').notNull().references(() => sections.id),
+  schoolYear: varchar('school_year', { length: 9 }).notNull(),
+  semester: varchar('semester', { length: 20 }).notNull(),
+  status: varchar('status', { length: 20 }).default('Active').notNull(),
+  assignedAt: timestamp('assigned_at').defaultNow(),
+});
+
+export const advisoryAssignments = pgTable('advisory_assignments', {
+  id: serial('id').primaryKey(),
+  teacherRegistrationId: integer('teacher_registration_id').notNull().references(() => teacherRegistrations.id),
+  sectionId: integer('section_id').notNull().references(() => sections.id),
+  schoolYear: varchar('school_year', { length: 9 }).notNull(),
+  status: varchar('status', { length: 20 }).default('Active').notNull(),
+  assignedAt: timestamp('assigned_at').defaultNow(),
+});
+
+export const classSchedules = pgTable('class_schedules', {
+  id: serial('id').primaryKey(),
+  subjectAssignmentId: integer('subject_assignment_id').notNull().references(() => subjectAssignments.id),
+  dayOfWeek: varchar('day_of_week', { length: 20 }).notNull(),
+  startTime: varchar('start_time', { length: 10 }).notNull(),
+  endTime: varchar('end_time', { length: 10 }).notNull(),
+  room: varchar('room', { length: 50 }),
+  status: varchar('status', { length: 20 }).default('Active').notNull(),
+  createdAt: timestamp('created_at').defaultNow(),
+});
+
+export const teacherEvaluations = pgTable('teacher_evaluations', {
+  id: serial('id').primaryKey(),
+  teacherRegistrationId: integer('teacher_registration_id').notNull().references(() => teacherRegistrations.id),
+  evaluatorId: integer('evaluator_id').notNull().references(() => users.id),
+  evaluationPeriod: varchar('evaluation_period', { length: 50 }).notNull(),
+  overallRating: decimal('overall_rating', { precision: 3, scale: 2 }),
+  strengths: text('strengths'),
+  areasForImprovement: text('areas_for_improvement'),
+  comments: text('comments'),
+  status: varchar('status', { length: 20 }).default('Draft').notNull(),
+  evaluatedAt: timestamp('evaluated_at').defaultNow(),
+});
+
 // Relations
 export const usersRelations = relations(users, ({ one, many }) => ({
   role: one(roles, {
@@ -397,6 +468,8 @@ export const usersRelations = relations(users, ({ one, many }) => ({
   news: many(news),
   events: many(events),
   teacherAssignments: many(teacherAssignments),
+  teacherRegistrations: many(teacherRegistrations),
+  teacherEvaluations: many(teacherEvaluations),
 }));
 
 export const rolesRelations = relations(roles, ({ many }) => ({
@@ -499,6 +572,72 @@ export const meetingsRelations = relations(meetings, ({ one }) => ({
   }),
 }));
 
+// Academic Management Relations
+export const academicSubjectsRelations = relations(academicSubjects, ({ one, many }) => ({
+  prerequisiteSubject: one(academicSubjects, {
+    fields: [academicSubjects.prerequisiteSubjectId],
+    references: [academicSubjects.id],
+    relationName: 'prerequisite',
+  }),
+  dependentSubjects: many(academicSubjects, { relationName: 'prerequisite' }),
+  subjectAssignments: many(subjectAssignments),
+}));
+
+export const teacherRegistrationsRelations = relations(teacherRegistrations, ({ one, many }) => ({
+  user: one(users, {
+    fields: [teacherRegistrations.userId],
+    references: [users.id],
+  }),
+  subjectAssignments: many(subjectAssignments),
+  advisoryAssignments: many(advisoryAssignments),
+  teacherEvaluations: many(teacherEvaluations),
+}));
+
+export const subjectAssignmentsRelations = relations(subjectAssignments, ({ one, many }) => ({
+  teacherRegistration: one(teacherRegistrations, {
+    fields: [subjectAssignments.teacherRegistrationId],
+    references: [teacherRegistrations.id],
+  }),
+  subject: one(academicSubjects, {
+    fields: [subjectAssignments.subjectId],
+    references: [academicSubjects.id],
+  }),
+  section: one(sections, {
+    fields: [subjectAssignments.sectionId],
+    references: [sections.id],
+  }),
+  classSchedules: many(classSchedules),
+}));
+
+export const advisoryAssignmentsRelations = relations(advisoryAssignments, ({ one }) => ({
+  teacherRegistration: one(teacherRegistrations, {
+    fields: [advisoryAssignments.teacherRegistrationId],
+    references: [teacherRegistrations.id],
+  }),
+  section: one(sections, {
+    fields: [advisoryAssignments.sectionId],
+    references: [sections.id],
+  }),
+}));
+
+export const classSchedulesRelations = relations(classSchedules, ({ one }) => ({
+  subjectAssignment: one(subjectAssignments, {
+    fields: [classSchedules.subjectAssignmentId],
+    references: [subjectAssignments.id],
+  }),
+}));
+
+export const teacherEvaluationsRelations = relations(teacherEvaluations, ({ one }) => ({
+  teacherRegistration: one(teacherRegistrations, {
+    fields: [teacherEvaluations.teacherRegistrationId],
+    references: [teacherRegistrations.id],
+  }),
+  evaluator: one(users, {
+    fields: [teacherEvaluations.evaluatorId],
+    references: [users.id],
+  }),
+}));
+
 // Schema types
 export const insertUserSchema = createInsertSchema(users).omit({ id: true, createdAt: true });
 export const selectUserSchema = createSelectSchema(users);
@@ -580,6 +719,20 @@ export const insertScholarshipSchema = createInsertSchema(scholarships).omit({ i
 export const selectScholarshipSchema = createSelectSchema(scholarships);
 export const insertSchoolExpenseSchema = createInsertSchema(schoolExpenses).omit({ id: true, createdAt: true });
 export const selectSchoolExpenseSchema = createSelectSchema(schoolExpenses);
+
+// Academic Management schemas
+export const insertAcademicSubjectSchema = createInsertSchema(academicSubjects).omit({ id: true, createdAt: true });
+export const selectAcademicSubjectSchema = createSelectSchema(academicSubjects);
+export const insertTeacherRegistrationSchema = createInsertSchema(teacherRegistrations).omit({ id: true, createdAt: true });
+export const selectTeacherRegistrationSchema = createSelectSchema(teacherRegistrations);
+export const insertSubjectAssignmentSchema = createInsertSchema(subjectAssignments).omit({ id: true, assignedAt: true });
+export const selectSubjectAssignmentSchema = createSelectSchema(subjectAssignments);
+export const insertAdvisoryAssignmentSchema = createInsertSchema(advisoryAssignments).omit({ id: true, assignedAt: true });
+export const selectAdvisoryAssignmentSchema = createSelectSchema(advisoryAssignments);
+export const insertClassScheduleSchema = createInsertSchema(classSchedules).omit({ id: true, createdAt: true });
+export const selectClassScheduleSchema = createSelectSchema(classSchedules);
+export const insertTeacherEvaluationSchema = createInsertSchema(teacherEvaluations).omit({ id: true, evaluatedAt: true });
+export const selectTeacherEvaluationSchema = createSelectSchema(teacherEvaluations);
 
 // Real-time chat system schemas
 export const insertConversationSchema = createInsertSchema(conversations).omit({ id: true, createdAt: true });

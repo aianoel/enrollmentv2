@@ -1919,6 +1919,266 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // =====================================================
+  // ACADEMIC MANAGEMENT ROUTES
+  // =====================================================
+
+  // Academic Management - Teachers
+  app.get("/api/academic/teachers", async (req, res) => {
+    try {
+      const teachers = await storage.getTeacherRegistrations();
+      res.json(teachers);
+    } catch (error) {
+      console.error("Error fetching teachers:", error);
+      res.status(500).json({ error: "Failed to fetch teachers" });
+    }
+  });
+
+  app.post("/api/academic/teachers", async (req, res) => {
+    try {
+      const teacher = await storage.createTeacherRegistration(req.body);
+      res.status(201).json(teacher);
+    } catch (error) {
+      console.error("Error creating teacher:", error);
+      res.status(500).json({ error: "Failed to create teacher" });
+    }
+  });
+
+  app.put("/api/academic/teachers/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const teacher = await storage.updateTeacherRegistration(id, req.body);
+      res.json(teacher);
+    } catch (error) {
+      console.error("Error updating teacher:", error);
+      res.status(500).json({ error: "Failed to update teacher" });
+    }
+  });
+
+  app.delete("/api/academic/teachers/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.deleteTeacherRegistration(id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting teacher:", error);
+      res.status(500).json({ error: "Failed to delete teacher" });
+    }
+  });
+
+  // Academic Management - Subjects
+  app.get("/api/academic/subjects", async (req, res) => {
+    try {
+      const subjects = await storage.getAcademicSubjects();
+      res.json(subjects);
+    } catch (error) {
+      console.error("Error fetching subjects:", error);
+      res.status(500).json({ error: "Failed to fetch subjects" });
+    }
+  });
+
+  app.post("/api/academic/subjects", async (req, res) => {
+    try {
+      const subject = await storage.createAcademicSubject(req.body);
+      res.status(201).json(subject);
+    } catch (error) {
+      console.error("Error creating subject:", error);
+      res.status(500).json({ error: "Failed to create subject" });
+    }
+  });
+
+  app.put("/api/academic/subjects/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const subject = await storage.updateAcademicSubject(id, req.body);
+      res.json(subject);
+    } catch (error) {
+      console.error("Error updating subject:", error);
+      res.status(500).json({ error: "Failed to update subject" });
+    }
+  });
+
+  app.delete("/api/academic/subjects/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.deleteAcademicSubject(id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting subject:", error);
+      res.status(500).json({ error: "Failed to delete subject" });
+    }
+  });
+
+  // Academic Management - Subject Assignments
+  app.get("/api/academic/subject-assignments", async (req, res) => {
+    try {
+      const assignments = await storage.getSubjectAssignments();
+      res.json(assignments);
+    } catch (error) {
+      console.error("Error fetching assignments:", error);
+      res.status(500).json({ error: "Failed to fetch assignments" });
+    }
+  });
+
+  app.post("/api/academic/subject-assignments", async (req, res) => {
+    try {
+      const assignment = await storage.createSubjectAssignment(req.body);
+      res.status(201).json(assignment);
+    } catch (error) {
+      console.error("Error creating assignment:", error);
+      res.status(500).json({ error: "Failed to create assignment" });
+    }
+  });
+
+  app.put("/api/academic/subject-assignments/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const assignment = await storage.updateSubjectAssignment(id, req.body);
+      res.json(assignment);
+    } catch (error) {
+      console.error("Error updating assignment:", error);
+      res.status(500).json({ error: "Failed to update assignment" });
+    }
+  });
+
+  app.delete("/api/academic/subject-assignments/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.deleteSubjectAssignment(id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting assignment:", error);
+      res.status(500).json({ error: "Failed to delete assignment" });
+    }
+  });
+
+  // Academic Management - Advisory Assignments
+  app.get("/api/academic/advisory-assignments", async (req, res) => {
+    try {
+      const assignments = await storage.getAdvisoryAssignments();
+      res.json(assignments);
+    } catch (error) {
+      console.error("Error fetching advisory assignments:", error);
+      res.status(500).json({ error: "Failed to fetch advisory assignments" });
+    }
+  });
+
+  app.post("/api/academic/advisory-assignments", async (req, res) => {
+    try {
+      const assignment = await storage.createAdvisoryAssignment(req.body);
+      res.status(201).json(assignment);
+    } catch (error) {
+      console.error("Error creating advisory assignment:", error);
+      res.status(500).json({ error: "Failed to create advisory assignment" });
+    }
+  });
+
+  app.put("/api/academic/advisory-assignments/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const assignment = await storage.updateAdvisoryAssignment(id, req.body);
+      res.json(assignment);
+    } catch (error) {
+      console.error("Error updating advisory assignment:", error);
+      res.status(500).json({ error: "Failed to update advisory assignment" });
+    }
+  });
+
+  app.delete("/api/academic/advisory-assignments/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.deleteAdvisoryAssignment(id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting advisory assignment:", error);
+      res.status(500).json({ error: "Failed to delete advisory assignment" });
+    }
+  });
+
+  // Academic Management - Class Schedules
+  app.get("/api/academic/schedules", async (req, res) => {
+    try {
+      const schedules = await storage.getClassSchedules();
+      res.json(schedules);
+    } catch (error) {
+      console.error("Error fetching schedules:", error);
+      res.status(500).json({ error: "Failed to fetch schedules" });
+    }
+  });
+
+  app.post("/api/academic/schedules", async (req, res) => {
+    try {
+      const schedule = await storage.createClassSchedule(req.body);
+      res.status(201).json(schedule);
+    } catch (error) {
+      console.error("Error creating schedule:", error);
+      res.status(500).json({ error: "Failed to create schedule" });
+    }
+  });
+
+  app.put("/api/academic/schedules/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const schedule = await storage.updateClassSchedule(id, req.body);
+      res.json(schedule);
+    } catch (error) {
+      console.error("Error updating schedule:", error);
+      res.status(500).json({ error: "Failed to update schedule" });
+    }
+  });
+
+  app.delete("/api/academic/schedules/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.deleteClassSchedule(id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting schedule:", error);
+      res.status(500).json({ error: "Failed to delete schedule" });
+    }
+  });
+
+  // Academic Management - Sections (for reference)
+  app.get("/api/academic/sections", async (req, res) => {
+    try {
+      const sections = await storage.getSections();
+      res.json(sections);
+    } catch (error) {
+      console.error("Error fetching sections:", error);
+      res.status(500).json({ error: "Failed to fetch sections" });
+    }
+  });
+
+  // Academic Management - Statistics
+  app.get("/api/academic/stats", async (req, res) => {
+    try {
+      const teachers = await storage.getTeacherRegistrations();
+      const subjects = await storage.getAcademicSubjects();
+      const schedules = await storage.getClassSchedules();
+      const assignments = await storage.getSubjectAssignments();
+      const advisoryAssignments = await storage.getAdvisoryAssignments();
+
+      const stats = {
+        totalTeachers: teachers.length,
+        newTeachersThisMonth: teachers.filter(t => {
+          const createdDate = new Date(t.createdAt);
+          const currentDate = new Date();
+          return createdDate.getMonth() === currentDate.getMonth() && 
+                 createdDate.getFullYear() === currentDate.getFullYear();
+        }).length,
+        activeSubjects: subjects.filter(s => s.isActive).length,
+        totalSchedules: schedules.length,
+        advisoryClasses: advisoryAssignments.length,
+        subjectAssignments: assignments.length
+      };
+
+      res.json(stats);
+    } catch (error) {
+      console.error("Error fetching academic stats:", error);
+      res.status(500).json({ error: "Failed to fetch academic stats" });
+    }
+  });
+
   const httpServer = createServer(app);
   
   // Initialize Socket.IO
