@@ -4,6 +4,10 @@ import { Button } from '../../components/ui/button';
 import { DashboardStats } from '../../components/dashboard/DashboardStats';
 import { EmptyState } from '../../components/common/EmptyState';
 import { useAuth } from '../../contexts/AuthContext';
+import { DashboardBackground } from '@/components/ui/dashboard-background';
+import { EnhancedCard, StatCard, ActionCard } from '@/components/ui/enhanced-card';
+import { EnhancedButton, QuickActionButton } from '@/components/ui/enhanced-button';
+import { BookOpen, Calendar, Trophy, Clock, FileText, Video, MessageSquare, BarChart3, Upload, Users, GraduationCap } from 'lucide-react';
 
 export const TeacherDashboard: React.FC = () => {
   const { user } = useAuth();
@@ -13,40 +17,62 @@ export const TeacherDashboard: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Welcome Header */}
-      <div className="bg-gradient-to-r from-primary-600 to-primary-700 rounded-xl p-6 text-white">
-        <h2 className="text-2xl font-bold mb-2" data-testid="welcome-message">
-          Welcome back, {user.name}!
-        </h2>
-        <p className="opacity-90">Ready to inspire minds today?</p>
-      </div>
+    <DashboardBackground userRole="teacher" className="p-6">
+      <div className="space-y-6">
+        {/* Welcome Header */}
+        <EnhancedCard 
+          variant="gradient" 
+          className="bg-gradient-to-r from-green-600 to-green-700 text-white border-0"
+          data-testid="welcome-header"
+        >
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-2xl font-bold mb-2" data-testid="welcome-message">
+                Welcome back, {user.name}!
+              </h2>
+              <p className="opacity-90">Ready to inspire minds today?</p>
+            </div>
+            <GraduationCap className="h-16 w-16 opacity-20" />
+          </div>
+        </EnhancedCard>
 
-      {/* Quick Stats */}
-      <DashboardStats />
+        {/* Quick Stats */}
+        <DashboardStats />
 
-      {/* Quick Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Button className="h-20 bg-primary-600 hover:bg-primary-700 flex-col space-y-2" data-testid="quick-grade">
-          <i className="fas fa-clipboard-check text-xl"></i>
-          <span>Grade Assignments</span>
-        </Button>
-        <Button className="h-20 bg-secondary-600 hover:bg-secondary-700 text-white flex-col space-y-2" data-testid="quick-module">
-          <i className="fas fa-upload text-xl"></i>
-          <span>Upload Module</span>
-        </Button>
-        <Button className="h-20 bg-accent-600 hover:bg-accent-700 text-white flex-col space-y-2" data-testid="quick-meeting">
-          <i className="fas fa-video text-xl"></i>
-          <span>Schedule Meeting</span>
-        </Button>
-        <Button className="h-20 bg-purple-600 hover:bg-purple-700 text-white flex-col space-y-2" data-testid="quick-announce">
-          <i className="fas fa-bullhorn text-xl"></i>
-          <span>Send Announcement</span>
-        </Button>
-      </div>
+        {/* Quick Actions */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <QuickActionButton
+            title="Grade Assignments"
+            description="Review and grade student work"
+            icon={BarChart3}
+            color="green"
+            data-testid="quick-grade"
+          />
+          <QuickActionButton
+            title="Upload Module"
+            description="Add new learning materials"
+            icon={Upload}
+            color="blue"
+            data-testid="quick-module"
+          />
+          <QuickActionButton
+            title="Schedule Meeting"
+            description="Plan virtual classes"
+            icon={Video}
+            color="purple"
+            data-testid="quick-meeting"
+          />
+          <QuickActionButton
+            title="Send Announcement"
+            description="Communicate with students"
+            icon={MessageSquare}
+            color="orange"
+            data-testid="quick-announce"
+          />
+        </div>
 
-      {/* Teacher-specific content */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Teacher-specific content */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* My Classes */}
         <Card>
           <CardContent className="p-0">
@@ -110,7 +136,8 @@ export const TeacherDashboard: React.FC = () => {
             </div>
           </CardContent>
         </Card>
+        </div>
       </div>
-    </div>
+    </DashboardBackground>
   );
 };

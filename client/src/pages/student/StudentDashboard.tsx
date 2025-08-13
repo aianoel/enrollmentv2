@@ -4,6 +4,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useQuery } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
+import { DashboardBackground } from '@/components/ui/dashboard-background';
+import { EnhancedCard, StatCard, ActionCard } from '@/components/ui/enhanced-card';
+import { EnhancedButton, QuickActionButton } from '@/components/ui/enhanced-button';
+import { BookOpen, Calendar, Trophy, Clock, FileText, Video, MessageSquare, BarChart3, Upload, GraduationCap } from 'lucide-react';
 
 export const StudentDashboard: React.FC = () => {
   const { user } = useAuth();
@@ -28,81 +32,97 @@ export const StudentDashboard: React.FC = () => {
   const gpa = grades.length > 0 ? (grades.reduce((sum: number, g: any) => sum + parseFloat(g.grade || 0), 0) / grades.length).toFixed(2) : '0.00';
 
   return (
-    <div className="space-y-6">
-      {/* Welcome Header */}
-      <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-xl p-6 text-white">
-        <h2 className="text-2xl font-bold mb-2" data-testid="welcome-message">
-          Welcome back, {user.name}!
-        </h2>
-        <p className="opacity-90">Ready to continue your learning journey?</p>
-      </div>
+    <DashboardBackground userRole="student" className="p-6">
+      <div className="space-y-6">
+        {/* Welcome Header */}
+        <EnhancedCard 
+          variant="gradient" 
+          className="bg-gradient-to-r from-blue-600 to-blue-700 text-white border-0"
+          data-testid="welcome-header"
+        >
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-2xl font-bold mb-2" data-testid="welcome-message">
+                Welcome back, {user.name}!
+              </h2>
+              <p className="opacity-90">Ready to continue your learning journey?</p>
+            </div>
+            <GraduationCap className="h-16 w-16 opacity-20" />
+          </div>
+        </EnhancedCard>
 
-      {/* Quick Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Current GPA</CardTitle>
-            <i className="fas fa-chart-line text-blue-600"></i>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{gpa}</div>
-            <p className="text-xs text-muted-foreground">Overall average</p>
-          </CardContent>
-        </Card>
+        {/* Quick Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <StatCard
+            title="Current GPA"
+            value={gpa}
+            description="Overall average"
+            icon={BarChart3}
+            iconColor="text-blue-600"
+            trend={{ value: 5.2, label: "from last semester", isPositive: true }}
+            data-testid="gpa-stat"
+          />
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Subjects</CardTitle>
-            <i className="fas fa-book text-green-600"></i>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{new Set(grades.map((g: any) => g.subject)).size}</div>
-            <p className="text-xs text-muted-foreground">Enrolled subjects</p>
-          </CardContent>
-        </Card>
+          <StatCard
+            title="Total Subjects"
+            value={new Set(grades.map((g: any) => g.subject)).size}
+            description="Enrolled subjects"
+            icon={BookOpen}
+            iconColor="text-green-600"
+            data-testid="subjects-stat"
+          />
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Assignments Due</CardTitle>
-            <i className="fas fa-tasks text-orange-600"></i>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{upcomingAssignments.length}</div>
-            <p className="text-xs text-muted-foreground">Due this week</p>
-          </CardContent>
-        </Card>
+          <StatCard
+            title="Assignments Due"
+            value={upcomingAssignments.length}
+            description="Due this week"
+            icon={Clock}
+            iconColor="text-orange-600"
+            data-testid="assignments-stat"
+          />
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Grades</CardTitle>
-            <i className="fas fa-clipboard-list text-purple-600"></i>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{grades.length}</div>
-            <p className="text-xs text-muted-foreground">Recorded grades</p>
-          </CardContent>
-        </Card>
-      </div>
+          <StatCard
+            title="Total Grades"
+            value={grades.length}
+            description="Recorded grades"
+            icon={Trophy}
+            iconColor="text-purple-600"
+            trend={{ value: 12, label: "improvement", isPositive: true }}
+            data-testid="grades-stat"
+          />
+        </div>
 
-      {/* Quick Actions */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Button className="h-20 bg-blue-600 hover:bg-blue-700 flex-col space-y-2" data-testid="view-grades">
-          <i className="fas fa-chart-line text-xl"></i>
-          <span>View Grades</span>
-        </Button>
-        <Button className="h-20 bg-green-600 hover:bg-green-700 text-white flex-col space-y-2" data-testid="view-assignments">
-          <i className="fas fa-tasks text-xl"></i>
-          <span>Assignments</span>
-        </Button>
-        <Button className="h-20 bg-purple-600 hover:bg-purple-700 text-white flex-col space-y-2" data-testid="view-modules">
-          <i className="fas fa-book text-xl"></i>
-          <span>Learning Modules</span>
-        </Button>
-        <Button className="h-20 bg-orange-600 hover:bg-orange-700 text-white flex-col space-y-2" data-testid="view-meetings">
-          <i className="fas fa-video text-xl"></i>
-          <span>Meetings</span>
-        </Button>
-      </div>
+        {/* Quick Actions */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <QuickActionButton
+            title="View Grades"
+            description="Check your academic performance"
+            icon={BarChart3}
+            color="blue"
+            data-testid="view-grades"
+          />
+          <QuickActionButton
+            title="Assignments"
+            description="View and submit assignments"
+            icon={FileText}
+            color="green"
+            data-testid="view-assignments"
+          />
+          <QuickActionButton
+            title="Learning Modules"
+            description="Access course materials"
+            icon={BookOpen}
+            color="purple"
+            data-testid="view-modules"
+          />
+          <QuickActionButton
+            title="Join Meeting"
+            description="Attend virtual classes"
+            icon={Video}
+            color="orange"
+            data-testid="view-meetings"
+          />
+        </div>
 
       {/* Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -166,6 +186,7 @@ export const StudentDashboard: React.FC = () => {
           </CardContent>
         </Card>
       </div>
-    </div>
+      </div>
+    </DashboardBackground>
   );
 };

@@ -4,6 +4,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useQuery } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
+import { DashboardBackground } from '@/components/ui/dashboard-background';
+import { EnhancedCard, StatCard, ActionCard } from '@/components/ui/enhanced-card';
+import { EnhancedButton, QuickActionButton } from '@/components/ui/enhanced-button';
+import { Users, Calendar, MessageSquare, BarChart3, FileText, Trophy, Heart, BookOpen } from 'lucide-react';
 
 export const ParentDashboard: React.FC = () => {
   const { user } = useAuth();
@@ -33,81 +37,95 @@ export const ParentDashboard: React.FC = () => {
   const recentAnnouncements = announcements.slice(0, 3);
 
   return (
-    <div className="space-y-6">
-      {/* Welcome Header */}
-      <div className="bg-gradient-to-r from-green-600 to-green-700 rounded-xl p-6 text-white">
-        <h2 className="text-2xl font-bold mb-2" data-testid="welcome-message">
-          Welcome back, {user.name}!
-        </h2>
-        <p className="opacity-90">Keep track of your child's progress.</p>
-      </div>
+    <DashboardBackground userRole="parent" className="p-6">
+      <div className="space-y-6">
+        {/* Welcome Header */}
+        <EnhancedCard 
+          variant="gradient" 
+          className="bg-gradient-to-r from-purple-600 to-purple-700 text-white border-0"
+          data-testid="welcome-header"
+        >
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-2xl font-bold mb-2" data-testid="welcome-message">
+                Welcome back, {user.name}!
+              </h2>
+              <p className="opacity-90">Keep track of your child's progress.</p>
+            </div>
+            <Heart className="h-16 w-16 opacity-20" />
+          </div>
+        </EnhancedCard>
 
-      {/* Quick Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">My Children</CardTitle>
-            <i className="fas fa-users text-green-600"></i>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{studentChildren.length}</div>
-            <p className="text-xs text-muted-foreground">Enrolled students</p>
-          </CardContent>
-        </Card>
+        {/* Quick Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <StatCard
+            title="My Children"
+            value={studentChildren.length}
+            description="Enrolled students"
+            icon={Users}
+            iconColor="text-purple-600"
+            data-testid="children-stat"
+          />
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Announcements</CardTitle>
-            <i className="fas fa-bullhorn text-blue-600"></i>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{announcements.length}</div>
-            <p className="text-xs text-muted-foreground">New updates</p>
-          </CardContent>
-        </Card>
+          <StatCard
+            title="Announcements"
+            value={announcements.length}
+            description="New updates"
+            icon={MessageSquare}
+            iconColor="text-blue-600"
+            data-testid="announcements-stat"
+          />
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Upcoming Events</CardTitle>
-            <i className="fas fa-calendar text-orange-600"></i>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{upcomingEvents.length}</div>
-            <p className="text-xs text-muted-foreground">This month</p>
-          </CardContent>
-        </Card>
+          <StatCard
+            title="Upcoming Events"
+            value={upcomingEvents.length}
+            description="This month"
+            icon={Calendar}
+            iconColor="text-orange-600"
+            data-testid="events-stat"
+          />
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Payment Status</CardTitle>
-            <i className="fas fa-dollar-sign text-purple-600"></i>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600">Paid</div>
-            <p className="text-xs text-muted-foreground">Current term</p>
-          </CardContent>
-        </Card>
-      </div>
+          <StatCard
+            title="Payment Status"
+            value="Paid"
+            description="Current term"
+            icon={Trophy}
+            iconColor="text-green-600"
+            data-testid="payment-stat"
+          />
+        </div>
 
-      {/* Quick Actions */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Button className="h-20 bg-green-600 hover:bg-green-700 flex-col space-y-2" data-testid="view-child-grades">
-          <i className="fas fa-chart-line text-xl"></i>
-          <span>View Grades</span>
-        </Button>
-        <Button className="h-20 bg-blue-600 hover:bg-blue-700 text-white flex-col space-y-2" data-testid="view-attendance">
-          <i className="fas fa-calendar-check text-xl"></i>
-          <span>Attendance</span>
-        </Button>
-        <Button className="h-20 bg-purple-600 hover:bg-purple-700 text-white flex-col space-y-2" data-testid="view-billing">
-          <i className="fas fa-receipt text-xl"></i>
-          <span>Billing</span>
-        </Button>
-        <Button className="h-20 bg-orange-600 hover:bg-orange-700 text-white flex-col space-y-2" data-testid="message-teachers">
-          <i className="fas fa-comments text-xl"></i>
-          <span>Message Teachers</span>
-        </Button>
-      </div>
+        {/* Quick Actions */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <QuickActionButton
+            title="View Grades"
+            description="Check academic progress"
+            icon={BarChart3}
+            color="green"
+            data-testid="view-child-grades"
+          />
+          <QuickActionButton
+            title="Attendance"
+            description="Monitor attendance"
+            icon={Calendar}
+            color="blue"
+            data-testid="view-attendance"
+          />
+          <QuickActionButton
+            title="Billing"
+            description="Payment history"
+            icon={FileText}
+            color="purple"
+            data-testid="view-billing"
+          />
+          <QuickActionButton
+            title="Message Teachers"
+            description="Contact educators"
+            icon={MessageSquare}
+            color="orange"
+            data-testid="message-teachers"
+          />
+        </div>
 
       {/* Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -167,6 +185,7 @@ export const ParentDashboard: React.FC = () => {
           </CardContent>
         </Card>
       </div>
-    </div>
+      </div>
+    </DashboardBackground>
   );
 };

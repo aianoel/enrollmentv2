@@ -19,6 +19,8 @@ import {
   Shield,
   Building2
 } from "lucide-react";
+import { DashboardBackground } from '@/components/ui/dashboard-background';
+import { EnhancedCard, StatCard } from '@/components/ui/enhanced-card';
 import { UserManagement } from "./UserManagement";
 import { EnrollmentManagement } from "./EnrollmentManagement";
 import { AcademicSetup } from "./AcademicSetup";
@@ -86,13 +88,23 @@ export function AdminDashboard() {
   }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Admin Dashboard</h1>
-        <p className="text-muted-foreground">
-          Comprehensive school management and administrative controls
-        </p>
-      </div>
+    <DashboardBackground userRole="admin" className="p-6">
+      <div className="space-y-6">
+        <EnhancedCard 
+          variant="gradient" 
+          className="bg-gradient-to-r from-blue-600 to-blue-700 text-white border-0"
+          data-testid="welcome-header"
+        >
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold">Admin Dashboard</h1>
+              <p className="opacity-90">
+                Comprehensive school management and administrative controls
+              </p>
+            </div>
+            <Shield className="h-16 w-16 opacity-20" />
+          </div>
+        </EnhancedCard>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
         <TabsList className="grid w-full grid-cols-8">
@@ -236,6 +248,7 @@ export function AdminDashboard() {
           <SystemConfiguration />
         </TabsContent>
       </Tabs>
-    </div>
+      </div>
+    </DashboardBackground>
   );
 }
