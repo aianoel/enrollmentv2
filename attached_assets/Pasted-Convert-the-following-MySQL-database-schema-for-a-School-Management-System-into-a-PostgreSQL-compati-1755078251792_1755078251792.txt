@@ -1,0 +1,130 @@
+Convert the following MySQL database schema for a School Management System into a PostgreSQL-compatible schema.
+
+Conversion Rules:
+
+Replace AUTO_INCREMENT with SERIAL.
+
+Replace ENUM columns with VARCHAR and a CHECK constraint to restrict allowed values.
+
+Keep foreign key relationships exactly as in the original.
+
+Maintain TIMESTAMP DEFAULT CURRENT_TIMESTAMP for created_at columns.
+
+Keep table and column names the same.
+
+Output only the converted SQL script with no extra explanation.
+
+MySQL Schema:
+
+sql
+Copy
+Edit
+CREATE TABLE users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    email VARCHAR(100) UNIQUE NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+    role ENUM('admin','teacher','student','parent','guidance','registrar','accounting') NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE sections (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    grade_level INT NOT NULL,
+    adviser_id INT,
+    FOREIGN KEY (adviser_id) REFERENCES users(id)
+);
+
+CREATE TABLE enrollments (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    student_id INT NOT NULL,
+    section_id INT,
+    status ENUM('pending','approved','rejected') DEFAULT 'pending',
+    documents TEXT,
+    payment_status ENUM('unpaid','paid') DEFAULT 'unpaid',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (student_id) REFERENCES users(id),
+    FOREIGN KEY (section_id) REFERENCES sections(id)
+);
+
+CREATE TABLE grades (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    student_id INT NOT NULL,
+    subject VARCHAR(100) NOT NULL,
+    quarter INT NOT NULL,
+    grade DECIMAL(5,2),
+    teacher_id INT,
+    FOREIGN KEY (student_id) REFERENCES users(id),
+    FOREIGN KEY (teacher_id) REFERENCES users(id)
+);
+
+CREATE TABLE assignments (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    section_id INT NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    description TEXT,
+    type ENUM('test','assignment') NOT NULL,
+    due_date DATE,
+    file_url VARCHAR(255),
+    created_by INT NOT NULL,
+    FOREIGN KEY (section_id) REFERENCES sections(id),
+    FOREIGN KEY (created_by) REFERENCES users(id)
+);
+
+CREATE TABLE chat_messages (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    sender_id INT NOT NULL,
+    receiver_id INT,
+    message TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (sender_id) REFERENCES users(id),
+    FOREIGN KEY (receiver_id) REFERENCES users(id)
+);
+
+CREATE TABLE meetings (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    section_id INT NOT NULL,
+    title VARCHAR(255),
+    meeting_link VARCHAR(255),
+    date DATETIME,
+    created_by INT NOT NULL,
+    FOREIGN KEY (section_id) REFERENCES sections(id),
+    FOREIGN KEY (created_by) REFERENCES users(id)
+);
+
+CREATE TABLE hero_images (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    image_url VARCHAR(255) NOT NULL,
+    uploaded_by INT,
+    FOREIGN KEY (uploaded_by) REFERENCES users(id)
+);
+
+CREATE TABLE announcements (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    content TEXT NOT NULL,
+    date_posted DATE DEFAULT CURRENT_DATE,
+    posted_by INT,
+    FOREIGN KEY (posted_by) REFERENCES users(id)
+);
+
+CREATE TABLE news (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    summary TEXT,
+    image_url VARCHAR(255),
+    date_posted DATE DEFAULT CURRENT_DATE,
+    posted_by INT,
+    FOREIGN KEY (posted_by) REFERENCES users(id)
+);
+
+CREATE TABLE events (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    description TEXT,
+    date DATE,
+    location VARCHAR(255),
+    posted_by INT,
+    FOREIGN KEY (posted_by) REFERENCES users(id)
+);
