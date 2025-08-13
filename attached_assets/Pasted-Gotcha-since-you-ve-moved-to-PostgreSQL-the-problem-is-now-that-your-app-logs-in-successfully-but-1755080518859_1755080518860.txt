@@ -1,0 +1,152 @@
+Gotcha — since you’ve moved to PostgreSQL, the problem is now that your app logs in successfully but doesn’t fetch the user’s role from PostgreSQL after authentication, so you don’t know which dashboard to send them to.
+
+Here’s the correct way to handle role-based redirection with PostgreSQL:
+
+General Flow
+User logs in → Send credentials to your backend API (Express, NestJS, Django, etc.).
+
+Backend validates password against the hashed one in PostgreSQL.
+
+Backend returns the user’s role along with an authentication token (JWT or session).
+
+Frontend stores the token & role, then redirects based on role.
+
+Backend Example (Node.js + Express + PostgreSQL + JWT)
+javascript
+Copy
+Edit
+import express from "express";
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
+import pkg from "pg";
+const { Pool } = pkg;
+
+const app = express();
+app.use(express.json());
+
+const pool = new Pool({
+  user: "postgres",
+  host: "localhost",
+  database: "school_db",
+  password: "yourpassword",
+  port: 5432
+});
+
+app.post("/login", async (req, res) => {
+  const { email, password } = req.body;
+
+  try {
+    // Get user from PostgreSQL
+    const result = await pool.query(
+      "SELECT id, name, role, password_hash FROM users WHERE email = $1",
+      [email]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(400).json({ error: "Invalid email or password" });
+    }
+
+    const user = result.rows[0];
+
+    // Check password
+    const isMatch = await bcrypt.compare(password, user.password_hash);
+    if (!isMatch) {
+      return res.status(400).json({ error: "Invalid email or password" });
+    }
+
+    // Generate JWT
+    const token = jwt.sign({ id: user.id, role: user.role }, "secretkey", {
+      expiresIn: "1h"
+    });
+
+    res.json({
+      token,
+      role: user.role
+    });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+app.listen(5000, () => console.log("Server running on port 5000"));
+Frontend Example (React Role Redirect)
+jsx
+Copy
+Edit
+import React, { useState } from "react";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
+
+export default function LoginPage() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const navigate = useNavigate();
+
+  const handleLogin = async () => {
+    try {
+      const res = await axios.post("http://localhost:5000/login", {
+        email,
+        password
+      });
+
+      const { token, role } = res.data;
+
+      // Save token
+      localStorage.setItem("token", token);
+
+      // Redirect based on role
+      switch (role) {
+        case "admin":
+          navigate("/admin-dashboard");
+          break;
+        case "teacher":
+          navigate("/teacher-dashboard");
+          break;
+        case "student":
+          navigate("/student-dashboard");
+          break;
+        case "parent":
+          navigate("/parent-dashboard");
+          break;
+        default:
+          navigate("/");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Invalid login");
+    }
+  };
+
+  return (
+    <div className="p-8">
+      <h1 className="text-2xl mb-4">Login</h1>
+      <input
+        type="email"
+        placeholder="Email"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        className="border p-2 mb-2 block"
+      />
+      <input
+        type="password"
+        placeholder="Password"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+        className="border p-2 mb-4 block"
+      />
+      <button
+        onClick={handleLogin}
+        className="bg-blue-500 text-white px-4 py-2 rounded"
+      >
+        Login
+      </button>
+    </div>
+  );
+}
+Why your current login always goes to the landing page
+You’re probably authenticating the user but not fetching their role from PostgreSQL.
+
+Without the role, your navigate() has no idea where to send them, so it falls back to / (landing page).
+

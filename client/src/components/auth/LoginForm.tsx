@@ -3,8 +3,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { authAPI, ADMIN_CREDENTIALS } from "@/lib/auth";
+import { ADMIN_CREDENTIALS } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface LoginFormProps {
   onLogin: (user: any) => void;
@@ -15,18 +16,24 @@ export function LoginForm({ onLogin }: LoginFormProps) {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const { login } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
-      const response = await authAPI.login({ email, password });
-      onLogin(response.user);
+      // Use AuthContext login method which properly sets user state
+      await login(email, password);
+      
       toast({
-        title: "Login successful",
-        description: `Welcome back, ${response.user.name}!`,
+        title: "Login successful", 
+        description: `Redirecting to your dashboard...`,
       });
+
+      // The AuthContext login method will set the user state
+      // which will trigger the App component to render MainLayout
+      // and the appropriate role-based dashboard
     } catch (error: any) {
       toast({
         title: "Login failed",

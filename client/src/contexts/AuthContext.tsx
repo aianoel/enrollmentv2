@@ -44,8 +44,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setError(null);
       
       const response = await authAPI.login({ email, password });
+      
+      // Set user data - this will trigger a re-render and show the dashboard
       setUser(response.user);
       storage.setUser(response.user);
+      
+      console.log(`User logged in successfully: ${response.user.name} (${response.user.role})`);
     } catch (err: any) {
       setError(err.message);
       throw err;

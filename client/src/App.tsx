@@ -48,9 +48,10 @@ function AppContent() {
   if (currentView === 'login') {
     return (
       <LoginForm 
-        onLogin={(user) => {
-          // Login handled by context
-          setCurrentView('landing');
+        onLogin={(loggedInUser) => {
+          // The context will update the user state, triggering a re-render
+          // The user state will be set by the AuthContext, so we don't need to do anything here
+          // The component will re-render and show the MainLayout since user will be truthy
         }}
       />
     );
