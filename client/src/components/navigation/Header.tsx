@@ -2,15 +2,20 @@ import React from 'react';
 import { Button } from '../ui/button';
 import { useAuth } from '../../contexts/AuthContext';
 import { useChat } from '../../contexts/ChatContext';
+import { LogoutButton } from '../common/LogoutButton';
 
 export const Header: React.FC = () => {
-  const { userProfile, logout } = useAuth();
+  const { user } = useAuth();
   const { isOpen, setIsOpen, onlineUsers } = useChat();
 
-  if (!userProfile) return null;
+  if (!user) return null;
 
-  const getInitials = (firstName: string, lastName: string) => {
-    return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
+  const getInitials = (name: string) => {
+    const names = name.split(' ');
+    if (names.length >= 2) {
+      return `${names[0].charAt(0)}${names[1].charAt(0)}`.toUpperCase();
+    }
+    return name.charAt(0).toUpperCase();
   };
 
   return (
@@ -58,26 +63,18 @@ export const Header: React.FC = () => {
             <div className="flex items-center space-x-3">
               <div className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center">
                 <span className="text-primary-600 font-medium text-sm" data-testid="user-initials">
-                  {getInitials(userProfile.firstName, userProfile.lastName)}
+                  {getInitials(user.name)}
                 </span>
               </div>
               <div className="hidden md:block">
                 <p className="text-sm font-medium text-gray-900" data-testid="user-name">
-                  {userProfile.firstName} {userProfile.lastName}
+                  {user.name}
                 </p>
                 <p className="text-xs text-gray-500 capitalize" data-testid="user-role">
-                  {userProfile.role}
+                  {user.role}
                 </p>
               </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={logout}
-                className="text-gray-600 hover:text-primary-600"
-                data-testid="button-logout"
-              >
-                <i className="fas fa-chevron-down text-sm"></i>
-              </Button>
+              <LogoutButton />
             </div>
           </div>
         </div>

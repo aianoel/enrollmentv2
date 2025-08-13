@@ -1,0 +1,231 @@
+Alright — here’s how we can map the Academic Coordinator features directly into a PostgreSQL schema so your system can support them.
+I’ll focus only on the tables and relationships needed for Academic Coordinator tasks, assuming the rest of the school management system exists (users, roles, etc.).
+
+PostgreSQL Schema for Academic Coordinator Role
+sql
+Copy
+Edit
+-- ===============================
+-- 1. Roles (Assuming already exists)
+-- ===============================
+CREATE TABLE roles (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(50) UNIQUE NOT NULL
+);
+
+-- Academic Coordinator Role
+INSERT INTO roles (name) VALUES ('Academic Coordinator');
+
+-- ===============================
+-- 2. Subjects
+-- ===============================
+CREATE TABLE subjects (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    description TEXT,
+    grade_level INT NOT NULL,
+    created_by INT REFERENCES users(id) ON DELETE SET NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ===============================
+-- 3. Sections
+-- ===============================
+CREATE TABLE sections (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(50) NOT NULL,
+    grade_level INT NOT NULL,
+    academic_year VARCHAR(20) NOT NULL,
+    coordinator_id INT REFERENCES users(id) ON DELETE SET NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ===============================
+-- 4. Teacher Assignments
+-- ===============================
+CREATE TABLE teacher_assignments (
+    id SERIAL PRIMARY KEY,
+    teacher_id INT REFERENCES users(id) ON DELETE CASCADE,
+    subject_id INT REFERENCES subjects(id) ON DELETE CASCADE,
+    section_id INT REFERENCES sections(id) ON DELETE CASCADE,
+    academic_year VARCHAR(20) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ===============================
+-- 5. Class Schedules
+-- ===============================
+CREATE TABLE class_schedules (
+    id SERIAL PRIMARY KEY,
+    section_id INT REFERENCES sections(id) ON DELETE CASCADE,
+    subject_id INT REFERENCES subjects(id) ON DELETE CASCADE,
+    teacher_id INT REFERENCES users(id) ON DELETE CASCADE,
+    day_of_week VARCHAR(10) NOT NULL, -- Monday, Tuesday, etc.
+    start_time TIME NOT NULL,
+    end_time TIME NOT NULL
+);
+
+-- ===============================
+-- 6. Academic Calendar
+-- ===============================
+CREATE TABLE academic_calendar (
+    id SERIAL PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    description TEXT,
+    event_date DATE NOT NULL,
+    created_by INT REFERENCES users(id) ON DELETE SET NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ===============================
+-- 7. Performance Reports
+-- ===============================
+CREATE TABLE performance_reports (
+    id SERIAL PRIMARY KEY,
+    section_id INT REFERENCES sections(id) ON DELETE CASCADE,
+    subject_id INT REFERENCES subjects(id) ON DELETE CASCADE,
+    average_grade DECIMAL(5,2),
+    report_period VARCHAR(20), -- e.g., "Q1 2025"
+    created_by INT REFERENCES users(id) ON DELETE SET NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ===============================
+-- 8. Teacher Feedback
+-- ===============================
+CREATE TABLE teacher_feedback (
+    id SERIAL PRIMARY KEY,
+    teacher_id INT REFERENCES users(id) ON DELETE CASCADE,
+    coordinator_id INT REFERENCES users(id) ON DELETE CASCADE,
+    feedback TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+Feature-to-Table Mapping
+Feature	Related Table(s)
+Manage subjects	subjects
+Manage sections	sections
+Assign teachers to sections & subjects	teacher_assignments
+Manage class schedules	class_schedules
+Control academic calendar	academic_calendar
+Monitor performance reports	performance_reports
+Provide teacher feedback	teacher_feedback
+
+If you want, I can also extend this so that:
+
+All these tables are role-restricted (Academic Coordinator only)
+
+The API endpoints for CRUD operations are mapped out for each feature
+
+The React dashboard for Academic Coordinator is auto-generated from this schema
+
+Do you want me to prepare that API + UI mapping next so it’s fully functional?
+
+
+
+
+
+
+
+
+You said:
+add log out button of each dashboard
+
+
+ChatGPT said:
+Got it — you want a logout button that appears on every dashboard (Admin, Academic Coordinator, Registrar, Accounting, etc.) so no matter the role, the user can log out with one click.
+
+Since you’re using PostgreSQL + JWT authentication, logging out means:
+
+Remove the JWT from the browser (localStorage or sessionStorage).
+
+(Optional) Invalidate refresh token in PostgreSQL if you store them server-side.
+
+Redirect back to the login page.
+
+Reusable Logout Button Component
+jsx
+Copy
+Edit
+// src/components/LogoutButton.jsx
+import React from "react";
+import { useNavigate } from "react-router-dom";
+
+export default function LogoutButton() {
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    // Remove authentication data
+    localStorage.removeItem("token");
+    localStorage.removeItem("role");
+    localStorage.removeItem("userId");
+
+    // Redirect to login page
+    navigate("/login");
+  };
+
+  return (
+    <button
+      onClick={handleLogout}
+      className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md transition"
+    >
+      Logout
+    </button>
+  );
+}
+Example: Adding to Each Dashboard
+jsx
+Copy
+Edit
+// src/layouts/DashboardLayout.jsx
+import React from "react";
+import LogoutButton from "../components/LogoutButton";
+
+export default function DashboardLayout({ title, children }) {
+  return (
+    <div className="min-h-screen flex flex-col">
+      {/* Header */}
+      <header className="flex justify-between items-center bg-blue-700 text-white px-6 py-3 shadow-md">
+        <h1 className="text-lg font-bold">{title}</h1>
+        <LogoutButton />
+      </header>
+
+      {/* Main Content */}
+      <main className="flex-1 p-6 bg-gray-100">{children}</main>
+    </div>
+  );
+}
+Usage in Role-Based Dashboards
+You can reuse this layout for Admin, Academic Coordinator, Registrar, etc.:
+
+jsx
+Copy
+Edit
+// src/pages/admin/AdminDashboard.jsx
+import DashboardLayout from "../../layouts/DashboardLayout";
+
+export default function AdminDashboard() {
+  return (
+    <DashboardLayout title="Admin Dashboard">
+      <p>Welcome to the Admin panel.</p>
+    </DashboardLayout>
+  );
+}
+
+// src/pages/coordinator/CoordinatorDashboard.jsx
+import DashboardLayout from "../../layouts/DashboardLayout";
+
+export default function CoordinatorDashboard() {
+  return (
+    <DashboardLayout title="Academic Coordinator Dashboard">
+      <p>Manage subjects, schedules, and teachers here.</p>
+    </DashboardLayout>
+  );
+}
+✅ Result
+
+One LogoutButton component works for all dashboards.
+
+Easy to maintain — if you change logout behavior later, it’s updated everywhere.
+
+Keeps UI consistent across roles.
+
