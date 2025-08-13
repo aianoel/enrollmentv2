@@ -6,6 +6,7 @@ import { Textarea } from '../ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { Card, CardContent } from '../ui/card';
 import { useToast } from '../../hooks/use-toast';
+import { apiRequest } from '../../lib/queryClient';
 // Firebase enrollment replaced with PostgreSQL placeholder
 import { EnrollmentApplication } from '@shared/schema';
 
@@ -61,32 +62,41 @@ export const EnrollmentPortal: React.FC<EnrollmentPortalProps> = ({ onBackToLogi
   const handleSubmit = async () => {
     setLoading(true);
     try {
-      const enrollmentData: Omit<EnrollmentApplication, 'id' | 'createdAt' | 'updatedAt'> = {
-        ...formData,
-        gender: formData.gender as 'male' | 'female' | 'other',
-        previousGPA: formData.previousGPA ? parseFloat(formData.previousGPA) : undefined,
-        documents: [],
-        paymentStatus: 'unpaid' as const,
-        status: 'pending' as const,
-      };
-
-      // TODO: Implement PostgreSQL enrollment submission
-      console.log('Enrollment data (PostgreSQL not yet implemented):', enrollmentData);
-      
-      // Simulate successful submission for now
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      toast({
-        title: "Application submitted successfully!",
-        description: "You will receive an email confirmation shortly.",
+      // Create enrollment application
+      const applicationResponse = await apiRequest('/api/enrollment/applications', {
+        method: 'POST',
+        body: JSON.stringify({
+          schoolYear: '2024-2025',
+          studentInfo: {
+            firstName: formData.firstName,
+            lastName: formData.lastName,
+            birthDate: formData.dateOfBirth,
+            address: formData.address,
+            parentContact: formData.parentPhone
+          }
+        })
       });
 
-      onBackToLogin();
+      if (applicationResponse.id) {
+        // Submit the application immediately for review
+        await apiRequest(`/api/enrollment/applications/${applicationResponse.id}/submit`, {
+          method: 'PATCH'
+        });
+
+        toast({
+          title: "Application submitted successfully!",
+          description: "Your enrollment application has been submitted for review. Check the registrar dashboard to see your application.",
+        });
+
+        onBackToLogin();
+      } else {
+        throw new Error('Failed to create application');
+      }
     } catch (error) {
       console.error('Error submitting application:', error);
       toast({
         title: "Submission failed",
-        description: "Please try again later.",
+        description: "Please try again later or contact the registrar office.",
         variant: "destructive",
       });
     } finally {

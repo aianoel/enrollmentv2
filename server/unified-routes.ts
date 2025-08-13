@@ -63,6 +63,77 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  // Enhanced Enrollment Routes
+  app.post("/api/enrollment/applications", async (req, res) => {
+    try {
+      const { schoolYear, studentInfo } = req.body;
+      
+      // Create user first (for enrollment demo)
+      const hashedPassword = await bcrypt.hash('student123', 12);
+      const user = await storage.createUser({
+        roleId: 5, // Student role
+        firstName: studentInfo.firstName,
+        lastName: studentInfo.lastName,
+        email: `${studentInfo.firstName.toLowerCase()}.${studentInfo.lastName.toLowerCase()}@student.edu`,
+        passwordHash: hashedPassword,
+        isActive: true,
+        createdAt: new Date()
+      });
+
+      // Create enrollment application
+      const application = await storage.createEnrollmentApplication({
+        studentId: user.id,
+        schoolYear,
+        status: 'Draft',
+        createdAt: new Date()
+      });
+
+      res.status(201).json({ id: application.id, message: 'Application created successfully' });
+    } catch (error) {
+      console.error('Create enrollment error:', error);
+      res.status(500).json({ error: 'Failed to create application' });
+    }
+  });
+
+  app.patch("/api/enrollment/applications/:id/submit", async (req, res) => {
+    try {
+      const applicationId = parseInt(req.params.id);
+      
+      // Update application status
+      await storage.updateEnrollmentApplication(applicationId, {
+        status: 'Submitted',
+        submittedAt: new Date()
+      });
+
+      // Get application to update progress
+      const application = await storage.getEnrollmentApplication(applicationId);
+      if (application) {
+        await storage.updateEnrollmentProgress(application.studentId, {
+          applicationId,
+          currentStatus: 'Submitted',
+          remarks: 'Application submitted for review'
+        });
+
+        // Notify registrars
+        const registrars = await storage.getUsersByRole('Registrar');
+        for (const registrar of registrars) {
+          await storage.createNotification({
+            userId: registrar.id,
+            title: 'New Enrollment Application',
+            body: 'A new enrollment application has been submitted for review',
+            type: 'enrollment_submitted',
+            relatedId: applicationId
+          });
+        }
+      }
+
+      res.json({ message: 'Application submitted successfully' });
+    } catch (error) {
+      console.error('Submit application error:', error);
+      res.status(500).json({ error: 'Failed to submit application' });
+    }
+  });
+
   // Announcements
   app.get("/api/announcements", async (req, res) => {
     try {
