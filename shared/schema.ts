@@ -10,6 +10,8 @@ export const users = pgTable('users', {
   email: varchar('email', { length: 100 }).unique().notNull(),
   passwordHash: varchar('password_hash', { length: 255 }).notNull(),
   role: varchar('role', { length: 20 }).notNull(),
+  roleId: integer('role_id').references(() => roles.id),
+  isActive: boolean('is_active').default(true),
   createdAt: timestamp('created_at').defaultNow(),
 });
 
@@ -109,8 +111,58 @@ export const events = pgTable('events', {
   postedBy: integer('posted_by'),
 });
 
+// Roles table for flexible role management
+export const roles = pgTable('roles', {
+  id: serial('id').primaryKey(),
+  roleName: varchar('role_name', { length: 50 }).unique().notNull(),
+});
+
+// Subjects table
+export const subjects = pgTable('subjects', {
+  id: serial('id').primaryKey(),
+  name: varchar('name', { length: 100 }).notNull(),
+  gradeLevel: integer('grade_level').notNull(),
+});
+
+// Teacher assignments table
+export const teacherAssignments = pgTable('teacher_assignments', {
+  id: serial('id').primaryKey(),
+  teacherId: integer('teacher_id').references(() => users.id),
+  sectionId: integer('section_id').references(() => sections.id),
+  subjectId: integer('subject_id').references(() => subjects.id),
+});
+
+// Organizational chart table
+export const orgChart = pgTable('org_chart', {
+  id: serial('id').primaryKey(),
+  name: varchar('name', { length: 100 }).notNull(),
+  position: varchar('position', { length: 100 }).notNull(),
+  photoUrl: varchar('photo_url', { length: 255 }),
+  reportsTo: integer('reports_to'),
+});
+
+// School settings table
+export const schoolSettings = pgTable('school_settings', {
+  id: serial('id').primaryKey(),
+  schoolYear: varchar('school_year', { length: 20 }).notNull(),
+  startDate: date('start_date'),
+  endDate: date('end_date'),
+});
+
+// Tuition fees table
+export const tuitionFees = pgTable('tuition_fees', {
+  id: serial('id').primaryKey(),
+  gradeLevel: integer('grade_level').notNull(),
+  amount: decimal('amount', { precision: 10, scale: 2 }).notNull(),
+  dueDate: date('due_date'),
+});
+
 // Relations
-export const usersRelations = relations(users, ({ many }) => ({
+export const usersRelations = relations(users, ({ one, many }) => ({
+  role: one(roles, {
+    fields: [users.roleId],
+    references: [roles.id],
+  }),
   sections: many(sections),
   enrollments: many(enrollments),
   grades: many(grades),
@@ -122,6 +174,39 @@ export const usersRelations = relations(users, ({ many }) => ({
   announcements: many(announcements),
   news: many(news),
   events: many(events),
+  teacherAssignments: many(teacherAssignments),
+}));
+
+export const rolesRelations = relations(roles, ({ many }) => ({
+  users: many(users),
+}));
+
+export const subjectsRelations = relations(subjects, ({ many }) => ({
+  teacherAssignments: many(teacherAssignments),
+}));
+
+export const teacherAssignmentsRelations = relations(teacherAssignments, ({ one }) => ({
+  teacher: one(users, {
+    fields: [teacherAssignments.teacherId],
+    references: [users.id],
+  }),
+  section: one(sections, {
+    fields: [teacherAssignments.sectionId],
+    references: [sections.id],
+  }),
+  subject: one(subjects, {
+    fields: [teacherAssignments.subjectId],
+    references: [subjects.id],
+  }),
+}));
+
+export const orgChartRelations = relations(orgChart, ({ one, many }) => ({
+  manager: one(orgChart, {
+    fields: [orgChart.reportsTo],
+    references: [orgChart.id],
+    relationName: 'manager',
+  }),
+  subordinates: many(orgChart, { relationName: 'manager' }),
 }));
 
 export const sectionsRelations = relations(sections, ({ one, many }) => ({
@@ -132,6 +217,7 @@ export const sectionsRelations = relations(sections, ({ one, many }) => ({
   enrollments: many(enrollments),
   assignments: many(assignments),
   meetings: many(meetings),
+  teacherAssignments: many(teacherAssignments),
 }));
 
 export const enrollmentsRelations = relations(enrollments, ({ one }) => ({
@@ -213,6 +299,20 @@ export const selectNewsSchema = createSelectSchema(news);
 export const insertEventSchema = createInsertSchema(events).omit({ id: true });
 export const selectEventSchema = createSelectSchema(events);
 
+// New schema types for admin functionality
+export const insertRoleSchema = createInsertSchema(roles).omit({ id: true });
+export const selectRoleSchema = createSelectSchema(roles);
+export const insertSubjectSchema = createInsertSchema(subjects).omit({ id: true });
+export const selectSubjectSchema = createSelectSchema(subjects);
+export const insertTeacherAssignmentSchema = createInsertSchema(teacherAssignments).omit({ id: true });
+export const selectTeacherAssignmentSchema = createSelectSchema(teacherAssignments);
+export const insertOrgChartSchema = createInsertSchema(orgChart).omit({ id: true });
+export const selectOrgChartSchema = createSelectSchema(orgChart);
+export const insertSchoolSettingsSchema = createInsertSchema(schoolSettings).omit({ id: true });
+export const selectSchoolSettingsSchema = createSelectSchema(schoolSettings);
+export const insertTuitionFeeSchema = createInsertSchema(tuitionFees).omit({ id: true });
+export const selectTuitionFeeSchema = createSelectSchema(tuitionFees);
+
 // Inferred types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -234,6 +334,20 @@ export type News = typeof news.$inferSelect;
 export type InsertNews = z.infer<typeof insertNewsSchema>;
 export type Event = typeof events.$inferSelect;
 export type InsertEvent = z.infer<typeof insertEventSchema>;
+
+// New inferred types for admin functionality
+export type Role = typeof roles.$inferSelect;
+export type InsertRole = z.infer<typeof insertRoleSchema>;
+export type Subject = typeof subjects.$inferSelect;
+export type InsertSubject = z.infer<typeof insertSubjectSchema>;
+export type TeacherAssignment = typeof teacherAssignments.$inferSelect;
+export type InsertTeacherAssignment = z.infer<typeof insertTeacherAssignmentSchema>;
+export type OrgChart = typeof orgChart.$inferSelect;
+export type InsertOrgChart = z.infer<typeof insertOrgChartSchema>;
+export type SchoolSettings = typeof schoolSettings.$inferSelect;
+export type InsertSchoolSettings = z.infer<typeof insertSchoolSettingsSchema>;
+export type TuitionFee = typeof tuitionFees.$inferSelect;
+export type InsertTuitionFee = z.infer<typeof insertTuitionFeeSchema>;
 
 // User roles enum for validation
 export const UserRoles = ['admin', 'teacher', 'student', 'parent', 'guidance', 'registrar', 'accounting'] as const;

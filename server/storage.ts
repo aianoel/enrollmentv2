@@ -1,26 +1,107 @@
 import { 
-  users, announcements, news, events, 
+  users, announcements, news, events, enrollments, sections, roles, subjects, 
+  teacherAssignments, orgChart, schoolSettings, tuitionFees, grades, chatMessages,
   type User, type InsertUser, 
   type Announcement, type InsertAnnouncement, 
   type News, type InsertNews, 
-  type Event, type InsertEvent 
+  type Event, type InsertEvent,
+  type Enrollment, type InsertEnrollment,
+  type Section, type InsertSection,
+  type Role, type InsertRole,
+  type Subject, type InsertSubject,
+  type TeacherAssignment, type InsertTeacherAssignment,
+  type OrgChart, type InsertOrgChart,
+  type SchoolSettings, type InsertSchoolSettings,
+  type TuitionFee, type InsertTuitionFee,
+  type Grade, type InsertGrade,
+  type ChatMessage, type InsertChatMessage
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, and } from "drizzle-orm";
 
 // modify the interface with any CRUD methods
 // you might need
 
 export interface IStorage {
+  // User management
   getUser(id: number): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
+  updateUser(id: number, updates: Partial<InsertUser>): Promise<User>;
+  deleteUser(id: number): Promise<void>;
+  getAllUsers(): Promise<User[]>;
+  
+  // Role management
+  getRoles(): Promise<Role[]>;
+  createRole(role: InsertRole): Promise<Role>;
+  updateRole(id: number, updates: Partial<InsertRole>): Promise<Role>;
+  deleteRole(id: number): Promise<void>;
+  
+  // Enrollment management
+  getEnrollments(): Promise<Enrollment[]>;
+  getEnrollment(id: number): Promise<Enrollment | undefined>;
+  updateEnrollment(id: number, updates: Partial<InsertEnrollment>): Promise<Enrollment>;
+  createEnrollment(enrollment: InsertEnrollment): Promise<Enrollment>;
+  
+  // Section management
+  getSections(): Promise<Section[]>;
+  createSection(section: InsertSection): Promise<Section>;
+  updateSection(id: number, updates: Partial<InsertSection>): Promise<Section>;
+  deleteSection(id: number): Promise<void>;
+  
+  // Subject management
+  getSubjects(): Promise<Subject[]>;
+  createSubject(subject: InsertSubject): Promise<Subject>;
+  updateSubject(id: number, updates: Partial<InsertSubject>): Promise<Subject>;
+  deleteSubject(id: number): Promise<void>;
+  
+  // Teacher assignments
+  getTeacherAssignments(): Promise<TeacherAssignment[]>;
+  createTeacherAssignment(assignment: InsertTeacherAssignment): Promise<TeacherAssignment>;
+  deleteTeacherAssignment(id: number): Promise<void>;
+  
+  // Org chart management
+  getOrgChart(): Promise<OrgChart[]>;
+  createOrgChartEntry(entry: InsertOrgChart): Promise<OrgChart>;
+  updateOrgChartEntry(id: number, updates: Partial<InsertOrgChart>): Promise<OrgChart>;
+  deleteOrgChartEntry(id: number): Promise<void>;
+  
+  // School settings
+  getSchoolSettings(): Promise<SchoolSettings[]>;
+  createSchoolSettings(settings: InsertSchoolSettings): Promise<SchoolSettings>;
+  updateSchoolSettings(id: number, updates: Partial<InsertSchoolSettings>): Promise<SchoolSettings>;
+  
+  // Tuition fees
+  getTuitionFees(): Promise<TuitionFee[]>;
+  createTuitionFee(fee: InsertTuitionFee): Promise<TuitionFee>;
+  updateTuitionFee(id: number, updates: Partial<InsertTuitionFee>): Promise<TuitionFee>;
+  deleteTuitionFee(id: number): Promise<void>;
+  
+  // Grades management
+  getGrades(): Promise<Grade[]>;
+  getGradesByStudent(studentId: number): Promise<Grade[]>;
+  createGrade(grade: InsertGrade): Promise<Grade>;
+  updateGrade(id: number, updates: Partial<InsertGrade>): Promise<Grade>;
+  deleteGrade(id: number): Promise<void>;
+  
+  // Chat message management
+  getChatMessages(): Promise<ChatMessage[]>;
+  deleteChatMessage(id: number): Promise<void>;
+  createChatMessage(message: InsertChatMessage): Promise<ChatMessage>;
+  
+  // Content management
   getAnnouncements(): Promise<Announcement[]>;
   createAnnouncement(announcement: InsertAnnouncement): Promise<Announcement>;
+  updateAnnouncement(id: number, updates: Partial<InsertAnnouncement>): Promise<Announcement>;
+  deleteAnnouncement(id: number): Promise<void>;
   getNews(): Promise<News[]>;
   createNews(news: InsertNews): Promise<News>;
+  updateNews(id: number, updates: Partial<InsertNews>): Promise<News>;
+  deleteNews(id: number): Promise<void>;
   getEvents(): Promise<Event[]>;
   createEvent(event: InsertEvent): Promise<Event>;
+  updateEvent(id: number, updates: Partial<InsertEvent>): Promise<Event>;
+  deleteEvent(id: number): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -76,6 +157,229 @@ export class DatabaseStorage implements IStorage {
       .values(insertEvent)
       .returning();
     return event;
+  }
+
+  // User management methods
+  async updateUser(id: number, updates: Partial<InsertUser>): Promise<User> {
+    const [user] = await db.update(users).set(updates).where(eq(users.id, id)).returning();
+    return user;
+  }
+
+  async deleteUser(id: number): Promise<void> {
+    await db.update(users).set({ isActive: false }).where(eq(users.id, id));
+  }
+
+  async getAllUsers(): Promise<User[]> {
+    return await db.select().from(users).where(eq(users.isActive, true));
+  }
+
+  // Role management methods
+  async getRoles(): Promise<Role[]> {
+    return await db.select().from(roles);
+  }
+
+  async createRole(insertRole: InsertRole): Promise<Role> {
+    const [role] = await db.insert(roles).values(insertRole).returning();
+    return role;
+  }
+
+  async updateRole(id: number, updates: Partial<InsertRole>): Promise<Role> {
+    const [role] = await db.update(roles).set(updates).where(eq(roles.id, id)).returning();
+    return role;
+  }
+
+  async deleteRole(id: number): Promise<void> {
+    await db.delete(roles).where(eq(roles.id, id));
+  }
+
+  // Enrollment management methods
+  async getEnrollments(): Promise<Enrollment[]> {
+    return await db.select().from(enrollments);
+  }
+
+  async getEnrollment(id: number): Promise<Enrollment | undefined> {
+    const [enrollment] = await db.select().from(enrollments).where(eq(enrollments.id, id));
+    return enrollment || undefined;
+  }
+
+  async updateEnrollment(id: number, updates: Partial<InsertEnrollment>): Promise<Enrollment> {
+    const [enrollment] = await db.update(enrollments).set(updates).where(eq(enrollments.id, id)).returning();
+    return enrollment;
+  }
+
+  async createEnrollment(insertEnrollment: InsertEnrollment): Promise<Enrollment> {
+    const [enrollment] = await db.insert(enrollments).values(insertEnrollment).returning();
+    return enrollment;
+  }
+
+  // Section management methods
+  async getSections(): Promise<Section[]> {
+    return await db.select().from(sections);
+  }
+
+  async createSection(insertSection: InsertSection): Promise<Section> {
+    const [section] = await db.insert(sections).values(insertSection).returning();
+    return section;
+  }
+
+  async updateSection(id: number, updates: Partial<InsertSection>): Promise<Section> {
+    const [section] = await db.update(sections).set(updates).where(eq(sections.id, id)).returning();
+    return section;
+  }
+
+  async deleteSection(id: number): Promise<void> {
+    await db.delete(sections).where(eq(sections.id, id));
+  }
+
+  // Subject management methods
+  async getSubjects(): Promise<Subject[]> {
+    return await db.select().from(subjects);
+  }
+
+  async createSubject(insertSubject: InsertSubject): Promise<Subject> {
+    const [subject] = await db.insert(subjects).values(insertSubject).returning();
+    return subject;
+  }
+
+  async updateSubject(id: number, updates: Partial<InsertSubject>): Promise<Subject> {
+    const [subject] = await db.update(subjects).set(updates).where(eq(subjects.id, id)).returning();
+    return subject;
+  }
+
+  async deleteSubject(id: number): Promise<void> {
+    await db.delete(subjects).where(eq(subjects.id, id));
+  }
+
+  // Teacher assignments methods
+  async getTeacherAssignments(): Promise<TeacherAssignment[]> {
+    return await db.select().from(teacherAssignments);
+  }
+
+  async createTeacherAssignment(insertAssignment: InsertTeacherAssignment): Promise<TeacherAssignment> {
+    const [assignment] = await db.insert(teacherAssignments).values(insertAssignment).returning();
+    return assignment;
+  }
+
+  async deleteTeacherAssignment(id: number): Promise<void> {
+    await db.delete(teacherAssignments).where(eq(teacherAssignments.id, id));
+  }
+
+  // Org chart methods
+  async getOrgChart(): Promise<OrgChart[]> {
+    return await db.select().from(orgChart);
+  }
+
+  async createOrgChartEntry(insertEntry: InsertOrgChart): Promise<OrgChart> {
+    const [entry] = await db.insert(orgChart).values(insertEntry).returning();
+    return entry;
+  }
+
+  async updateOrgChartEntry(id: number, updates: Partial<InsertOrgChart>): Promise<OrgChart> {
+    const [entry] = await db.update(orgChart).set(updates).where(eq(orgChart.id, id)).returning();
+    return entry;
+  }
+
+  async deleteOrgChartEntry(id: number): Promise<void> {
+    await db.delete(orgChart).where(eq(orgChart.id, id));
+  }
+
+  // School settings methods
+  async getSchoolSettings(): Promise<SchoolSettings[]> {
+    return await db.select().from(schoolSettings);
+  }
+
+  async createSchoolSettings(insertSettings: InsertSchoolSettings): Promise<SchoolSettings> {
+    const [settings] = await db.insert(schoolSettings).values(insertSettings).returning();
+    return settings;
+  }
+
+  async updateSchoolSettings(id: number, updates: Partial<InsertSchoolSettings>): Promise<SchoolSettings> {
+    const [settings] = await db.update(schoolSettings).set(updates).where(eq(schoolSettings.id, id)).returning();
+    return settings;
+  }
+
+  // Tuition fees methods
+  async getTuitionFees(): Promise<TuitionFee[]> {
+    return await db.select().from(tuitionFees);
+  }
+
+  async createTuitionFee(insertFee: InsertTuitionFee): Promise<TuitionFee> {
+    const [fee] = await db.insert(tuitionFees).values(insertFee).returning();
+    return fee;
+  }
+
+  async updateTuitionFee(id: number, updates: Partial<InsertTuitionFee>): Promise<TuitionFee> {
+    const [fee] = await db.update(tuitionFees).set(updates).where(eq(tuitionFees.id, id)).returning();
+    return fee;
+  }
+
+  async deleteTuitionFee(id: number): Promise<void> {
+    await db.delete(tuitionFees).where(eq(tuitionFees.id, id));
+  }
+
+  // Grades management methods
+  async getGrades(): Promise<Grade[]> {
+    return await db.select().from(grades);
+  }
+
+  async getGradesByStudent(studentId: number): Promise<Grade[]> {
+    return await db.select().from(grades).where(eq(grades.studentId, studentId));
+  }
+
+  async createGrade(insertGrade: InsertGrade): Promise<Grade> {
+    const [grade] = await db.insert(grades).values(insertGrade).returning();
+    return grade;
+  }
+
+  async updateGrade(id: number, updates: Partial<InsertGrade>): Promise<Grade> {
+    const [grade] = await db.update(grades).set(updates).where(eq(grades.id, id)).returning();
+    return grade;
+  }
+
+  async deleteGrade(id: number): Promise<void> {
+    await db.delete(grades).where(eq(grades.id, id));
+  }
+
+  // Chat message management methods
+  async getChatMessages(): Promise<ChatMessage[]> {
+    return await db.select().from(chatMessages).orderBy(desc(chatMessages.createdAt));
+  }
+
+  async deleteChatMessage(id: number): Promise<void> {
+    await db.delete(chatMessages).where(eq(chatMessages.id, id));
+  }
+
+  async createChatMessage(insertMessage: InsertChatMessage): Promise<ChatMessage> {
+    const [message] = await db.insert(chatMessages).values(insertMessage).returning();
+    return message;
+  }
+
+  // Content management methods
+  async updateAnnouncement(id: number, updates: Partial<InsertAnnouncement>): Promise<Announcement> {
+    const [announcement] = await db.update(announcements).set(updates).where(eq(announcements.id, id)).returning();
+    return announcement;
+  }
+
+  async deleteAnnouncement(id: number): Promise<void> {
+    await db.delete(announcements).where(eq(announcements.id, id));
+  }
+
+  async updateNews(id: number, updates: Partial<InsertNews>): Promise<News> {
+    const [newsItem] = await db.update(news).set(updates).where(eq(news.id, id)).returning();
+    return newsItem;
+  }
+
+  async deleteNews(id: number): Promise<void> {
+    await db.delete(news).where(eq(news.id, id));
+  }
+
+  async updateEvent(id: number, updates: Partial<InsertEvent>): Promise<Event> {
+    const [event] = await db.update(events).set(updates).where(eq(events.id, id)).returning();
+    return event;
+  }
+
+  async deleteEvent(id: number): Promise<void> {
+    await db.delete(events).where(eq(events.id, id));
   }
 }
 
