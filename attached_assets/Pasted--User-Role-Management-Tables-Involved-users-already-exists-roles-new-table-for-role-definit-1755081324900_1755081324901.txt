@@ -1,0 +1,131 @@
+. User & Role Management
+Tables Involved:
+
+users (already exists)
+
+roles (new table for role definitions — more flexible than ENUM)
+
+sql
+Copy
+Edit
+CREATE TABLE roles (
+    id SERIAL PRIMARY KEY,
+    role_name VARCHAR(50) UNIQUE NOT NULL
+);
+
+-- Update users table to reference roles
+ALTER TABLE users
+ADD COLUMN role_id INT REFERENCES roles(id);
+Admin Actions:
+
+Insert into users to create accounts.
+
+Update role_id in users to change roles.
+
+Soft delete: add is_active BOOLEAN DEFAULT TRUE in users.
+
+2. Enrollment Management
+Tables Involved:
+
+enrollments (already exists)
+
+Admin Actions:
+
+Update status column (pending, approved, rejected).
+
+Assign section_id in enrollments.
+
+3. Academic Setup
+Tables Involved:
+
+sections (already exists)
+
+subjects (new table)
+
+teacher_assignments (new table to track teacher-subject-section links)
+
+sql
+Copy
+Edit
+CREATE TABLE subjects (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    grade_level INT NOT NULL
+);
+
+CREATE TABLE teacher_assignments (
+    id SERIAL PRIMARY KEY,
+    teacher_id INT REFERENCES users(id),
+    section_id INT REFERENCES sections(id),
+    subject_id INT REFERENCES subjects(id)
+);
+4. Content Management (Landing Page Control)
+Tables Involved:
+
+hero_images (already exists)
+
+announcements (already exists)
+
+news (already exists)
+
+events (already exists)
+
+org_chart (new table for organizational chart)
+
+sql
+Copy
+Edit
+CREATE TABLE org_chart (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    position VARCHAR(100) NOT NULL,
+    photo_url VARCHAR(255),
+    reports_to INT REFERENCES org_chart(id) ON DELETE SET NULL
+);
+5. Monitoring & Reporting
+Tables Involved:
+
+grades (already exists)
+
+assignments (already exists)
+
+meetings (already exists)
+
+Admin Actions:
+
+SELECT from these tables to generate performance & attendance reports.
+
+6. Communication
+Tables Involved:
+
+chat_messages (already exists)
+
+Admin Actions:
+
+DELETE inappropriate messages.
+
+Send messages to any user (insert into chat_messages).
+
+7. System Configuration
+Tables Involved:
+
+school_settings (new table)
+
+tuition_fees (new table)
+
+sql
+Copy
+Edit
+CREATE TABLE school_settings (
+    id SERIAL PRIMARY KEY,
+    school_year VARCHAR(20) NOT NULL,
+    start_date DATE,
+    end_date DATE
+);
+
+CREATE TABLE tuition_fees (
+    id SERIAL PRIMARY KEY,
+    grade_level INT NOT NULL,
+    amount NUMERIC(10,2) NOT NULL,
+    due_date DATE
+);
