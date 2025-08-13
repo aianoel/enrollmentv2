@@ -73,10 +73,7 @@ export function SystemConfiguration() {
 
   // School Settings mutations
   const createSettingsMutation = useMutation({
-    mutationFn: (data: SchoolSettingsFormData) => apiRequest("/api/admin/school-settings", {
-      method: "POST",
-      body: JSON.stringify(data),
-    }),
+    mutationFn: (data: SchoolSettingsFormData) => apiRequest("/api/admin/school-settings", "POST", data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/school-settings"] });
       setIsSettingsDialogOpen(false);
@@ -90,10 +87,7 @@ export function SystemConfiguration() {
 
   const updateSettingsMutation = useMutation({
     mutationFn: ({ id, data }: { id: number; data: Partial<SchoolSettingsFormData> }) =>
-      apiRequest(`/api/admin/school-settings/${id}`, {
-        method: "PATCH",
-        body: JSON.stringify(data),
-      }),
+      apiRequest(`/api/admin/school-settings/${id}`, "PATCH", data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/school-settings"] });
       setIsSettingsDialogOpen(false);
@@ -108,10 +102,7 @@ export function SystemConfiguration() {
 
   // Tuition Fee mutations
   const createFeeMutation = useMutation({
-    mutationFn: (data: TuitionFeeFormData) => apiRequest("/api/admin/tuition-fees", {
-      method: "POST",
-      body: JSON.stringify(data),
-    }),
+    mutationFn: (data: TuitionFeeFormData) => apiRequest("/api/admin/tuition-fees", "POST", data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/tuition-fees"] });
       setIsFeeDialogOpen(false);
@@ -125,10 +116,7 @@ export function SystemConfiguration() {
 
   const updateFeeMutation = useMutation({
     mutationFn: ({ id, data }: { id: number; data: Partial<TuitionFeeFormData> }) =>
-      apiRequest(`/api/admin/tuition-fees/${id}`, {
-        method: "PATCH",
-        body: JSON.stringify(data),
-      }),
+      apiRequest(`/api/admin/tuition-fees/${id}`, "PATCH", data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/tuition-fees"] });
       setIsFeeDialogOpen(false);
@@ -142,9 +130,7 @@ export function SystemConfiguration() {
   });
 
   const deleteFeeMutation = useMutation({
-    mutationFn: (id: number) => apiRequest(`/api/admin/tuition-fees/${id}`, {
-      method: "DELETE",
-    }),
+    mutationFn: (id: number) => apiRequest(`/api/admin/tuition-fees/${id}`, "DELETE"),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/tuition-fees"] });
       toast({ title: "Tuition fee deleted successfully" });

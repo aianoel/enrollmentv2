@@ -84,12 +84,9 @@ export function UserManagement() {
 
   // User mutations
   const createUserMutation = useMutation({
-    mutationFn: (data: UserFormData) => apiRequest("/api/admin/users", {
-      method: "POST",
-      body: JSON.stringify({
-        ...data,
-        passwordHash: data.password // This will be hashed on the backend
-      }),
+    mutationFn: (data: UserFormData) => apiRequest("/api/admin/users", "POST", {
+      ...data,
+      passwordHash: data.password // This will be hashed on the backend
     }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
@@ -104,10 +101,7 @@ export function UserManagement() {
 
   const updateUserMutation = useMutation({
     mutationFn: ({ id, data }: { id: number; data: Partial<UserFormData> }) =>
-      apiRequest(`/api/admin/users/${id}`, {
-        method: "PATCH",
-        body: JSON.stringify(data),
-      }),
+      apiRequest(`/api/admin/users/${id}`, "PATCH", data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
       setIsUserDialogOpen(false);
@@ -121,9 +115,7 @@ export function UserManagement() {
   });
 
   const deleteUserMutation = useMutation({
-    mutationFn: (id: number) => apiRequest(`/api/admin/users/${id}`, {
-      method: "DELETE",
-    }),
+    mutationFn: (id: number) => apiRequest(`/api/admin/users/${id}`, "DELETE"),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
       toast({ title: "User deactivated successfully" });
@@ -135,10 +127,7 @@ export function UserManagement() {
 
   // Role mutations
   const createRoleMutation = useMutation({
-    mutationFn: (data: RoleFormData) => apiRequest("/api/admin/roles", {
-      method: "POST",
-      body: JSON.stringify(data),
-    }),
+    mutationFn: (data: RoleFormData) => apiRequest("/api/admin/roles", "POST", data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/roles"] });
       setIsRoleDialogOpen(false);
@@ -151,9 +140,7 @@ export function UserManagement() {
   });
 
   const deleteRoleMutation = useMutation({
-    mutationFn: (id: number) => apiRequest(`/api/admin/roles/${id}`, {
-      method: "DELETE",
-    }),
+    mutationFn: (id: number) => apiRequest(`/api/admin/roles/${id}`, "DELETE"),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/roles"] });
       toast({ title: "Role deleted successfully" });
