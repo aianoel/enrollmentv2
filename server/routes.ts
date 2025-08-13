@@ -1360,6 +1360,176 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Enhanced Accounting Office API Routes
+  app.get("/api/accounting/fee-structures", async (req, res) => {
+    try {
+      const gradeLevel = req.query.gradeLevel as string | undefined;
+      const schoolYear = req.query.schoolYear as string | undefined;
+      const feeStructures = await storage.getFeeStructures(gradeLevel, schoolYear);
+      res.json(feeStructures);
+    } catch (error) {
+      console.error("Error fetching fee structures:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.post("/api/accounting/fee-structures", async (req, res) => {
+    try {
+      const feeStructureData = req.body;
+      const newFeeStructure = await storage.createFeeStructure(feeStructureData);
+      res.status(201).json(newFeeStructure);
+    } catch (error) {
+      console.error("Error creating fee structure:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.get("/api/accounting/invoices", async (req, res) => {
+    try {
+      const studentId = req.query.studentId ? parseInt(req.query.studentId as string) : undefined;
+      const status = req.query.status as string | undefined;
+      const invoices = await storage.getInvoices(studentId, status);
+      res.json(invoices);
+    } catch (error) {
+      console.error("Error fetching invoices:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.post("/api/accounting/invoices", async (req, res) => {
+    try {
+      const invoiceData = req.body;
+      const newInvoice = await storage.createInvoice(invoiceData);
+      
+      // Notify student about new invoice
+      await storage.createNotification({
+        recipientId: invoiceData.studentId,
+        message: `New invoice generated for ${invoiceData.schoolYear} - Amount: ₱${invoiceData.totalAmount}`,
+        link: `/student/billing/${newInvoice.id}`,
+      });
+      
+      res.status(201).json(newInvoice);
+    } catch (error) {
+      console.error("Error creating invoice:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.patch("/api/accounting/invoices/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const updates = req.body;
+      const updatedInvoice = await storage.updateInvoice(id, updates);
+      res.json(updatedInvoice);
+    } catch (error) {
+      console.error("Error updating invoice:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.get("/api/accounting/payments", async (req, res) => {
+    try {
+      const invoiceId = req.query.invoiceId ? parseInt(req.query.invoiceId as string) : undefined;
+      const payments = await storage.getPayments(invoiceId);
+      res.json(payments);
+    } catch (error) {
+      console.error("Error fetching payments:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.post("/api/accounting/payments", async (req, res) => {
+    try {
+      const paymentData = req.body;
+      const newPayment = await storage.createPayment(paymentData);
+      
+      // Update invoice status based on payment
+      const invoiceItems = await storage.getInvoiceItems(paymentData.invoiceId);
+      const totalInvoiceAmount = invoiceItems.reduce((sum, item) => sum + parseFloat(item.amount), 0);
+      const allPayments = await storage.getPayments(paymentData.invoiceId);
+      const totalPaid = allPayments.reduce((sum, payment) => sum + parseFloat(payment.amountPaid), 0);
+      
+      let newStatus = 'Unpaid';
+      if (totalPaid >= totalInvoiceAmount) {
+        newStatus = 'Paid';
+      } else if (totalPaid > 0) {
+        newStatus = 'Partial';
+      }
+      
+      await storage.updateInvoice(paymentData.invoiceId, { status: newStatus });
+      
+      res.status(201).json(newPayment);
+    } catch (error) {
+      console.error("Error creating payment:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.get("/api/accounting/scholarships", async (req, res) => {
+    try {
+      const studentId = req.query.studentId ? parseInt(req.query.studentId as string) : undefined;
+      const scholarships = await storage.getScholarships(studentId);
+      res.json(scholarships);
+    } catch (error) {
+      console.error("Error fetching scholarships:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.post("/api/accounting/scholarships", async (req, res) => {
+    try {
+      const scholarshipData = req.body;
+      const newScholarship = await storage.createScholarship(scholarshipData);
+      
+      // Notify student about scholarship
+      await storage.createNotification({
+        recipientId: scholarshipData.studentId,
+        message: `Scholarship granted: ${scholarshipData.scholarshipName} (${scholarshipData.discountPercentage}% discount)`,
+        link: `/student/scholarships`,
+      });
+      
+      res.status(201).json(newScholarship);
+    } catch (error) {
+      console.error("Error creating scholarship:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.get("/api/accounting/school-expenses", async (req, res) => {
+    try {
+      const category = req.query.category as string | undefined;
+      const startDate = req.query.startDate as string | undefined;
+      const endDate = req.query.endDate as string | undefined;
+      const expenses = await storage.getSchoolExpenses(category, startDate, endDate);
+      res.json(expenses);
+    } catch (error) {
+      console.error("Error fetching school expenses:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.post("/api/accounting/school-expenses", async (req, res) => {
+    try {
+      const expenseData = req.body;
+      const newExpense = await storage.createSchoolExpense(expenseData);
+      res.status(201).json(newExpense);
+    } catch (error) {
+      console.error("Error creating school expense:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.get("/api/accounting/students", async (req, res) => {
+    try {
+      const users = await storage.getAllUsers();
+      const students = users.filter((u: any) => u.role === 'student');
+      res.json(students);
+    } catch (error) {
+      console.error("Error fetching students:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
   const httpServer = createServer(app);
 
   return httpServer;

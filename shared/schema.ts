@@ -182,6 +182,60 @@ export const transcriptRequests = pgTable('transcript_requests', {
   releaseDate: timestamp('release_date'),
 });
 
+// Accounting module features
+export const feeStructures = pgTable('fee_structures', {
+  id: serial('id').primaryKey(),
+  gradeLevel: varchar('grade_level', { length: 50 }).notNull(),
+  tuitionFee: decimal('tuition_fee', { precision: 12, scale: 2 }).notNull(),
+  miscFee: decimal('misc_fee', { precision: 12, scale: 2 }).default('0').notNull(),
+  otherFee: decimal('other_fee', { precision: 12, scale: 2 }).default('0').notNull(),
+  effectiveSchoolYear: varchar('effective_school_year', { length: 9 }).notNull(),
+});
+
+export const invoices = pgTable('invoices', {
+  id: serial('id').primaryKey(),
+  studentId: integer('student_id').notNull().references(() => users.id),
+  schoolYear: varchar('school_year', { length: 9 }).notNull(),
+  dueDate: date('due_date').notNull(),
+  totalAmount: decimal('total_amount', { precision: 12, scale: 2 }).notNull(),
+  status: varchar('status', { length: 20 }).default('Unpaid').notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+export const invoiceItems = pgTable('invoice_items', {
+  id: serial('id').primaryKey(),
+  invoiceId: integer('invoice_id').notNull().references(() => invoices.id),
+  description: varchar('description', { length: 255 }).notNull(),
+  amount: decimal('amount', { precision: 12, scale: 2 }).notNull(),
+});
+
+export const payments = pgTable('payments', {
+  id: serial('id').primaryKey(),
+  invoiceId: integer('invoice_id').notNull().references(() => invoices.id),
+  paymentDate: timestamp('payment_date').defaultNow().notNull(),
+  amountPaid: decimal('amount_paid', { precision: 12, scale: 2 }).notNull(),
+  paymentMethod: varchar('payment_method', { length: 50 }),
+  receiptNumber: varchar('receipt_number', { length: 100 }),
+});
+
+export const scholarships = pgTable('scholarships', {
+  id: serial('id').primaryKey(),
+  studentId: integer('student_id').notNull().references(() => users.id),
+  scholarshipName: varchar('scholarship_name', { length: 255 }).notNull(),
+  discountPercentage: decimal('discount_percentage', { precision: 5, scale: 2 }).notNull(),
+  effectiveSchoolYear: varchar('effective_school_year', { length: 9 }).notNull(),
+});
+
+export const schoolExpenses = pgTable('school_expenses', {
+  id: serial('id').primaryKey(),
+  expenseDate: date('expense_date').notNull(),
+  category: varchar('category', { length: 100 }).notNull(),
+  description: text('description'),
+  amount: decimal('amount', { precision: 12, scale: 2 }).notNull(),
+  recordedBy: integer('recorded_by').notNull().references(() => users.id),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
 // Legacy assignments table (keeping for compatibility)
 export const assignments = pgTable('assignments', {
   id: serial('id').primaryKey(),
@@ -483,6 +537,20 @@ export const selectGraduationCandidateSchema = createSelectSchema(graduationCand
 export const insertTranscriptRequestSchema = createInsertSchema(transcriptRequests).omit({ id: true, requestDate: true, releaseDate: true });
 export const selectTranscriptRequestSchema = createSelectSchema(transcriptRequests);
 
+// Accounting module schemas
+export const insertFeeStructureSchema = createInsertSchema(feeStructures).omit({ id: true });
+export const selectFeeStructureSchema = createSelectSchema(feeStructures);
+export const insertInvoiceSchema = createInsertSchema(invoices).omit({ id: true, createdAt: true });
+export const selectInvoiceSchema = createSelectSchema(invoices);
+export const insertInvoiceItemSchema = createInsertSchema(invoiceItems).omit({ id: true });
+export const selectInvoiceItemSchema = createSelectSchema(invoiceItems);
+export const insertPaymentSchema = createInsertSchema(payments).omit({ id: true, paymentDate: true });
+export const selectPaymentSchema = createSelectSchema(payments);
+export const insertScholarshipSchema = createInsertSchema(scholarships).omit({ id: true });
+export const selectScholarshipSchema = createSelectSchema(scholarships);
+export const insertSchoolExpenseSchema = createInsertSchema(schoolExpenses).omit({ id: true, createdAt: true });
+export const selectSchoolExpenseSchema = createSelectSchema(schoolExpenses);
+
 // Inferred types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -550,6 +618,20 @@ export type GraduationCandidate = typeof graduationCandidates.$inferSelect;
 export type InsertGraduationCandidate = z.infer<typeof insertGraduationCandidateSchema>;
 export type TranscriptRequest = typeof transcriptRequests.$inferSelect;
 export type InsertTranscriptRequest = z.infer<typeof insertTranscriptRequestSchema>;
+
+// Accounting module types
+export type FeeStructure = typeof feeStructures.$inferSelect;
+export type InsertFeeStructure = z.infer<typeof insertFeeStructureSchema>;
+export type Invoice = typeof invoices.$inferSelect;
+export type InsertInvoice = z.infer<typeof insertInvoiceSchema>;
+export type InvoiceItem = typeof invoiceItems.$inferSelect;
+export type InsertInvoiceItem = z.infer<typeof insertInvoiceItemSchema>;
+export type Payment = typeof payments.$inferSelect;
+export type InsertPayment = z.infer<typeof insertPaymentSchema>;
+export type Scholarship = typeof scholarships.$inferSelect;
+export type InsertScholarship = z.infer<typeof insertScholarshipSchema>;
+export type SchoolExpense = typeof schoolExpenses.$inferSelect;
+export type InsertSchoolExpense = z.infer<typeof insertSchoolExpenseSchema>;
 
 // User roles enum for validation
 export const UserRoles = ['admin', 'teacher', 'student', 'parent', 'guidance', 'registrar', 'accounting'] as const;

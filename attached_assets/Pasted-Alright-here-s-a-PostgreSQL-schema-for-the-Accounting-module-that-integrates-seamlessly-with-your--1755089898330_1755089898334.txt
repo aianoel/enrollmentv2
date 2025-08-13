@@ -1,0 +1,94 @@
+Alright — here’s a PostgreSQL schema for the Accounting module that integrates seamlessly with your existing Registrar, Teacher, and Admin modules.
+
+This covers student billing, payment tracking, fee management, scholarships, and reporting.
+
+PostgreSQL Schema – Accounting Module
+sql
+Copy
+Edit
+-- ===============================
+-- 1. Fee Structure
+-- ===============================
+CREATE TABLE fee_structures (
+    id SERIAL PRIMARY KEY,
+    grade_level VARCHAR(50) NOT NULL,
+    tuition_fee NUMERIC(12,2) NOT NULL,
+    misc_fee NUMERIC(12,2) DEFAULT 0,
+    other_fee NUMERIC(12,2) DEFAULT 0,
+    effective_school_year VARCHAR(9) NOT NULL -- e.g., 2025-2026
+);
+
+-- ===============================
+-- 2. Invoices (Billing)
+-- ===============================
+CREATE TABLE invoices (
+    id SERIAL PRIMARY KEY,
+    student_id INT REFERENCES users(id) ON DELETE CASCADE,
+    school_year VARCHAR(9) NOT NULL,
+    due_date DATE NOT NULL,
+    total_amount NUMERIC(12,2) NOT NULL,
+    status VARCHAR(20) DEFAULT 'Unpaid', -- Unpaid, Partial, Paid
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ===============================
+-- 3. Invoice Items (Detailed Breakdown)
+-- ===============================
+CREATE TABLE invoice_items (
+    id SERIAL PRIMARY KEY,
+    invoice_id INT REFERENCES invoices(id) ON DELETE CASCADE,
+    description VARCHAR(255) NOT NULL, -- e.g., Tuition, Miscellaneous, Lab Fee
+    amount NUMERIC(12,2) NOT NULL
+);
+
+-- ===============================
+-- 4. Payments
+-- ===============================
+CREATE TABLE payments (
+    id SERIAL PRIMARY KEY,
+    invoice_id INT REFERENCES invoices(id) ON DELETE CASCADE,
+    payment_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    amount_paid NUMERIC(12,2) NOT NULL,
+    payment_method VARCHAR(50), -- Cash, Bank Transfer, GCash, Credit Card
+    receipt_number VARCHAR(100)
+);
+
+-- ===============================
+-- 5. Scholarships & Discounts
+-- ===============================
+CREATE TABLE scholarships (
+    id SERIAL PRIMARY KEY,
+    student_id INT REFERENCES users(id) ON DELETE CASCADE,
+    scholarship_name VARCHAR(255) NOT NULL,
+    discount_percentage NUMERIC(5,2) NOT NULL, -- e.g., 50.00 for 50%
+    effective_school_year VARCHAR(9) NOT NULL
+);
+
+-- ===============================
+-- 6. School Expenses (Non-Student Related)
+-- ===============================
+CREATE TABLE school_expenses (
+    id SERIAL PRIMARY KEY,
+    expense_date DATE NOT NULL,
+    category VARCHAR(100) NOT NULL, -- e.g., Utilities, Supplies, Salaries
+    description TEXT,
+    amount NUMERIC(12,2) NOT NULL,
+    recorded_by INT REFERENCES users(id) -- Accountant/Admin who entered the record
+);
+💡 Feature → Table Mapping
+Accounting Feature	Table(s)	Description
+Define tuition & fees	fee_structures	Stores per-grade fee setup
+Generate invoices for students	invoices, invoice_items	Stores bills & breakdown
+Record payments	payments	Tracks payment history
+Apply discounts & scholarships	scholarships	Manages special fee reductions
+Record school operational expenses	school_expenses	Tracks non-student expenses
+Generate financial reports	All tables	Pulls income/expense summaries
+
+🔗 Integration with Other Modules
+Registrar Module → Uses fee_structures to determine billing for new enrollees.
+
+Teacher Module → Can’t directly access accounting, but tuition status could restrict grade release if desired.
+
+Admin Module → Can manage both accounting staff and high-level reports.
+
+Student/Parent Portal → Can view invoices, payments, and outstanding balances.

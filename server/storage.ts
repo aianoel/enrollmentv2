@@ -4,6 +4,7 @@ import {
   teacherTasks, taskSubmissions, teacherMeetings, notifications,
   guidanceBehaviorRecords, guidanceCounselingSessions, guidanceWellnessPrograms, guidanceProgramParticipants,
   registrarEnrollmentRequests, registrarSubjects, academicRecords, graduationCandidates, transcriptRequests,
+  feeStructures, invoices, invoiceItems, payments, scholarships, schoolExpenses,
   type User, type InsertUser, 
   type Announcement, type InsertAnnouncement, 
   type News, type InsertNews, 
@@ -30,7 +31,13 @@ import {
   type RegistrarSubject, type InsertRegistrarSubject,
   type AcademicRecord, type InsertAcademicRecord,
   type GraduationCandidate, type InsertGraduationCandidate,
-  type TranscriptRequest, type InsertTranscriptRequest
+  type TranscriptRequest, type InsertTranscriptRequest,
+  type FeeStructure, type InsertFeeStructure,
+  type Invoice, type InsertInvoice,
+  type InvoiceItem, type InsertInvoiceItem,
+  type Payment, type InsertPayment,
+  type Scholarship, type InsertScholarship,
+  type SchoolExpense, type InsertSchoolExpense
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and } from "drizzle-orm";
@@ -182,6 +189,35 @@ export interface IStorage {
   getTranscriptRequests(studentId?: number): Promise<TranscriptRequest[]>;
   createTranscriptRequest(request: InsertTranscriptRequest): Promise<TranscriptRequest>;
   updateTranscriptRequest(id: number, updates: Partial<InsertTranscriptRequest>): Promise<TranscriptRequest>;
+  
+  // Accounting module features
+  getFeeStructures(gradeLevel?: string, schoolYear?: string): Promise<FeeStructure[]>;
+  createFeeStructure(feeStructure: InsertFeeStructure): Promise<FeeStructure>;
+  updateFeeStructure(id: number, updates: Partial<InsertFeeStructure>): Promise<FeeStructure>;
+  deleteFeeStructure(id: number): Promise<void>;
+  
+  getInvoices(studentId?: number, status?: string): Promise<Invoice[]>;
+  createInvoice(invoice: InsertInvoice): Promise<Invoice>;
+  updateInvoice(id: number, updates: Partial<InsertInvoice>): Promise<Invoice>;
+  deleteInvoice(id: number): Promise<void>;
+  
+  getInvoiceItems(invoiceId: number): Promise<InvoiceItem[]>;
+  createInvoiceItem(item: InsertInvoiceItem): Promise<InvoiceItem>;
+  deleteInvoiceItem(id: number): Promise<void>;
+  
+  getPayments(invoiceId?: number): Promise<Payment[]>;
+  createPayment(payment: InsertPayment): Promise<Payment>;
+  updatePayment(id: number, updates: Partial<InsertPayment>): Promise<Payment>;
+  
+  getScholarships(studentId?: number): Promise<Scholarship[]>;
+  createScholarship(scholarship: InsertScholarship): Promise<Scholarship>;
+  updateScholarship(id: number, updates: Partial<InsertScholarship>): Promise<Scholarship>;
+  deleteScholarship(id: number): Promise<void>;
+  
+  getSchoolExpenses(category?: string, startDate?: string, endDate?: string): Promise<SchoolExpense[]>;
+  createSchoolExpense(expense: InsertSchoolExpense): Promise<SchoolExpense>;
+  updateSchoolExpense(id: number, updates: Partial<InsertSchoolExpense>): Promise<SchoolExpense>;
+  deleteSchoolExpense(id: number): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -736,6 +772,143 @@ export class DatabaseStorage implements IStorage {
       releaseDate: updates.status === 'Released' ? new Date() : undefined
     }).where(eq(transcriptRequests.id, id)).returning();
     return updatedRequest;
+  }
+
+  // Accounting module implementations
+  async getFeeStructures(gradeLevel?: string, schoolYear?: string): Promise<FeeStructure[]> {
+    if (gradeLevel && schoolYear) {
+      return await db.select().from(feeStructures).where(and(eq(feeStructures.gradeLevel, gradeLevel), eq(feeStructures.effectiveSchoolYear, schoolYear)));
+    } else if (gradeLevel) {
+      return await db.select().from(feeStructures).where(eq(feeStructures.gradeLevel, gradeLevel));
+    } else if (schoolYear) {
+      return await db.select().from(feeStructures).where(eq(feeStructures.effectiveSchoolYear, schoolYear));
+    }
+    return await db.select().from(feeStructures).orderBy(feeStructures.gradeLevel);
+  }
+
+  async createFeeStructure(feeStructure: InsertFeeStructure): Promise<FeeStructure> {
+    const [newFeeStructure] = await db.insert(feeStructures).values(feeStructure).returning();
+    return newFeeStructure;
+  }
+
+  async updateFeeStructure(id: number, updates: Partial<InsertFeeStructure>): Promise<FeeStructure> {
+    const [updatedFeeStructure] = await db.update(feeStructures).set(updates).where(eq(feeStructures.id, id)).returning();
+    return updatedFeeStructure;
+  }
+
+  async deleteFeeStructure(id: number): Promise<void> {
+    await db.delete(feeStructures).where(eq(feeStructures.id, id));
+  }
+
+  async getInvoices(studentId?: number, status?: string): Promise<Invoice[]> {
+    if (studentId && status) {
+      return await db.select().from(invoices).where(and(eq(invoices.studentId, studentId), eq(invoices.status, status))).orderBy(desc(invoices.createdAt));
+    } else if (studentId) {
+      return await db.select().from(invoices).where(eq(invoices.studentId, studentId)).orderBy(desc(invoices.createdAt));
+    } else if (status) {
+      return await db.select().from(invoices).where(eq(invoices.status, status)).orderBy(desc(invoices.createdAt));
+    }
+    return await db.select().from(invoices).orderBy(desc(invoices.createdAt));
+  }
+
+  async createInvoice(invoice: InsertInvoice): Promise<Invoice> {
+    const [newInvoice] = await db.insert(invoices).values(invoice).returning();
+    return newInvoice;
+  }
+
+  async updateInvoice(id: number, updates: Partial<InsertInvoice>): Promise<Invoice> {
+    const [updatedInvoice] = await db.update(invoices).set(updates).where(eq(invoices.id, id)).returning();
+    return updatedInvoice;
+  }
+
+  async deleteInvoice(id: number): Promise<void> {
+    await db.delete(invoices).where(eq(invoices.id, id));
+  }
+
+  async getInvoiceItems(invoiceId: number): Promise<InvoiceItem[]> {
+    return await db.select().from(invoiceItems).where(eq(invoiceItems.invoiceId, invoiceId));
+  }
+
+  async createInvoiceItem(item: InsertInvoiceItem): Promise<InvoiceItem> {
+    const [newItem] = await db.insert(invoiceItems).values(item).returning();
+    return newItem;
+  }
+
+  async deleteInvoiceItem(id: number): Promise<void> {
+    await db.delete(invoiceItems).where(eq(invoiceItems.id, id));
+  }
+
+  async getPayments(invoiceId?: number): Promise<Payment[]> {
+    if (invoiceId) {
+      return await db.select().from(payments).where(eq(payments.invoiceId, invoiceId)).orderBy(desc(payments.paymentDate));
+    }
+    return await db.select().from(payments).orderBy(desc(payments.paymentDate));
+  }
+
+  async createPayment(payment: InsertPayment): Promise<Payment> {
+    const [newPayment] = await db.insert(payments).values(payment).returning();
+    return newPayment;
+  }
+
+  async updatePayment(id: number, updates: Partial<InsertPayment>): Promise<Payment> {
+    const [updatedPayment] = await db.update(payments).set(updates).where(eq(payments.id, id)).returning();
+    return updatedPayment;
+  }
+
+  async getScholarships(studentId?: number): Promise<Scholarship[]> {
+    if (studentId) {
+      return await db.select().from(scholarships).where(eq(scholarships.studentId, studentId));
+    }
+    return await db.select().from(scholarships);
+  }
+
+  async createScholarship(scholarship: InsertScholarship): Promise<Scholarship> {
+    const [newScholarship] = await db.insert(scholarships).values(scholarship).returning();
+    return newScholarship;
+  }
+
+  async updateScholarship(id: number, updates: Partial<InsertScholarship>): Promise<Scholarship> {
+    const [updatedScholarship] = await db.update(scholarships).set(updates).where(eq(scholarships.id, id)).returning();
+    return updatedScholarship;
+  }
+
+  async deleteScholarship(id: number): Promise<void> {
+    await db.delete(scholarships).where(eq(scholarships.id, id));
+  }
+
+  async getSchoolExpenses(category?: string, startDate?: string, endDate?: string): Promise<SchoolExpense[]> {
+    let query = db.select().from(schoolExpenses);
+    
+    if (category && startDate && endDate) {
+      return await query.where(and(
+        eq(schoolExpenses.category, category),
+        gte(schoolExpenses.expenseDate, startDate),
+        lte(schoolExpenses.expenseDate, endDate)
+      )).orderBy(desc(schoolExpenses.expenseDate));
+    } else if (category) {
+      return await query.where(eq(schoolExpenses.category, category)).orderBy(desc(schoolExpenses.expenseDate));
+    } else if (startDate && endDate) {
+      return await query.where(and(
+        gte(schoolExpenses.expenseDate, startDate),
+        lte(schoolExpenses.expenseDate, endDate)
+      )).orderBy(desc(schoolExpenses.expenseDate));
+    }
+    
+    return await query.orderBy(desc(schoolExpenses.expenseDate));
+  }
+
+  async createSchoolExpense(expense: InsertSchoolExpense): Promise<SchoolExpense> {
+    const [newExpense] = await db.insert(schoolExpenses).values(expense).returning();
+    return newExpense;
+  }
+
+  async updateSchoolExpense(id: number, updates: Partial<InsertSchoolExpense>): Promise<SchoolExpense> {
+    const [updatedExpense] = await db.update(schoolExpenses).set(updates).where(eq(schoolExpenses.id, id)).returning();
+    return updatedExpense;
+  }
+
+  async deleteSchoolExpense(id: number): Promise<void> {
+    await db.delete(schoolExpenses).where(eq(schoolExpenses.id, id));
   }
 }
 

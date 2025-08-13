@@ -19,6 +19,7 @@ import { EnhancedGuidanceDashboard } from '../../pages/guidance/EnhancedGuidance
 import { RegistrarDashboard } from '../../pages/registrar/RegistrarDashboard';
 import { EnhancedRegistrarDashboard } from '../../pages/registrar/EnhancedRegistrarDashboard';
 import { AccountingDashboard } from '../../pages/accounting/AccountingDashboard';
+import { EnhancedAccountingDashboard } from '../../pages/accounting/EnhancedAccountingDashboard';
 import { useAuth } from '../../contexts/AuthContext';
 import { useChat } from '../../contexts/ChatContext';
 
@@ -46,7 +47,7 @@ export const MainLayout: React.FC = () => {
         case 'registrar':
           return <EnhancedRegistrarDashboard />;
         case 'accounting':
-          return <AccountingDashboard />;
+          return <EnhancedAccountingDashboard />;
         default:
           return <Dashboard />;
       }
