@@ -1920,6 +1920,96 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // =====================================================
+  // NOTIFICATION ROUTES
+  // =====================================================
+
+  // Get notifications for a user
+  app.get("/api/notifications", async (req, res) => {
+    try {
+      const recipientId = req.query.recipientId ? parseInt(req.query.recipientId as string) : undefined;
+      
+      if (!recipientId) {
+        return res.status(400).json({ error: "Recipient ID is required" });
+      }
+      
+      const notifications = await storage.getNotifications(recipientId);
+      res.json(notifications);
+    } catch (error) {
+      console.error("Error fetching notifications:", error);
+      res.status(500).json({ error: "Failed to fetch notifications" });
+    }
+  });
+
+  // Get unread notification count for a user
+  app.get("/api/notifications/count", async (req, res) => {
+    try {
+      const recipientId = req.query.recipientId ? parseInt(req.query.recipientId as string) : undefined;
+      
+      if (!recipientId) {
+        return res.status(400).json({ error: "Recipient ID is required" });
+      }
+      
+      const count = await storage.getUnreadNotificationCount(recipientId);
+      res.json(count);
+    } catch (error) {
+      console.error("Error fetching notification count:", error);
+      res.status(500).json({ error: "Failed to fetch notification count" });
+    }
+  });
+
+  // Mark notification as read
+  app.put("/api/notifications/:id/read", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.markNotificationAsRead(id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error marking notification as read:", error);
+      res.status(500).json({ error: "Failed to mark notification as read" });
+    }
+  });
+
+  // Mark all notifications as read for a user
+  app.put("/api/notifications/mark-all-read", async (req, res) => {
+    try {
+      const { recipientId } = req.body;
+      
+      if (!recipientId) {
+        return res.status(400).json({ error: "Recipient ID is required" });
+      }
+      
+      await storage.markAllNotificationsAsRead(recipientId);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error marking all notifications as read:", error);
+      res.status(500).json({ error: "Failed to mark all notifications as read" });
+    }
+  });
+
+  // Delete notification
+  app.delete("/api/notifications/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.deleteNotification(id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting notification:", error);
+      res.status(500).json({ error: "Failed to delete notification" });
+    }
+  });
+
+  // Create notification (for system use)
+  app.post("/api/notifications", async (req, res) => {
+    try {
+      const notification = await storage.createNotification(req.body);
+      res.status(201).json(notification);
+    } catch (error) {
+      console.error("Error creating notification:", error);
+      res.status(500).json({ error: "Failed to create notification" });
+    }
+  });
+
+  // =====================================================
   // ACADEMIC MANAGEMENT ROUTES
   // =====================================================
 

@@ -1646,6 +1646,51 @@ export class DatabaseStorage implements IStorage {
   async deleteTeacherEvaluation(id: number): Promise<void> {
     await db.delete(teacherEvaluations).where(eq(teacherEvaluations.id, id));
   }
+
+  // Notification Management Methods
+  async getNotifications(recipientId: number): Promise<any[]> {
+    return await db
+      .select()
+      .from(notifications)
+      .where(eq(notifications.userId, recipientId))
+      .orderBy(desc(notifications.createdAt));
+  }
+
+  async getUnreadNotificationCount(recipientId: number): Promise<number> {
+    const result = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(notifications)
+      .where(
+        and(
+          eq(notifications.userId, recipientId),
+          eq(notifications.isRead, false)
+        )
+      );
+    return result[0]?.count || 0;
+  }
+
+  async markNotificationAsRead(id: number): Promise<void> {
+    await db
+      .update(notifications)
+      .set({ isRead: true })
+      .where(eq(notifications.id, id));
+  }
+
+  async markAllNotificationsAsRead(recipientId: number): Promise<void> {
+    await db
+      .update(notifications)
+      .set({ isRead: true })
+      .where(eq(notifications.userId, recipientId));
+  }
+
+  async deleteNotification(id: number): Promise<void> {
+    await db.delete(notifications).where(eq(notifications.id, id));
+  }
+
+  async createNotification(data: any): Promise<any> {
+    const [notification] = await db.insert(notifications).values(data).returning();
+    return notification;
+  }
 }
 
 export const storage = new DatabaseStorage();

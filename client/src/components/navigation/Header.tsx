@@ -1,12 +1,24 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '../ui/button';
 import { useAuth } from '../../contexts/AuthContext';
 import { useChat } from '../../contexts/ChatContext';
 import { LogoutButton } from '../common/LogoutButton';
+import { NotificationPanel } from '../notifications/NotificationPanel';
+import { useQuery } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 
 export const Header: React.FC = () => {
   const { user } = useAuth();
   const { isOpen, setIsOpen, onlineUsers } = useChat();
+  const [isNotificationPanelOpen, setIsNotificationPanelOpen] = useState(false);
+
+  // Fetch unread notification count
+  const { data: notificationCount = 0 } = useQuery({
+    queryKey: ["/api/notifications/count", user?.id],
+    queryFn: () => apiRequest(`/api/notifications/count?recipientId=${user?.id}`),
+    enabled: !!user?.id,
+    refetchInterval: 30000 // Refresh every 30 seconds
+  });
 
   if (!user) return null;
 
@@ -51,12 +63,15 @@ export const Header: React.FC = () => {
               variant="ghost"
               size="sm"
               className="relative p-2 text-gray-600 hover:text-primary-600 transition-colors"
+              onClick={() => setIsNotificationPanelOpen(!isNotificationPanelOpen)}
               data-testid="button-notifications"
             >
               <i className="fas fa-bell text-xl"></i>
-              <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center" data-testid="notification-count">
-                3
-              </span>
+              {notificationCount > 0 && (
+                <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center" data-testid="notification-count">
+                  {notificationCount > 99 ? '99+' : notificationCount}
+                </span>
+              )}
             </Button>
 
             {/* User Menu */}
@@ -79,6 +94,12 @@ export const Header: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Notification Panel */}
+      <NotificationPanel 
+        isOpen={isNotificationPanelOpen} 
+        onClose={() => setIsNotificationPanelOpen(false)} 
+      />
     </header>
   );
 };
