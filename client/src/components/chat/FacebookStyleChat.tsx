@@ -171,10 +171,27 @@ export function FacebookStyleChat() {
     }
   }, [user, queryClient]);
 
-  // Auto-scroll to bottom when new messages arrive
+  // Auto-scroll to bottom when new messages arrive or conversation changes
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messages, selectedConversation]);
+
+  // Scroll to bottom when component mounts or conversation is selected
+  useEffect(() => {
+    const scrollToBottom = () => {
+      if (messagesEndRef.current) {
+        messagesEndRef.current.scrollIntoView({ behavior: 'auto' });
+      }
+    };
+    
+    // Scroll immediately and after a short delay to ensure content is rendered
+    scrollToBottom();
+    const timeoutId = setTimeout(scrollToBottom, 100);
+    
+    return () => clearTimeout(timeoutId);
+  }, [selectedConversation]);
 
   const handleSendMessage = () => {
     if (!messageText.trim() || !selectedConversation || !user) return;
@@ -198,6 +215,13 @@ export function FacebookStyleChat() {
 
     sendMessageMutation.mutate(messageData);
     setMessageText('');
+    
+    // Scroll to bottom after sending message
+    setTimeout(() => {
+      if (messagesEndRef.current) {
+        messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+      }
+    }, 100);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -361,71 +385,86 @@ export function FacebookStyleChat() {
         // Chat View
         <div className="flex-1 flex flex-col">
           {/* Messages Area */}
-          <ScrollArea className="flex-1 p-3">
-            <div className="space-y-2">
-              {messages.map((message: Message) => (
-                <div
-                  key={message.id}
-                  className={`flex ${message.senderId === user.id ? 'justify-end' : 'justify-start'}`}
-                >
-                  <div
-                    className={`max-w-xs lg:max-w-md px-3 py-2 rounded-2xl ${
-                      message.senderId === user.id
-                        ? 'bg-primary text-primary-foreground'
-                        : 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100'
-                    }`}
-                  >
-                    <p className="text-sm">{message.messageText}</p>
-                    <p className={`text-xs mt-1 ${
-                      message.senderId === user.id 
-                        ? 'text-primary-foreground/70' 
-                        : 'text-gray-500 dark:text-gray-400'
-                    }`}>
-                      {formatTime(message.createdAt || new Date())}
-                    </p>
+          <ScrollArea className="flex-1 p-3 max-h-80 overflow-y-auto">
+            <div className="space-y-2 min-h-full">
+              {messages.length === 0 ? (
+                <div className="flex items-center justify-center h-32 text-gray-500 dark:text-gray-400">
+                  <div className="text-center">
+                    <MessageSquare className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                    <p className="text-sm">No messages yet</p>
+                    <p className="text-xs">Start the conversation!</p>
                   </div>
                 </div>
-              ))}
-              <div ref={messagesEndRef} />
+              ) : (
+                messages.map((message: Message) => (
+                  <div
+                    key={message.id}
+                    className={`flex ${message.senderId === user.id ? 'justify-end' : 'justify-start'} mb-2`}
+                  >
+                    <div
+                      className={`max-w-[70%] px-3 py-2 rounded-2xl word-wrap break-words ${
+                        message.senderId === user.id
+                          ? 'bg-primary text-primary-foreground rounded-br-md'
+                          : 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-bl-md'
+                      }`}
+                    >
+                      <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.messageText}</p>
+                      <p className={`text-xs mt-1 ${
+                        message.senderId === user.id 
+                          ? 'text-primary-foreground/70' 
+                          : 'text-gray-500 dark:text-gray-400'
+                      }`}>
+                        {formatTime(message.createdAt || new Date())}
+                      </p>
+                    </div>
+                  </div>
+                ))
+              )}
+              <div ref={messagesEndRef} className="h-1" />
             </div>
           </ScrollArea>
 
           {/* Message Input */}
-          <div className="p-3 border-t border-gray-200 dark:border-gray-700">
-            <div className="flex items-center gap-2">
+          <div className="p-3 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 sticky bottom-0">
+            <div className="flex items-end gap-2">
               <Button
                 variant="ghost"
                 size="sm"
-                className="p-1"
+                className="p-1 mb-1"
                 data-testid="button-attach-file"
               >
                 <Paperclip className="h-4 w-4" />
               </Button>
-              <Input
-                value={messageText}
-                onChange={(e) => setMessageText(e.target.value)}
-                onKeyPress={handleKeyPress}
-                placeholder="Type a message..."
-                className="flex-1"
-                data-testid="input-message"
-              />
-              <Button
-                variant="ghost"
-                size="sm"
-                className="p-1"
-                data-testid="button-emoji"
-              >
-                <Smile className="h-4 w-4" />
-              </Button>
-              <Button
-                onClick={handleSendMessage}
-                disabled={!messageText.trim() || sendMessageMutation.isPending}
-                size="sm"
-                className="p-2"
-                data-testid="button-send-message"
-              >
-                <Send className="h-4 w-4" />
-              </Button>
+              <div className="flex-1 relative">
+                <Input
+                  value={messageText}
+                  onChange={(e) => setMessageText(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  placeholder="Type a message..."
+                  className="pr-16 min-h-[40px] resize-none rounded-full"
+                  data-testid="input-message"
+                  autoComplete="off"
+                />
+                <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex items-center gap-1">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="p-1 h-6 w-6"
+                    data-testid="button-emoji"
+                  >
+                    <Smile className="h-3 w-3" />
+                  </Button>
+                  <Button
+                    onClick={handleSendMessage}
+                    disabled={!messageText.trim() || sendMessageMutation.isPending}
+                    size="sm"
+                    className="p-1 h-6 w-6 rounded-full"
+                    data-testid="button-send-message"
+                  >
+                    <Send className="h-3 w-3" />
+                  </Button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
