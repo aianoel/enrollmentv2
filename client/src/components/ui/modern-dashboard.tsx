@@ -191,6 +191,44 @@ interface SimpleChartProps {
 export function SimpleDonutChart({ data }: SimpleChartProps) {
   const total = data.reduce((sum, item) => sum + item.value, 0);
   
+  // Handle case when total is 0 to prevent NaN
+  if (total === 0) {
+    return (
+      <div className="flex items-center justify-center space-x-6">
+        <div className="relative">
+          <svg width="120" height="120" className="transform -rotate-90">
+            <circle
+              cx="60"
+              cy="60"
+              r="50"
+              stroke="#e5e7eb"
+              strokeWidth="8"
+              fill="transparent"
+            />
+          </svg>
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="text-center">
+              <div className="text-2xl font-bold">0</div>
+              <div className="text-xs text-gray-500">Total</div>
+            </div>
+          </div>
+        </div>
+        <div className="space-y-2">
+          {data.map((item, index) => (
+            <div key={index} className="flex items-center space-x-2">
+              <div 
+                className="w-3 h-3 rounded-full" 
+                style={{ backgroundColor: item.color }}
+              />
+              <span className="text-sm">{item.label}</span>
+              <span className="text-sm font-semibold">0.0%</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+  
   return (
     <div className="flex items-center justify-center space-x-6">
       <div className="relative">
