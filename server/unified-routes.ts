@@ -1325,6 +1325,49 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  // School Settings endpoints
+  app.get("/api/admin/school-settings", async (req, res) => {
+    try {
+      // For compatibility, return the same structure as the admin-control settings
+      const settings = await storage.getSystemSettings();
+      res.json(settings || {
+        primaryColor: '#3b82f6',
+        secondaryColor: '#64748b',
+        accentColor: '#10b981',
+        logoUrl: '',
+        bannerImages: [],
+        organizationChartUrl: '',
+        schoolYear: new Date().getFullYear() + '-' + (new Date().getFullYear() + 1),
+        schoolName: 'Your School Name',
+        schoolAddress: '',
+        schoolMotto: '',
+        principalMessage: '',
+        visionStatement: '',
+        missionStatement: '',
+      });
+    } catch (error) {
+      console.error('Error fetching school settings:', error);
+      res.status(500).json({ error: 'Failed to fetch school settings' });
+    }
+  });
+
+  app.post("/api/admin/school-settings", async (req, res) => {
+    try {
+      const settingsData = req.body;
+      const updatedSettings = await storage.updateSystemSettings(settingsData);
+      
+      // If school year is being updated, we could add notification logic here
+      if (settingsData.schoolYear) {
+        console.log(`School year updated to: ${settingsData.schoolYear}`);
+      }
+      
+      res.json(updatedSettings);
+    } catch (error) {
+      console.error('Error updating school settings:', error);
+      res.status(500).json({ error: 'Failed to update school settings' });
+    }
+  });
+
   app.get("/api/admin/school-settings", async (req, res) => {
     try {
       const settings = await storage.getSchoolSettings();

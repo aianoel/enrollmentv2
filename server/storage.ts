@@ -49,6 +49,7 @@ import {
   type FolderDocument, type InsertFolderDocument,
   type FolderSectionAccess, type InsertFolderSectionAccess
 } from "@shared/schema";
+import { systemSettings, type SystemSettings, type InsertSystemSettings } from "../shared/admin-schema";
 import { db } from "./db";
 
 import { eq, desc, and, not, gte, lte, sql } from "drizzle-orm";
@@ -104,6 +105,10 @@ export interface IStorage {
   getSchoolSettings(): Promise<SchoolSettings[]>;
   createSchoolSettings(settings: InsertSchoolSettings): Promise<SchoolSettings>;
   updateSchoolSettings(id: number, updates: Partial<InsertSchoolSettings>): Promise<SchoolSettings>;
+  
+  // System settings (for compatibility with admin dashboard)
+  getSystemSettings(): Promise<SystemSettings | null>;
+  updateSystemSettings(updates: Partial<InsertSystemSettings>): Promise<SystemSettings>;
   
   // Tuition fees
   getTuitionFees(): Promise<TuitionFee[]>;
@@ -2425,6 +2430,44 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error('Error getting online users:', error);
       return [];
+    }
+  }
+
+  // System Settings compatibility methods for admin dashboard
+  async getSystemSettings(): Promise<SystemSettings | null> {
+    try {
+      const [settings] = await db.select().from(systemSettings).limit(1);
+      return settings || null;
+    } catch (error) {
+      console.error('Error fetching system settings:', error);
+      return null;
+    }
+  }
+
+  async updateSystemSettings(updates: Partial<InsertSystemSettings>): Promise<SystemSettings> {
+    try {
+      // Check if settings exist
+      const existing = await this.getSystemSettings();
+      
+      if (existing) {
+        // Update existing settings
+        const [updated] = await db
+          .update(systemSettings)
+          .set({ ...updates, updatedAt: new Date() })
+          .where(eq(systemSettings.id, existing.id))
+          .returning();
+        return updated;
+      } else {
+        // Create new settings
+        const [created] = await db
+          .insert(systemSettings)
+          .values(updates)
+          .returning();
+        return created;
+      }
+    } catch (error) {
+      console.error('Error updating system settings:', error);
+      throw error;
     }
   }
 }
