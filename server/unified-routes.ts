@@ -1244,6 +1244,107 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  // Admin API endpoints
+  app.get("/api/admin/roles", async (req, res) => {
+    try {
+      const roles = await storage.getRoles();
+      res.json(roles);
+    } catch (error) {
+      console.error("Error fetching roles:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.get("/api/admin/subjects", async (req, res) => {
+    try {
+      const subjects = await storage.getSubjects();
+      res.json(subjects);
+    } catch (error) {
+      console.error("Error fetching subjects:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.get("/api/admin/teacher-assignments", async (req, res) => {
+    try {
+      const assignments = await storage.getTeacherAssignments();
+      res.json(assignments);
+    } catch (error) {
+      console.error("Error fetching teacher assignments:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.get("/api/admin/org-chart", async (req, res) => {
+    try {
+      const orgChart = await storage.getOrgChart();
+      res.json(orgChart);
+    } catch (error) {
+      console.error("Error fetching org chart:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.get("/api/admin/grades", async (req, res) => {
+    try {
+      const grades = await storage.getAdminGrades();
+      res.json(grades);
+    } catch (error) {
+      console.error("Error fetching admin grades:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.get("/api/admin/assignments", async (req, res) => {
+    try {
+      const assignments = await storage.getAdminAssignments();
+      res.json(assignments);
+    } catch (error) {
+      console.error("Error fetching admin assignments:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.get("/api/admin/chat-messages", async (req, res) => {
+    try {
+      const messages = await storage.getChatMessages();
+      res.json(messages);
+    } catch (error) {
+      console.error("Error fetching chat messages:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.get("/api/admin/tuition-fees", async (req, res) => {
+    try {
+      const fees = await storage.getTuitionFees();
+      res.json(fees);
+    } catch (error) {
+      console.error("Error fetching tuition fees:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.get("/api/admin/school-settings", async (req, res) => {
+    try {
+      const settings = await storage.getSchoolSettings();
+      res.json(settings);
+    } catch (error) {
+      console.error("Error fetching school settings:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.get("/api/admin/sections", async (req, res) => {
+    try {
+      const sections = await storage.getSections();
+      res.json(sections);
+    } catch (error) {
+      console.error("Error fetching sections:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
   app.get("/api/admin/enrollments", async (req, res) => {
     try {
       const enrollments = await storage.getEnrollmentApplications({});

@@ -1,0 +1,58 @@
+[vite] connecting...
+[vite] connected.
+AuthContext: Checking for existing user session...
+AuthContext: Saved user: 
+Object {id: 1, name: "undefined undefined", email: "admin@school.edu", role: "admin", roleId: 1, …}
+AuthContext: User loaded from storage
+AuthContext: Loading set to false
+API Request failed: 
+Object {url: "/api/admin/roles", method: "GET", error: SyntaxError}
+
+at t.value (https://3e900d2e-df28-4d70-96f2-8b185abe54b7-00-29d2w07rj2cck.sisko.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:17465)
+at new t (https://3e900d2e-df28-4d70-96f2-8b185abe54b7-00-29d2w07rj2cck.sisko.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:12630)
+at t.value (https://3e900d2e-df28-4d70-96f2-8b185abe54b7-00-29d2w07rj2cck.sisko.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:32766)
+at https://3e900d2e-df28-4d70-96f2-8b185abe54b7-00-29d2w07rj2cck.sisko.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:34400
+API Request failed: 
+Object {url: "/api/admin/enrollments", method: "GET", error: Error}
+
+API Request failed: 
+Object {url: "/api/admin/sections", method: "GET", error: SyntaxError}
+
+API Request failed: 
+Object {url: "/api/admin/subjects", method: "GET", error: SyntaxError}
+
+API Request failed: 
+Object {url: "/api/admin/sections", method: "GET", error: SyntaxError}
+
+API Request failed: 
+Object {url: "/api/admin/teacher-assignments", method: "GET", error: SyntaxError}
+
+API Request failed: 
+Object {url: "/api/announcements", method: "GET", error: Error}
+
+API Request failed: 
+Object {url: "/api/admin/org-chart", method: "GET", error: SyntaxError}
+
+API Request failed: 
+Object {url: "/api/admin/enrollments", method: "GET", error: Error}
+
+API Request failed: 
+Object {url: "/api/news", method: "GET", error: Error}
+
+API Request failed: 
+Object {url: "/api/events", method: "GET", error: Error}
+
+API Request failed: 
+Object {url: "/api/admin/grades", method: "GET", error: SyntaxError}
+
+API Request failed: 
+Object {url: "/api/admin/assignments", method: "GET", error: SyntaxError}
+
+API Request failed: 
+Object {url: "/api/admin/chat-messages", method: "GET", error: SyntaxError}
+
+API Request failed: 
+Object {url: "/api/admin/tuition-fees", method: "GET", error: SyntaxError}
+
+API Request failed: 
+Object {url: "/api/admin/school-settings", method: "GET", error: SyntaxError}

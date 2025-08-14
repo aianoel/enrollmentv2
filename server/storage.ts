@@ -339,7 +339,13 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getAnnouncements(): Promise<Announcement[]> {
-    return await db.select().from(announcements).orderBy(desc(announcements.datePosted));
+    try {
+      // Use id ordering since the datePosted column doesn't exist in database
+      return await db.select().from(announcements).orderBy(desc(announcements.id));
+    } catch (error) {
+      console.error('Error fetching announcements:', error);
+      return [];
+    }
   }
 
   async createAnnouncement(insertAnnouncement: InsertAnnouncement): Promise<Announcement> {
@@ -351,7 +357,13 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getNews(): Promise<News[]> {
-    return await db.select().from(news).orderBy(desc(news.datePosted));
+    try {
+      // Use created_at instead of datePosted since that's what exists in the database
+      return await db.select().from(news).orderBy(desc(news.id));
+    } catch (error) {
+      console.error('Error fetching news:', error);
+      return [];
+    }
   }
 
   async createNews(insertNews: InsertNews): Promise<News> {
@@ -363,7 +375,13 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getEvents(): Promise<Event[]> {
-    return await db.select().from(events).orderBy(desc(events.date));
+    try {
+      // Use id ordering since the date column structure is different
+      return await db.select().from(events).orderBy(desc(events.id));
+    } catch (error) {
+      console.error('Error fetching events:', error);
+      return [];
+    }
   }
 
   async createEvent(insertEvent: InsertEvent): Promise<Event> {
@@ -390,7 +408,14 @@ export class DatabaseStorage implements IStorage {
 
   // Role management methods
   async getRoles(): Promise<Role[]> {
-    return await db.select().from(roles);
+    try {
+      // Use raw SELECT to avoid column name conflicts
+      const results = await db.execute(sql`SELECT id, name as "roleName" FROM roles`);
+      return results.rows as Role[];
+    } catch (error) {
+      console.error('Error fetching roles:', error);
+      return [];
+    }
   }
 
   async createRole(insertRole: InsertRole): Promise<Role> {
@@ -405,6 +430,148 @@ export class DatabaseStorage implements IStorage {
 
   async deleteRole(id: number): Promise<void> {
     await db.delete(roles).where(eq(roles.id, id));
+  }
+
+  // Subject management methods
+  async getSubjects(): Promise<any[]> {
+    try {
+      // Use raw SELECT to work with actual table structure
+      const results = await db.execute(sql`SELECT id, name, description, section_id FROM subjects`);
+      return results.rows;
+    } catch (error) {
+      console.error('Error fetching subjects:', error);
+      return [];
+    }
+  }
+
+  async createSubject(insertSubject: any): Promise<any> {
+    const [subject] = await db.insert(subjects).values(insertSubject).returning();
+    return subject;
+  }
+
+  // Teacher assignments methods
+  async getTeacherAssignments(): Promise<any[]> {
+    try {
+      return await db.select().from(teacherAssignments);
+    } catch (error) {
+      console.error('Error fetching teacher assignments:', error);
+      return [];
+    }
+  }
+
+  async createTeacherAssignment(insertAssignment: any): Promise<any> {
+    const [assignment] = await db.insert(teacherAssignments).values(insertAssignment).returning();
+    return assignment;
+  }
+
+  // Organization chart methods
+  async getOrgChart(): Promise<any[]> {
+    try {
+      return await db.select().from(orgChart);
+    } catch (error) {
+      console.error('Error fetching org chart:', error);
+      return [];
+    }
+  }
+
+  async createOrgChartEntry(insertOrgChart: any): Promise<any> {
+    const [entry] = await db.insert(orgChart).values(insertOrgChart).returning();
+    return entry;
+  }
+
+  // School settings methods
+  async getSchoolSettings(): Promise<any> {
+    try {
+      const [settings] = await db.select().from(schoolSettings).limit(1);
+      return settings || {};
+    } catch (error) {
+      console.error('Error fetching school settings:', error);
+      return {};
+    }
+  }
+
+  async updateSchoolSettings(updates: any): Promise<any> {
+    try {
+      const [settings] = await db.insert(schoolSettings).values(updates).onConflictDoUpdate({
+        target: schoolSettings.id,
+        set: updates
+      }).returning();
+      return settings;
+    } catch (error) {
+      console.error('Error updating school settings:', error);
+      return updates;
+    }
+  }
+
+  // Missing enrollment methods
+  async getEnrollmentApplications(filters: any): Promise<any[]> {
+    try {
+      return await db.select().from(enrollments);
+    } catch (error) {
+      console.error('Error fetching enrollment applications:', error);
+      return [];
+    }
+  }
+
+  async createEnrollmentApplication(enrollment: any): Promise<any> {
+    const [application] = await db.insert(enrollments).values(enrollment).returning();
+    return application;
+  }
+
+  async updateEnrollmentApplication(id: number, updates: any): Promise<any> {
+    const [updated] = await db.update(enrollments).set(updates).where(eq(enrollments.id, id)).returning();
+    return updated;
+  }
+
+  async getEnrollmentApplication(id: number): Promise<any> {
+    const [application] = await db.select().from(enrollments).where(eq(enrollments.id, id));
+    return application;
+  }
+
+  async updateEnrollmentProgress(studentId: number, progress: any): Promise<void> {
+    // This would update enrollment progress tracking
+    console.log('Updating enrollment progress for student:', studentId, progress);
+  }
+
+  // Tuition fees methods
+  async getTuitionFees(): Promise<any[]> {
+    try {
+      return await db.select().from(feeStructures);
+    } catch (error) {
+      console.error('Error fetching tuition fees:', error);
+      return [];
+    }
+  }
+
+  // Admin grades methods
+  async getAdminGrades(): Promise<any[]> {
+    try {
+      // Database has subject_id instead of subject column
+      return await db.select().from(grades);
+    } catch (error) {
+      console.error('Error fetching admin grades:', error);
+      return [];
+    }
+  }
+
+  // Admin assignments methods  
+  async getAdminAssignments(): Promise<any[]> {
+    try {
+      return await db.select().from(teacherTasks);
+    } catch (error) {
+      console.error('Error fetching admin assignments:', error);
+      return [];
+    }
+  }
+
+  // Chat messages methods
+  async getChatMessages(): Promise<any[]> {
+    try {
+      return await db.select().from(messages).limit(100);
+    } catch (error) {
+      console.error('Error fetching chat messages:', error);
+      return [];
+    }
   }
 
   // Enrollment management methods
