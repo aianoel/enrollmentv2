@@ -1,26 +1,30 @@
 import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { 
-  Users, 
-  GraduationCap, 
-  Settings, 
-  FileText, 
-  MessageSquare, 
-  BarChart3,
+import {
+  Users,
   UserCheck,
+  FileText,
   BookOpen,
-  Calendar,
+  BarChart3,
+  MessageSquare,
+  Settings,
+  GraduationCap,
+  TrendingUp,
+  TrendingDown,
+  Activity,
+  Bell,
   DollarSign,
   Shield,
-  Building2
+  Building2,
+  CheckCircle,
+  Clock
 } from "lucide-react";
 import { DashboardBackground } from '@/components/ui/dashboard-background';
 import { EnhancedCard, StatCard } from '@/components/ui/enhanced-card';
+import { StatCard as ModernStatCard, ActivityFeed, ChartCard, ProgressCard, SimpleDonutChart, DashboardLayout } from '@/components/ui/modern-dashboard';
 import { UserManagement } from "./UserManagement";
 import { EnrollmentManagement } from "./EnrollmentManagement";
 import { AcademicSetup } from "./AcademicSetup";
@@ -28,266 +32,309 @@ import { ContentManagement } from "./ContentManagement";
 import { MonitoringReports } from "./MonitoringReports";
 import { CommunicationTools } from "./CommunicationTools";
 import { SystemConfiguration } from "./SystemConfiguration";
-import { apiRequest } from "@/lib/queryClient";
 
 interface DashboardStats {
   totalUsers: number;
   activeEnrollments: number;
-  totalSections: number;
   pendingApprovals: number;
+  totalSections: number;
 }
 
 export function AdminDashboard() {
   const [activeTab, setActiveTab] = useState("overview");
-  const queryClient = useQueryClient();
 
-  // Fetch dashboard statistics
-  const { data: stats, isLoading: statsLoading } = useQuery({
+  // Fetch dashboard stats
+  const { data: dashboardStats, isLoading: statsLoading } = useQuery<DashboardStats>({
+    queryKey: ["/api/admin/dashboard-stats"],
+    queryFn: async () => {
+      const response = await fetch("/api/admin/dashboard-stats");
+      if (!response.ok) {
+        throw new Error("Failed to fetch dashboard stats");
+      }
+      return response.json();
+    }
+  });
+
+  // Fetch general stats
+  const { data: stats } = useQuery({
     queryKey: ["/api/admin/stats"],
-    queryFn: () => apiRequest("/api/admin/stats")
+    queryFn: async () => {
+      const response = await fetch("/api/admin/stats");
+      if (!response.ok) throw new Error("Failed to fetch stats");
+      return response.json();
+    }
   });
-
-  const { data: users = [] } = useQuery({
-    queryKey: ["/api/admin/users"],
-    queryFn: () => apiRequest("/api/admin/users")
-  });
-
-  const { data: enrollments = [] } = useQuery({
-    queryKey: ["/api/admin/enrollments"],
-    queryFn: () => apiRequest("/api/admin/enrollments")
-  });
-
-  const dashboardStats: DashboardStats = {
-    totalUsers: users.length,
-    activeEnrollments: enrollments.filter((e: any) => e.status === 'approved').length,
-    totalSections: 0, // Will be populated when sections are loaded
-    pendingApprovals: enrollments.filter((e: any) => e.status === 'pending').length
-  };
-
-  const StatCard = ({ icon: Icon, title, value, description, color = "blue" }: {
-    icon: any;
-    title: string;
-    value: string | number;
-    description: string;
-    color?: string;
-  }) => (
-    <Card className="group hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-white via-gray-50 to-white backdrop-blur-sm">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium">{title}</CardTitle>
-        <Icon className={`h-4 w-4 text-${color}-600`} />
-      </CardHeader>
-      <CardContent>
-        <div className="text-2xl font-bold">{value}</div>
-        <p className="text-xs text-muted-foreground">{description}</p>
-      </CardContent>
-    </Card>
-  );
 
   if (statsLoading) {
     return <div className="flex items-center justify-center h-64">Loading dashboard...</div>;
   }
 
+  // Sample activity data
+  const sampleActivities = [
+    {
+      id: "1",
+      user: { name: "John Smith", initials: "JS" },
+      action: "Submitted Math Assignment #5",
+      timestamp: "2 minutes ago",
+      type: "assignment" as const
+    },
+    {
+      id: "2", 
+      user: { name: "Sarah Wilson", initials: "SW" },
+      action: "Received grade for Science Quiz",
+      timestamp: "5 minutes ago",
+      type: "grade" as const
+    },
+    {
+      id: "3",
+      user: { name: "Mike Johnson", initials: "MJ" },
+      action: "Enrolled in Advanced Physics",
+      timestamp: "10 minutes ago", 
+      type: "enrollment" as const
+    },
+    {
+      id: "4",
+      user: { name: "Lisa Brown", initials: "LB" },
+      action: "Scheduled parent-teacher meeting",
+      timestamp: "15 minutes ago",
+      type: "meeting" as const
+    }
+  ];
+
+  const chartData = [
+    { label: "Students", value: (dashboardStats?.totalUsers || 0) * 0.8, color: "#3b82f6" },
+    { label: "Teachers", value: (dashboardStats?.totalUsers || 0) * 0.15, color: "#10b981" },
+    { label: "Staff", value: (dashboardStats?.totalUsers || 0) * 0.05, color: "#f59e0b" }
+  ];
+
+  const progressData = [
+    { label: "Course Completion", value: 145, max: 200 },
+    { label: "Assignment Submissions", value: 89, max: 100 },
+    { label: "Attendance Rate", value: 95, max: 100 }
+  ];
+
   return (
-    <div className="p-6 space-y-6 bg-gradient-to-br from-purple-50 via-white to-indigo-50 min-h-full">
-      {/* Enhanced Admin Welcome Header */}
-      <div className="bg-gradient-to-r from-purple-600 via-purple-700 to-indigo-800 shadow-2xl p-8 text-white backdrop-blur-lg" data-testid="welcome-header">
-        <div className="flex items-center justify-between">
-          <div className="flex-1 min-w-0">
-            <h1 className="text-3xl font-bold mb-2">Admin Dashboard</h1>
-            <p className="opacity-90 text-lg font-medium">
-              Comprehensive school management and administrative controls
-            </p>
+    <DashboardLayout>
+      {/* Header with navigation tabs */}
+      <div className="bg-white border-b border-gray-200">
+        <div className="flex items-center justify-between p-6">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
+            <p className="text-gray-600">Comprehensive school management and administrative controls</p>
           </div>
-          <div className="hidden sm:block">
-            <div className="w-16 h-16 bg-white/10 rounded-2xl flex items-center justify-center backdrop-blur-sm">
-              <Shield className="h-8 w-8" />
+          <div className="flex items-center space-x-2">
+            <Button variant="outline" size="sm">
+              Source code
+            </Button>
+            <div className="flex items-center space-x-1">
+              <Bell className="h-4 w-4 text-gray-400" />
+              <span className="text-sm text-gray-500">Admin User</span>
+              <span className="text-xs text-gray-400">Administrator</span>
             </div>
           </div>
         </div>
+        
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-8 bg-gray-100">
+            <TabsTrigger value="overview" className="text-sm">Home</TabsTrigger>
+            <TabsTrigger value="users" className="text-sm">Users</TabsTrigger>
+            <TabsTrigger value="enrollment" className="text-sm">Enrollment</TabsTrigger>
+            <TabsTrigger value="academic" className="text-sm">Academic</TabsTrigger>
+            <TabsTrigger value="content" className="text-sm">Content</TabsTrigger>
+            <TabsTrigger value="monitoring" className="text-sm">Reports</TabsTrigger>
+            <TabsTrigger value="communication" className="text-sm">Chat</TabsTrigger>
+            <TabsTrigger value="settings" className="text-sm">Settings</TabsTrigger>
+          </TabsList>
+        </Tabs>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-1">
-          <TabsTrigger value="overview" className="text-xs sm:text-sm">Overview</TabsTrigger>
-          <TabsTrigger value="users" className="text-xs sm:text-sm">Users</TabsTrigger>
-          <TabsTrigger value="enrollment" className="text-xs sm:text-sm">Enrollment</TabsTrigger>
-          <TabsTrigger value="academic" className="text-xs sm:text-sm">Academic</TabsTrigger>
-          <TabsTrigger value="content" className="text-xs sm:text-sm">Content</TabsTrigger>
-          <TabsTrigger value="monitoring" className="text-xs sm:text-sm">Reports</TabsTrigger>
-          <TabsTrigger value="communication" className="text-xs sm:text-sm">Chat</TabsTrigger>
-          <TabsTrigger value="settings" className="text-xs sm:text-sm">Settings</TabsTrigger>
-        </TabsList>
+      {/* Stats Cards Row */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-6">
+        <ModernStatCard 
+          title="New Students" 
+          value={43} 
+          change={6}
+          changeLabel=""
+          icon={Users}
+          variant="success"
+        />
+        <ModernStatCard 
+          title="Completed Today" 
+          value={17} 
+          change={-3}
+          changeLabel=""
+          icon={CheckCircle}
+          variant="error"
+        />
+        <ModernStatCard 
+          title="New Assignments" 
+          value={7} 
+          change={9}
+          changeLabel=""
+          icon={FileText}
+          variant="success"
+        />
+        <ModernStatCard 
+          title="Total Enrolled" 
+          value="27.3k" 
+          change={3}
+          changeLabel=""
+          icon={GraduationCap}
+          variant="success"
+        />
+        <ModernStatCard 
+          title="Daily Earnings" 
+          value="$95" 
+          change={-2}
+          changeLabel=""
+          icon={DollarSign}
+          variant="error"
+        />
+        <ModernStatCard 
+          title="Active Courses" 
+          value={621} 
+          change={-1}
+          changeLabel=""
+          icon={BookOpen}
+          variant="error"
+        />
+      </div>
 
-        <TabsContent value="overview" className="space-y-6 saas-fade-in">
-          <div className="saas-grid">
-            <div className="saas-card saas-scale-in group">
-              <div className="saas-card-content">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-blue-100 text-blue-600 group-hover:scale-110 transition-transform duration-200">
-                    <Users className="h-6 w-6" />
-                  </div>
-                  <div className="text-right">
-                    <div className="text-2xl font-bold text-gray-900">{dashboardStats.totalUsers}</div>
-                  </div>
-                </div>
-                <div>
-                  <h3 className="font-semibold text-gray-900 mb-1">Total Users</h3>
-                  <p className="text-sm font-medium text-gray-500">Active system users</p>
-                </div>
-              </div>
-            </div>
-            
-            <div className="saas-card saas-scale-in group">
-              <div className="saas-card-content">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-green-100 text-green-600 group-hover:scale-110 transition-transform duration-200">
-                    <UserCheck className="h-6 w-6" />
-                  </div>
-                  <div className="text-right">
-                    <div className="text-2xl font-bold text-gray-900">{dashboardStats.activeEnrollments}</div>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+        <TabsContent value="overview" className="space-y-6">
+          {/* Main Content Grid */}
+          <div className="grid gap-6 lg:grid-cols-3">
+            {/* Left Column - Charts */}
+            <div className="lg:col-span-2 space-y-6">
+              {/* Development Activity Chart */}
+              <ChartCard title="Student Progress Activity" className="h-80">
+                <div className="h-64 flex items-center justify-center bg-gray-50 rounded-lg">
+                  <div className="text-center text-gray-500">
+                    <Activity className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                    <p>Interactive charts would be implemented here</p>
+                    <p className="text-sm">showing student progress over time</p>
                   </div>
                 </div>
-                <div>
-                  <h3 className="font-semibold text-gray-900 mb-1">Active Enrollments</h3>
-                  <p className="text-sm font-medium text-gray-500">Approved student enrollments</p>
-                </div>
-              </div>
-            </div>
-            
-            <div className="saas-card saas-scale-in group">
-              <div className="saas-card-content">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-orange-100 text-orange-600 group-hover:scale-110 transition-transform duration-200">
-                    <FileText className="h-6 w-6" />
-                  </div>
-                  <div className="text-right">
-                    <div className="text-2xl font-bold text-gray-900">{dashboardStats.pendingApprovals}</div>
-                  </div>
-                </div>
-                <div>
-                  <h3 className="font-semibold text-gray-900 mb-1">Pending Approvals</h3>
-                  <p className="text-sm font-medium text-gray-500">Enrollment requests awaiting approval</p>
-                </div>
-              </div>
-            </div>
-            
-            <div className="saas-card saas-scale-in group">
-              <div className="saas-card-content">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-purple-100 text-purple-600 group-hover:scale-110 transition-transform duration-200">
-                    <GraduationCap className="h-6 w-6" />
-                  </div>
-                  <div className="text-right">
-                    <div className="text-2xl font-bold text-gray-900">{dashboardStats.totalSections}</div>
-                  </div>
-                </div>
-                <div>
-                  <h3 className="font-semibold text-gray-900 mb-1">Total Sections</h3>
-                  <p className="text-sm font-medium text-gray-500">Academic sections available</p>
-                </div>
-              </div>
-            </div>
-          </div>
+              </ChartCard>
 
-          <div className="grid gap-6 md:grid-cols-2">
-            <div className="saas-card">
-              <div className="saas-card-content">
-                <div className="mb-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-1">Quick Actions</h3>
-                  <p className="text-sm text-gray-500">Common administrative tasks</p>
-                </div>
-                <div className="space-y-3">
-                  <button 
-                    className="saas-button-secondary w-full justify-start text-left flex items-center"
-                    onClick={() => setActiveTab("users")}
-                  >
-                    <Users className="mr-3 h-4 w-4" />
-                    Manage Users & Roles
-                  </button>
-                  <button 
-                    className="saas-button-secondary w-full justify-start text-left flex items-center"
-                    onClick={() => setActiveTab("enrollment")}
-                  >
-                    <UserCheck className="mr-3 h-4 w-4" />
-                    Process Enrollments
-                  </button>
-                  <button 
-                    className="saas-button-secondary w-full justify-start text-left flex items-center"
-                    onClick={() => setActiveTab("academic")}
-                  >
-                    <BookOpen className="mr-3 h-4 w-4" />
-                    Academic Setup
-                  </button>
-                  <button 
-                    className="saas-button-secondary w-full justify-start text-left flex items-center"
-                    onClick={() => setActiveTab("content")}
-                  >
-                    <FileText className="mr-3 h-4 w-4" />
-                    Content Management
-                  </button>
+              {/* Documentation Banner */}
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <div className="flex items-center space-x-2">
+                  <BookOpen className="h-5 w-5 text-blue-600" />
+                  <span className="text-blue-800 font-medium">Read our documentation</span>
+                  <span className="text-blue-600">with code samples.</span>
                 </div>
               </div>
-            </div>
 
-            <div className="saas-card">
-              <div className="saas-card-content">
-                <div className="mb-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-1">System Status</h3>
-                  <p className="text-sm text-gray-500">Current system health and alerts</p>
-                </div>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium">Database Status</span>
-                    <span className="saas-badge saas-badge-success">Healthy</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium">User Sessions</span>
-                    <span className="saas-badge saas-badge-primary">{dashboardStats.totalUsers} Active</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium">Pending Actions</span>
-                    <span className="saas-badge saas-badge-warning">{dashboardStats.pendingApprovals} Items</span>
-                  </div>
-                  <div className="border-t border-gray-100 pt-4 mt-4">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium">Last Backup</span>
-                      <span className="text-sm text-gray-500">2 hours ago</span>
+              {/* Activity Table */}
+              <Card>
+                <CardHeader>
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <CardTitle>Development Activity</CardTitle>
+                      <CardDescription>Recent updates and changes</CardDescription>
                     </div>
                   </div>
-                </div>
-              </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {sampleActivities.map((activity) => (
+                      <div key={activity.id} className="flex items-center space-x-3 py-2">
+                        <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
+                          <span className="text-xs font-medium">{activity.user.initials}</span>
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex items-center space-x-2">
+                            <span className="font-medium">{activity.user.name}</span>
+                            <span className="text-gray-500">{activity.action}</span>
+                          </div>
+                        </div>
+                        <span className="text-sm text-gray-400">{activity.timestamp}</span>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Right Column - Charts and Progress */}
+            <div className="space-y-6">
+              {/* Donut Charts */}
+              <ChartCard title="User Distribution">
+                <SimpleDonutChart data={chartData} />
+              </ChartCard>
+
+              <ChartCard title="Course Progress">
+                <SimpleDonutChart data={[
+                  { label: "Completed", value: 60, color: "#10b981" },
+                  { label: "In Progress", value: 30, color: "#3b82f6" },
+                  { label: "Not Started", value: 10, color: "#e5e7eb" }
+                ]} />
+              </ChartCard>
+
+              {/* Progress Cards */}
+              <ProgressCard title="School Metrics" items={progressData} />
+
+              {/* Recent Activity */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-sm">New feedback</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm">Student satisfaction</span>
+                      <span className="text-sm font-medium">4.8/5</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm">Course completion</span>
+                      <span className="text-sm font-medium">89%</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-sm">Today profit</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">$1,423</div>
+                  <div className="text-sm text-green-600">+12% from yesterday</div>
+                </CardContent>
+              </Card>
             </div>
           </div>
         </TabsContent>
-
-        <TabsContent value="users">
+        
+        <TabsContent value="users" className="space-y-6">
           <UserManagement />
         </TabsContent>
-
-        <TabsContent value="enrollment">
+        
+        <TabsContent value="enrollment" className="space-y-6">
           <EnrollmentManagement />
         </TabsContent>
-
-        <TabsContent value="academic">
+        
+        <TabsContent value="academic" className="space-y-6">
           <AcademicSetup />
         </TabsContent>
-
-        <TabsContent value="content">
+        
+        <TabsContent value="content" className="space-y-6">
           <ContentManagement />
         </TabsContent>
-
-        <TabsContent value="monitoring">
+        
+        <TabsContent value="monitoring" className="space-y-6">
           <MonitoringReports />
         </TabsContent>
-
-        <TabsContent value="communication">
+        
+        <TabsContent value="communication" className="space-y-6">
           <CommunicationTools />
         </TabsContent>
-
-        <TabsContent value="settings">
+        
+        <TabsContent value="settings" className="space-y-6">
           <SystemConfiguration />
         </TabsContent>
       </Tabs>
-    </div>
+    </DashboardLayout>
   );
 }

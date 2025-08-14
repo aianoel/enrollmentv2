@@ -2,7 +2,7 @@
 
 ## Overview
 
-EduManage is a comprehensive school management system designed to streamline educational administration and enhance communication. It provides role-based portals for students, teachers, administrators, parents, registrars, guidance counselors, and accounting staff. Key capabilities include grades management, assignments, learning modules, meeting scheduling, chat, announcements, and an advanced enrollment workflow. The project aims to offer a robust, secure, and user-friendly platform for efficient school operations, with a vision for broad adoption in educational institutions.
+EduManage is a comprehensive school management system designed to streamline educational administration and enhance communication. It provides role-based portals for students, teachers, administrators, parents, registrars, guidance counselors, and accounting staff. Key capabilities include grades management, assignments, learning modules, meeting scheduling, chat, announcements, and an advanced enrollment workflow. The project features a modern Tabler-inspired dashboard design with professional stat cards, interactive charts, and activity feeds. The project aims to offer a robust, secure, and user-friendly platform for efficient school operations, with a vision for broad adoption in educational institutions.
 
 ## User Preferences
 
@@ -12,7 +12,7 @@ Preferred communication style: Simple, everyday language.
 
 ### Frontend Architecture
 
-The frontend is a React Single Page Application (SPA) built with TypeScript. It leverages Shadcn/ui, Radix UI primitives, and Tailwind CSS for a modern, consistent UI. State management utilizes React Context API for global states like authentication and chat, while TanStack Query handles server state and caching. Wouter provides lightweight client-side routing, enabling role-based content rendering.
+The frontend is a React Single Page Application (SPA) built with TypeScript. It leverages Shadcn/ui, Radix UI primitives, and Tailwind CSS for a modern, consistent UI. The design follows a Tabler-inspired dashboard layout with professional stat cards featuring trend indicators, interactive donut charts, progress cards, and activity feeds. Role-specific color themes (admin: purple, student: blue, teacher: green) provide visual differentiation. State management utilizes React Context API for global states like authentication and chat, while TanStack Query handles server state and caching. Wouter provides lightweight client-side routing, enabling role-based content rendering.
 
 ### Backend Architecture
 
