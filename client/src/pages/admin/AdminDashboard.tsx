@@ -154,54 +154,55 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps = {}) {
 
   return (
     <DashboardLayout>
-      {/* Header with navigation tabs */}
+      {/* Header with navigation tabs - Mobile Responsive */}
       <div className="bg-white border-b border-gray-200 shadow-sm">
-        <div className="flex items-center justify-between p-6">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
-              <div className="h-8 w-8 bg-gradient-to-br from-purple-600 to-blue-600 rounded-lg flex items-center justify-center">
-                <Shield className="h-5 w-5 text-white" />
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between p-3 sm:p-6 space-y-4 lg:space-y-0">
+          <div className="flex-1">
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900 flex items-center gap-2 sm:gap-3">
+              <div className="h-6 w-6 sm:h-8 sm:w-8 bg-gradient-to-br from-purple-600 to-blue-600 rounded-lg flex items-center justify-center">
+                <Shield className="h-3 w-3 sm:h-5 sm:w-5 text-white" />
               </div>
-              Admin Dashboard
+              <span className="hidden sm:inline">Admin Dashboard</span>
+              <span className="sm:hidden">Admin</span>
             </h1>
-            <p className="text-gray-600 mt-1">Comprehensive school management and administrative controls</p>
-            <div className="flex items-center gap-4 mt-2">
-              <Badge variant="outline" className="text-green-600 border-green-200">
-                <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+            <p className="text-gray-600 mt-1 text-sm hidden sm:block">Comprehensive school management and administrative controls</p>
+            <div className="flex items-center gap-2 sm:gap-4 mt-2">
+              <Badge variant="outline" className="text-green-600 border-green-200 text-xs">
+                <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-green-500 rounded-full mr-1 sm:mr-2"></div>
                 System Online
               </Badge>
-              <span className="text-sm text-gray-500">
+              <span className="text-xs sm:text-sm text-gray-500 hidden sm:inline">
                 Last updated: {new Date().toLocaleTimeString()}
               </span>
             </div>
           </div>
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-2 sm:space-x-4 overflow-x-auto">
             <Button 
               variant="outline" 
               size="sm" 
-              className="border-blue-200 text-blue-700 hover:bg-blue-50"
+              className="border-blue-200 text-blue-700 hover:bg-blue-50 whitespace-nowrap"
               onClick={() => onNavigate?.('admin-reports')}
             >
-              <BarChart3 className="h-4 w-4 mr-2" />
-              View Reports
+              <BarChart3 className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-2" />
+              <span className="hidden sm:inline">View Reports</span>
             </Button>
             <Button 
               variant="outline" 
               size="sm" 
-              className="border-purple-200 text-purple-700 hover:bg-purple-50"
+              className="border-purple-200 text-purple-700 hover:bg-purple-50 whitespace-nowrap"
               onClick={() => onNavigate?.('admin-settings')}
             >
-              <Settings className="h-4 w-4 mr-2" />
-              Settings
+              <Settings className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Settings</span>
             </Button>
-            <div className="flex items-center space-x-3 px-4 py-2 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-blue-200">
+            <div className="flex items-center space-x-2 sm:space-x-3 px-2 sm:px-4 py-2 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-blue-200">
               <div className="relative">
-                <Bell className="h-5 w-5 text-blue-600" />
-                <div className="absolute -top-1 -right-1 h-3 w-3 bg-red-500 rounded-full flex items-center justify-center">
+                <Bell className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
+                <div className="absolute -top-1 -right-1 h-2.5 w-2.5 sm:h-3 sm:w-3 bg-red-500 rounded-full flex items-center justify-center">
                   <span className="text-xs text-white font-bold">{dashboardStats?.pendingApprovals || 0}</span>
                 </div>
               </div>
-              <div className="flex flex-col">
+              <div className="flex flex-col hidden sm:flex">
                 <span className="text-sm font-medium text-blue-900">Administrator</span>
                 <span className="text-xs text-blue-600">System Admin</span>
               </div>
@@ -209,9 +210,72 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps = {}) {
           </div>
         </div>
         
-        <div className="px-6 pb-0">
+        <div className="px-3 sm:px-6 pb-0">
           <nav className="w-full">
-            <div className="grid w-full grid-cols-8 bg-gray-50 border border-gray-200 rounded-lg">
+            {/* Mobile: Horizontal scroll with smaller tabs */}
+            <div className="block sm:hidden">
+              <div className="flex space-x-1 overflow-x-auto bg-gray-50 border border-gray-200 rounded-lg p-1">
+                <button 
+                  onClick={() => onNavigate?.('dashboard')}
+                  className="px-3 py-1.5 text-xs font-medium bg-white text-blue-600 border-blue-200 rounded whitespace-nowrap"
+                  data-testid="nav-home"
+                >
+                  Home
+                </button>
+                <button 
+                  onClick={() => onNavigate?.('admin-users')}
+                  className="px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-100 rounded whitespace-nowrap"
+                  data-testid="nav-users"
+                >
+                  Users
+                </button>
+                <button 
+                  onClick={() => onNavigate?.('admin-enrollment')}
+                  className="px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-100 rounded whitespace-nowrap"
+                  data-testid="nav-enrollment"
+                >
+                  Enroll
+                </button>
+                <button 
+                  onClick={() => onNavigate?.('admin-academic')}
+                  className="px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-100 rounded whitespace-nowrap"
+                  data-testid="nav-academic"
+                >
+                  Academic
+                </button>
+                <button 
+                  onClick={() => onNavigate?.('admin-content')}
+                  className="px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-100 rounded whitespace-nowrap"
+                  data-testid="nav-content"
+                >
+                  Content
+                </button>
+                <button 
+                  onClick={() => onNavigate?.('admin-reports')}
+                  className="px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-100 rounded whitespace-nowrap"
+                  data-testid="nav-reports"
+                >
+                  Reports
+                </button>
+                <button 
+                  onClick={() => onNavigate?.('admin-communication')}
+                  className="px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-100 rounded whitespace-nowrap"
+                  data-testid="nav-chat"
+                >
+                  Chat
+                </button>
+                <button 
+                  onClick={() => onNavigate?.('admin-settings')}
+                  className="px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-100 rounded whitespace-nowrap"
+                  data-testid="nav-settings"
+                >
+                  Settings
+                </button>
+              </div>
+            </div>
+            
+            {/* Desktop: Regular grid layout */}
+            <div className="hidden sm:grid w-full grid-cols-4 lg:grid-cols-8 bg-gray-50 border border-gray-200 rounded-lg">
               <button 
                 onClick={() => onNavigate?.('dashboard')}
                 className="px-4 py-2 text-sm font-medium bg-white text-blue-600 border-blue-200 rounded-l-lg border-r"
@@ -235,35 +299,35 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps = {}) {
               </button>
               <button 
                 onClick={() => onNavigate?.('admin-academic')}
-                className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 border-r"
+                className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 lg:border-r"
                 data-testid="nav-academic"
               >
                 Academic
               </button>
               <button 
                 onClick={() => onNavigate?.('admin-content')}
-                className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 border-r"
+                className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 border-r sm:rounded-r-lg lg:rounded-none lg:border-r"
                 data-testid="nav-content"
               >
                 Content
               </button>
               <button 
                 onClick={() => onNavigate?.('admin-reports')}
-                className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 border-r"
+                className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 border-r hidden lg:block"
                 data-testid="nav-reports"
               >
                 Reports
               </button>
               <button 
                 onClick={() => onNavigate?.('admin-communication')}
-                className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 border-r"
+                className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 border-r hidden lg:block"
                 data-testid="nav-chat"
               >
                 Chat
               </button>
               <button 
                 onClick={() => onNavigate?.('admin-settings')}
-                className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-r-lg"
+                className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-r-lg hidden lg:block"
                 data-testid="nav-settings"
               >
                 Settings
@@ -273,9 +337,9 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps = {}) {
         </div>
       </div>
 
-      {/* Enhanced Stats Cards with Motion */}
+      {/* Enhanced Stats Cards with Motion - Mobile Responsive */}
       <motion.div 
-        className="p-6 grid gap-4 md:grid-cols-2 lg:grid-cols-4"
+        className="p-3 sm:p-6 grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, staggerChildren: 0.1 }}
@@ -338,8 +402,8 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps = {}) {
         </motion.div>
       </motion.div>
 
-      {/* Secondary Stats Row */}
-      <div className="px-6 pb-6 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      {/* Secondary Stats Row - Mobile Responsive */}
+      <div className="px-3 sm:px-6 pb-3 sm:pb-6 grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
         <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
@@ -397,12 +461,12 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps = {}) {
         </Card>
       </div>
 
-      <div className="p-6">
-        <div className="space-y-6">
-          {/* Main Content Grid */}
-          <div className="grid gap-6 lg:grid-cols-3">
+      <div className="p-3 sm:p-6">
+        <div className="space-y-4 sm:space-y-6">
+          {/* Main Content Grid - Mobile Responsive */}
+          <div className="grid gap-4 sm:gap-6 grid-cols-1 lg:grid-cols-3">
             {/* Left Column - Charts */}
-            <div className="lg:col-span-2 space-y-6">
+            <div className="lg:col-span-2 space-y-4 sm:space-y-6">
               {/* Enhanced Analytics Chart */}
               <Card className="h-80">
                 <CardHeader>
@@ -460,38 +524,42 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps = {}) {
                   <CardDescription>Common administrative tasks</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <Button 
                       variant="outline" 
-                      className="flex items-center gap-2 h-12"
+                      className="flex items-center gap-2 h-10 sm:h-12 text-sm"
                       onClick={() => onNavigate?.('admin-users')}
                     >
                       <Users className="h-4 w-4" />
-                      Manage Users
+                      <span className="hidden sm:inline">Manage Users</span>
+                      <span className="sm:hidden">Users</span>
                     </Button>
                     <Button 
                       variant="outline" 
-                      className="flex items-center gap-2 h-12"
+                      className="flex items-center gap-2 h-10 sm:h-12 text-sm"
                       onClick={() => onNavigate?.('admin-enrollment')}
                     >
                       <GraduationCap className="h-4 w-4" />
-                      Enrollments
+                      <span className="hidden sm:inline">Enrollments</span>
+                      <span className="sm:hidden">Enroll</span>
                     </Button>
                     <Button 
                       variant="outline" 
-                      className="flex items-center gap-2 h-12"
+                      className="flex items-center gap-2 h-10 sm:h-12 text-sm"
                       onClick={() => onNavigate?.('admin-academic')}
                     >
                       <BookOpen className="h-4 w-4" />
-                      Academic Setup
+                      <span className="hidden sm:inline">Academic Setup</span>
+                      <span className="sm:hidden">Academic</span>
                     </Button>
                     <Button 
                       variant="outline" 
-                      className="flex items-center gap-2 h-12"
+                      className="flex items-center gap-2 h-10 sm:h-12 text-sm"
                       onClick={() => onNavigate?.('admin-reports')}
                     >
                       <BarChart3 className="h-4 w-4" />
-                      View Reports
+                      <span className="hidden sm:inline">View Reports</span>
+                      <span className="sm:hidden">Reports</span>
                     </Button>
                   </div>
                 </CardContent>
@@ -552,8 +620,8 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps = {}) {
               </Card>
             </div>
 
-            {/* Right Column - Enhanced Analytics */}
-            <div className="space-y-6">
+            {/* Right Column - Enhanced Analytics - Mobile Responsive */}
+            <div className="space-y-4 sm:space-y-6">
               {/* Real-Time Analytics */}
               <Card className="bg-gradient-to-br from-blue-50 to-indigo-100 border-blue-200">
                 <CardHeader>

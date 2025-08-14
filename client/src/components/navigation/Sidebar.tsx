@@ -90,26 +90,26 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentSection, onSectionChang
 
   return (
     <aside className="w-full h-full flex flex-col">
-      {/* Header */}
-      <div className="p-6">
-        <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 bg-gradient-to-br from-purple-400 to-indigo-500 flex items-center justify-center shadow-lg">
-            <i className="fas fa-graduation-cap text-white text-lg"></i>
+      {/* Header - Mobile Responsive */}
+      <div className="p-4 sm:p-6">
+        <div className="flex items-center space-x-2 sm:space-x-3">
+          <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-purple-400 to-indigo-500 flex items-center justify-center shadow-lg rounded-md">
+            <i className="fas fa-graduation-cap text-white text-base sm:text-lg"></i>
           </div>
           <div>
-            <h2 className="text-xl font-bold text-white">EduManage</h2>
-            <p className="text-sm text-gray-300 capitalize font-medium">{user.role.replace('_', ' ')}</p>
+            <h2 className="text-lg sm:text-xl font-bold text-white">EduManage</h2>
+            <p className="text-xs sm:text-sm text-gray-300 capitalize font-medium">{user.role.replace('_', ' ')}</p>
           </div>
         </div>
       </div>
       
-      {/* Navigation */}
-      <nav className="flex-1 px-4 space-y-1 overflow-y-auto">
+      {/* Navigation - Mobile Responsive */}
+      <nav className="flex-1 px-3 sm:px-4 space-y-1 overflow-y-auto">
         {navigationItems.map((item) => (
           <Button
             key={item.id}
             variant="ghost"
-            className={`flex items-center space-x-3 w-full justify-start h-12 text-sm font-medium transition-all duration-200 ${
+            className={`flex items-center space-x-2 sm:space-x-3 w-full justify-start h-10 sm:h-12 text-xs sm:text-sm font-medium transition-all duration-200 ${
               currentSection === item.id
                 ? 'bg-gradient-to-r from-purple-500 to-indigo-600 text-white shadow-lg'
                 : 'text-gray-300 hover:bg-white/10 hover:text-white'
@@ -117,27 +117,27 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentSection, onSectionChang
             onClick={() => onSectionChange(item.id)}
             data-testid={`nav-${item.id}`}
           >
-            <div className={`w-5 h-5 flex items-center justify-center ${
+            <div className={`w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center ${
               currentSection === item.id ? 'text-white' : 'text-gray-400'
             }`}>
-              <i className={`${item.icon} text-sm`}></i>
+              <i className={`${item.icon} text-xs sm:text-sm`}></i>
             </div>
-            <span>{item.label}</span>
+            <span className="truncate">{item.label}</span>
           </Button>
         ))}
       </nav>
 
-      {/* User info and logout */}
-      <div className="p-4 bg-black/20 backdrop-blur-sm">
-        <div className="mb-4 p-3 bg-white/10 backdrop-blur-sm shadow-lg">
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-purple-400 to-indigo-500 flex items-center justify-center shadow-sm">
-              <span className="text-white text-sm font-semibold">
+      {/* User info and logout - Mobile Responsive */}
+      <div className="p-3 sm:p-4 bg-black/20 backdrop-blur-sm">
+        <div className="mb-3 sm:mb-4 p-2 sm:p-3 bg-white/10 backdrop-blur-sm shadow-lg rounded-md">
+          <div className="flex items-center space-x-2 sm:space-x-3">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-purple-400 to-indigo-500 flex items-center justify-center shadow-sm rounded-md">
+              <span className="text-white text-xs sm:text-sm font-semibold">
                 {user.name.split(' ').map(n => n[0]).join('').toUpperCase()}
               </span>
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-white truncate">{user.name}</p>
+              <p className="text-xs sm:text-sm font-semibold text-white truncate">{user.name}</p>
               <p className="text-xs text-gray-300 truncate">{user.email}</p>
             </div>
           </div>
@@ -145,12 +145,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentSection, onSectionChang
         
         <Button
           variant="ghost"
-          className="flex items-center space-x-3 w-full justify-start text-gray-300 hover:bg-red-500/20 hover:text-red-300 h-11 font-medium transition-all duration-200"
+          className="flex items-center space-x-2 sm:space-x-3 w-full justify-start text-gray-300 hover:bg-red-500/20 hover:text-red-300 h-9 sm:h-11 text-xs sm:text-sm font-medium transition-all duration-200"
           onClick={logout}
           data-testid="nav-logout"
         >
-          <div className="w-5 h-5 flex items-center justify-center">
-            <i className="fas fa-sign-out-alt text-sm"></i>
+          <div className="w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center">
+            <i className="fas fa-sign-out-alt text-xs sm:text-sm"></i>
           </div>
           <span>Sign Out</span>
         </Button>

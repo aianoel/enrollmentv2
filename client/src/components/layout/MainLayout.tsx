@@ -137,17 +137,18 @@ export const MainLayout: React.FC = () => {
       {/* Mobile sidebar overlay */}
       {isSidebarOpen && (
         <div 
-          className="fixed inset-0 z-40 bg-black/20 backdrop-blur-sm lg:hidden"
+          className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm lg:hidden"
           onClick={() => setIsSidebarOpen(false)}
         />
       )}
 
-      {/* Sidebar - No borders, full height */}
+      {/* Sidebar - Mobile responsive width */}
       <div className={`
         ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} 
         fixed lg:relative lg:translate-x-0 z-50 lg:z-auto
-        w-64 h-full bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900
+        w-72 sm:w-64 h-full bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900
         transition-transform duration-300 ease-in-out
+        ${isMobile ? 'shadow-2xl' : ''}
       `}>
         <Sidebar 
           currentSection={currentSection} 
@@ -158,23 +159,23 @@ export const MainLayout: React.FC = () => {
         />
       </div>
       
-      {/* Main content area - No borders, full space utilization */}
+      {/* Main content area - Mobile responsive */}
       <div className="flex-1 flex flex-col min-w-0 h-full">
-        {/* Header - No borders */}
+        {/* Header - Mobile responsive */}
         <Header 
           onMenuClick={() => setIsSidebarOpen(!isSidebarOpen)}
           isMobile={isMobile}
         />
         
-        {/* Content area - No borders, full height */}
+        {/* Content area - Mobile responsive padding */}
         <main className="flex-1 overflow-auto h-full">
-          <div className="w-full h-full">
+          <div className="w-full h-full p-2 sm:p-4 lg:p-6">
             {renderContent()}
           </div>
         </main>
       </div>
       
-      {/* Facebook Style Chat */}
+      {/* Facebook Style Chat - Mobile responsive */}
       <FacebookStyleChat />
     </div>
   );
