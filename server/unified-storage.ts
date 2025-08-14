@@ -828,8 +828,8 @@ export class DatabaseStorage implements IStorage {
   async createSubject(data: any): Promise<any> {
     try {
       const result = await db.execute(sql`
-        INSERT INTO subjects (name, description, code, units)
-        VALUES (${data.name}, ${data.description}, ${data.code}, ${data.units || 3})
+        INSERT INTO subjects (name, description)
+        VALUES (${data.name}, ${data.description || ''})
         RETURNING *
       `);
       return result.rows[0];

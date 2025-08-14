@@ -37,11 +37,9 @@ export const sections = pgTable("sections", {
 
 export const subjects = pgTable("subjects", {
   id: serial("id").primaryKey(),
+  sectionId: integer("section_id"),
   name: text("name").notNull(),
   description: text("description"),
-  code: text("code").notNull().unique(),
-  units: integer("units").default(3),
-  createdAt: timestamp("created_at").defaultNow(),
 });
 
 // Teacher-Subject Assignments

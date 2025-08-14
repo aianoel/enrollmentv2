@@ -41,8 +41,6 @@ import {
 const subjectSchema = z.object({
   name: z.string().min(1, "Subject name is required"),
   description: z.string().optional(),
-  code: z.string().min(1, "Subject code is required"),
-  units: z.number().min(1).max(6).default(3),
 });
 
 const sectionSchema = z.object({
@@ -112,7 +110,7 @@ export function EnhancedAcademicDashboard() {
   // Forms
   const subjectForm = useForm<z.infer<typeof subjectSchema>>({
     resolver: zodResolver(subjectSchema),
-    defaultValues: { units: 3 }
+    defaultValues: { description: "" }
   });
 
   const sectionForm = useForm<z.infer<typeof sectionSchema>>({
@@ -390,38 +388,12 @@ export function EnhancedAcademicDashboard() {
                     />
                     <FormField
                       control={subjectForm.control}
-                      name="code"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Subject Code</FormLabel>
-                          <FormControl>
-                            <Input placeholder="MATH101" {...field} data-testid="input-subject-code" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={subjectForm.control}
                       name="description"
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Description (Optional)</FormLabel>
                           <FormControl>
                             <Textarea placeholder="Subject description..." {...field} data-testid="textarea-subject-description" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={subjectForm.control}
-                      name="units"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Units</FormLabel>
-                          <FormControl>
-                            <Input type="number" min="1" max="6" {...field} onChange={(e) => field.onChange(Number(e.target.value))} data-testid="input-subject-units" />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -445,9 +417,9 @@ export function EnhancedAcademicDashboard() {
                   <div className="flex items-start justify-between mb-2">
                     <div>
                       <h3 className="font-semibold">{subject.name}</h3>
-                      <p className="text-sm text-gray-600">{subject.code}</p>
+                      <p className="text-sm text-gray-600">ID: {subject.id}</p>
                     </div>
-                    <Badge variant="secondary">{subject.units} units</Badge>
+                    <Badge variant="secondary">Subject</Badge>
                   </div>
                   {subject.description && (
                     <p className="text-sm text-gray-600 mt-2">{subject.description}</p>
