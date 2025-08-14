@@ -106,7 +106,7 @@ export function FacebookStyleChat() {
   });
 
   // Fetch online users
-  const { data: onlineUsers = [] } = useQuery({
+  const { data: onlineUsers = [] } = useQuery<User[]>({
     queryKey: ['/api/chat/online-users'],
     refetchInterval: 10000,
     enabled: !!user,
@@ -256,7 +256,12 @@ export function FacebookStyleChat() {
   };
 
   const isUserOnline = (userId: number) => {
-    return (onlineUsers as OnlineUser[]).some((status: OnlineUser) => status.userId === userId && status.isOnline);
+    // Check if the API returns user objects directly (current format)
+    if (onlineUsers.length > 0 && 'id' in onlineUsers[0]) {
+      return onlineUsers.some((user: User) => user.id === userId);
+    }
+    // Fallback to status objects format
+    return (onlineUsers as unknown as OnlineUser[]).some((status: OnlineUser) => status.userId === userId && status.isOnline);
   };
 
   const getRoleColor = (role: string) => {
@@ -285,11 +290,21 @@ export function FacebookStyleChat() {
   };
 
   // Filter online users based on search
-  const filteredOnlineUsers = (users as User[]).filter((u: User) => 
-    u.id !== user?.id && 
-    isUserOnline(u.id) &&
-    u.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredOnlineUsers = (() => {
+    // If onlineUsers API returns user objects directly
+    if (onlineUsers.length > 0 && 'id' in onlineUsers[0]) {
+      return onlineUsers.filter((u: User) => 
+        u.id !== user?.id && 
+        u.name.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+    // Otherwise, filter from all users and check online status
+    return (users as User[]).filter((u: User) => 
+      u.id !== user?.id && 
+      isUserOnline(u.id) &&
+      u.name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  })();
 
   // Filter conversations based on search
   const filteredConversations = conversations.filter((conv: ConversationWithDetails) =>
@@ -312,6 +327,11 @@ export function FacebookStyleChat() {
           {filteredOnlineUsers.length > 0 && (
             <div className="absolute -top-1 -right-1 bg-green-500 text-white text-xs rounded-full h-6 w-6 flex items-center justify-center font-bold">
               {filteredOnlineUsers.length}
+            </div>
+          )}
+          {filteredOnlineUsers.length === 0 && onlineUsers.length > 0 && (
+            <div className="absolute -top-1 -right-1 bg-green-500 text-white text-xs rounded-full h-6 w-6 flex items-center justify-center font-bold">
+              {onlineUsers.length}
             </div>
           )}
           <div className="absolute bottom-0 right-1 bg-green-500 rounded-full h-4 w-4 border-2 border-white"></div>
