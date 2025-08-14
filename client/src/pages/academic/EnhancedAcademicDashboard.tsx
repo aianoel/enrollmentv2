@@ -979,9 +979,9 @@ export function EnhancedAcademicDashboard() {
                   <div key={day} className="font-medium p-2 bg-gray-100 rounded text-center">{day}</div>
                 ))}
                 
-                {["08:00", "09:00", "10:00", "11:00", "13:00", "14:00", "15:00", "16:00"].map((time) => (
-                  <>
-                    <div key={time} className="p-2 bg-gray-50 rounded font-medium">{time}</div>
+                {["08:00", "09:00", "10:00", "11:00", "13:00", "14:00", "15:00", "16:00"].map((time, timeIndex) => (
+                  <div key={`time-row-${timeIndex}`} className="contents">
+                    <div className="p-2 bg-gray-50 rounded font-medium">{time}</div>
                     {["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"].map((day) => {
                       const daySchedule = schedules.find((schedule: any) => 
                         schedule.day_of_week === day && schedule.start_time === time
@@ -999,7 +999,7 @@ export function EnhancedAcademicDashboard() {
                         </div>
                       );
                     })}
-                  </>
+                  </div>
                 ))}
               </div>
             </CardContent>
