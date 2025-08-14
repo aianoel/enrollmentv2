@@ -50,7 +50,7 @@ export function SystemConfiguration() {
   const queryClient = useQueryClient();
 
   // Fetch data
-  const { data: schoolSettings = [], isLoading: settingsLoading } = useQuery({
+  const { data: schoolSettings = null, isLoading: settingsLoading } = useQuery({
     queryKey: ["/api/admin/school-settings"],
     queryFn: () => apiRequest("/api/admin/school-settings")
   });
@@ -370,26 +370,32 @@ export function SystemConfiguration() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {schoolSettings.map((settings: SchoolSettings) => (
-                    <TableRow key={settings.id}>
-                      <TableCell className="font-medium">{settings.schoolYear}</TableCell>
+                  {schoolSettings ? (
+                    <TableRow key={schoolSettings.id}>
+                      <TableCell className="font-medium">{schoolSettings.schoolYear}</TableCell>
                       <TableCell>
-                        {settings.startDate ? new Date(settings.startDate).toLocaleDateString() : "Not set"}
+                        {schoolSettings.startDate ? new Date(schoolSettings.startDate).toLocaleDateString() : "Not set"}
                       </TableCell>
                       <TableCell>
-                        {settings.endDate ? new Date(settings.endDate).toLocaleDateString() : "Not set"}
+                        {schoolSettings.endDate ? new Date(schoolSettings.endDate).toLocaleDateString() : "Not set"}
                       </TableCell>
                       <TableCell>
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => handleEditSettings(settings)}
+                          onClick={() => handleEditSettings(schoolSettings)}
                         >
                           <Edit className="h-4 w-4" />
                         </Button>
                       </TableCell>
                     </TableRow>
-                  ))}
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={4} className="text-center text-muted-foreground">
+                        No school settings configured yet
+                      </TableCell>
+                    </TableRow>
+                  )}
                 </TableBody>
               </Table>
             </CardContent>
