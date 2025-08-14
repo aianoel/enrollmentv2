@@ -587,7 +587,7 @@ export function EnhancedChatSystem() {
             </div>
 
             {/* Messages */}
-            <ScrollArea className="flex-1 p-4">
+            <ScrollArea className="flex-1 p-4 max-h-[400px] sm:max-h-[500px]">
               <div className="space-y-4">
                 {messages.map((message: Message) => (
                   <div
@@ -614,11 +614,7 @@ export function EnhancedChatSystem() {
                           </p>
                         )}
                         <p className="text-sm">
-                          {message.messageText || message.content || message.message || 
-                           (() => {
-                             console.log('Message debug:', message);
-                             return 'No content';
-                           })()}
+                          {message.messageText || 'No content'}
                         </p>
                         <p className={`text-xs mt-1 ${
                           message.senderId === user.id ? 'text-primary-foreground/70' : 'text-muted-foreground'
@@ -634,7 +630,7 @@ export function EnhancedChatSystem() {
             </ScrollArea>
 
             {/* Message Input */}
-            <div className="p-4 border-t">
+            <div className="p-4 border-t bg-background/95 backdrop-blur-sm">
               <div className="flex items-center gap-2">
                 <Button variant="ghost" size="sm">
                   <Paperclip className="h-4 w-4" />
