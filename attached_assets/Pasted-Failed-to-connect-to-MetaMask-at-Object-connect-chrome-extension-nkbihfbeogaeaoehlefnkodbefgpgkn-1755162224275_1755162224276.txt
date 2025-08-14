@@ -1,0 +1,25 @@
+Failed to connect to MetaMask
+at Object.connect (chrome-extension://nkbihfbeogaeaoehlefnkodbefgpgknn/scripts/inpage.js:1:21277)
+at async o (chrome-extension://nkbihfbeogaeaoehlefnkodbefgpgknn/scripts/inpage.js:1:19192)
+[vite] connecting...
+[vite] connected.
+AuthContext: Checking for existing user session...
+AuthContext: Saved user: 
+Object {id: 1, name: "undefined undefined", email: "admin@school.edu", role: "admin", roleId: 1, …}
+AuthContext: User name is invalid, clearing cache and re-logging...
+User logged in successfully: undefined undefined (admin)
+[vite] hot updated: /src/pages/admin/UserManagement.tsx
+[vite] hot updated: /src/index.css?v=1sdl2ngo-9JkhQ2_khcbk
+[vite] hot updated: /src/pages/admin/UserManagement.tsx
+[vite] hot updated: /src/index.css?v=1sdl2ngo-9JkhQ2_khcbk
+Warning: Invalid prop &#x60;data-replit-metadata&#x60; supplied to &#x60;React.Fragment&#x60;. React.Fragment can only have &#x60;key&#x60; and &#x60;children&#x60; props.
+    at EnrollmentPortal (https://3e900d2e-df28-4d70-96f2-8b185abe54b7-00-29d2w07rj2cck.sisko.replit.dev/src/components/enrollment/EnrollmentPortal.tsx:26:36)
+    at AppContent (https://3e900d2e-df28-4d70-96f2-8b185abe54b7-00-29d2w07rj2cck.sisko.replit.dev/src/App.tsx?v=k7DFWD8ouaT7gDlldFly1:35:29)
+    at Route (https://3e900d2e-df28-4d70-96f2-8b185abe54b7-00-29d2w07rj2cck.sisko.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=e7b2ae60:323:16)
+    at Switch (https://3e900d2e-df28-4d70-96f2-8b185abe54b7-00-29d2w07rj2cck.sisko.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=e7b2ae60:379:17)
+    at Router
+    at AuthProvider (https://3e900d2e-df28-4d70-96f2-8b185abe54b7-00-29d2w07rj2cck.sisko.replit.dev/src/contexts/AuthContext.tsx:30:32)
+    at Provider (https://3e900d2e-df28-4d70-96f2-8b185abe54b7-00-29d2w07rj2cck.sisko.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-OXZDJRWN.js?v=e7b2ae60:38:15)
+    at TooltipProvider (https://3e900d2e-df28-4d70-96f2-8b185abe54b7-00-29d2w07rj2cck.sisko.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=e7b2ae60:64:5)
+    at QueryClientProvider (https://3e900d2e-df28-4d70-96f2-8b185abe54b7-00-29d2w07rj2cck.sisko.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=e7b2ae60:2805:3)
+    at App

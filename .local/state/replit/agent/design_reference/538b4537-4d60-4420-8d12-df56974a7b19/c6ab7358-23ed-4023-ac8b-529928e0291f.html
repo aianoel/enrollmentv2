@@ -1,0 +1,977 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EduManage - School Management System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#E3F2FD',
+                            100: '#BBDEFB',
+                            500: '#2196F3',
+                            600: '#1976D2',
+                            700: '#1565C0'
+                        },
+                        secondary: {
+                            50: '#E8F5E8',
+                            500: '#4CAF50',
+                            600: '#388E3C'
+                        },
+                        accent: {
+                            500: '#FF9800',
+                            600: '#F57C00'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .glass-effect {
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.9);
+        }
+        .hover-lift {
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .hover-lift:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+        .online-indicator {
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 font-sans">
+    <!-- @COMPONENT: AuthenticationWrapper -->
+    <div id="authWrapper" class="min-h-screen">
+        
+        <!-- Login Screen -->
+        <div id="loginScreen" class="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 to-secondary-50">
+            <!-- Modern cityscape with school buildings at sunrise -->
+            <div class="absolute inset-0 bg-cover bg-center opacity-10" style="background-image: url('https://pixabay.com/get/g532055a50b118d9812f2c4477a3320210a2391f3fe376c060152a714edfd4699ccec94e3ed6ef01a005e580d1053ac895da444559087cfaf7b33176d413586f9_1280.jpg');"></div>
+            
+            <div class="relative z-10 max-w-md w-full mx-4">
+                <!-- @COMPONENT: LoginCard -->
+                <div class="glass-effect rounded-2xl shadow-2xl p-8 border border-white/20">
+                    <div class="text-center mb-8">
+                        <div class="inline-flex items-center justify-center w-16 h-16 bg-primary-600 rounded-2xl mb-4">
+                            <i class="fas fa-graduation-cap text-white text-2xl"></i>
+                        </div>
+                        <h1 class="text-3xl font-bold text-gray-900 mb-2">EduManage</h1>
+                        <p class="text-gray-600">School Management System</p>
+                    </div>
+
+                    <form class="space-y-6" data-implementation="Handle Firebase Auth login">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
+                            <input type="email" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors" placeholder="Enter your email" data-bind="email" />
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Password</label>
+                            <input type="password" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors" placeholder="Enter your password" data-bind="password" />
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Login As</label>
+                            <select class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent" data-bind="role">
+                                <option value="student">Student</option>
+                                <option value="teacher">Teacher</option>
+                                <option value="admin">Admin</option>
+                                <option value="registrar">Registrar</option>
+                                <option value="accounting">Accounting</option>
+                                <option value="guidance">Guidance Counselor</option>
+                                <option value="parent">Parent</option>
+                            </select>
+                        </div>
+
+                        <button type="submit" class="w-full bg-primary-600 text-white py-3 rounded-lg font-medium hover:bg-primary-700 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2" data-event="click:handleLogin">
+                            Sign In
+                        </button>
+                    </form>
+
+                    <div class="mt-6 text-center">
+                        <button class="text-primary-600 hover:text-primary-700 font-medium" onclick="showEnrollmentPortal()">
+                            New Student? Apply for Enrollment
+                        </button>
+                    </div>
+                </div>
+                <!-- @END_COMPONENT: LoginCard -->
+            </div>
+        </div>
+
+        <!-- Main Application -->
+        <div id="mainApp" class="hidden">
+            <!-- @COMPONENT: NavigationHeader -->
+            <header class="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div class="flex justify-between items-center h-16">
+                        <div class="flex items-center">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-8 h-8 bg-primary-600 rounded-lg flex items-center justify-center">
+                                    <i class="fas fa-graduation-cap text-white text-sm"></i>
+                                </div>
+                                <h1 class="text-xl font-bold text-gray-900">EduManage</h1>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center space-x-4">
+                            <!-- Chat Toggle -->
+                            <button class="relative p-2 text-gray-600 hover:text-primary-600 transition-colors" onclick="toggleChat()">
+                                <i class="fas fa-comments text-xl"></i>
+                                <span class="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></span>
+                            </button>
+
+                            <!-- Notifications -->
+                            <button class="relative p-2 text-gray-600 hover:text-primary-600 transition-colors">
+                                <i class="fas fa-bell text-xl"></i>
+                                <span class="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">3</span>
+                            </button>
+
+                            <!-- User Menu -->
+                            <div class="flex items-center space-x-3">
+                                <div class="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center">
+                                    <span class="text-primary-600 font-medium text-sm" data-bind="user.initials">JD</span>
+                                </div>
+                                <div class="hidden md:block">
+                                    <p class="text-sm font-medium text-gray-900" data-bind="user.name">John Doe</p>
+                                    <p class="text-xs text-gray-500 capitalize" data-bind="user.role">Student</p>
+                                </div>
+                                <button class="text-gray-600 hover:text-primary-600">
+                                    <i class="fas fa-chevron-down text-sm"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+            <!-- @END_COMPONENT: NavigationHeader -->
+
+            <div class="flex min-h-screen bg-gray-50">
+                <!-- @COMPONENT: Sidebar -->
+                <aside class="w-64 bg-white shadow-sm border-r border-gray-200">
+                    <nav class="p-4 space-y-2">
+                        <a href="#" class="flex items-center space-x-3 px-3 py-2 bg-primary-50 text-primary-600 rounded-lg" onclick="showSection('dashboard')">
+                            <i class="fas fa-home w-5"></i>
+                            <span class="font-medium">Dashboard</span>
+                        </a>
+                        
+                        <!-- Role-specific navigation items will be dynamically generated -->
+                        <div id="roleNavigation">
+                            <!-- Student Navigation -->
+                            <div class="student-nav space-y-2">
+                                <a href="#" class="flex items-center space-x-3 px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-lg" onclick="showSection('grades')">
+                                    <i class="fas fa-chart-line w-5"></i>
+                                    <span>My Grades</span>
+                                </a>
+                                <a href="#" class="flex items-center space-x-3 px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-lg" onclick="showSection('assignments')">
+                                    <i class="fas fa-tasks w-5"></i>
+                                    <span>Assignments</span>
+                                </a>
+                                <a href="#" class="flex items-center space-x-3 px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-lg" onclick="showSection('modules')">
+                                    <i class="fas fa-book w-5"></i>
+                                    <span>Learning Modules</span>
+                                </a>
+                                <a href="#" class="flex items-center space-x-3 px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-lg" onclick="showSection('meetings')">
+                                    <i class="fas fa-video w-5"></i>
+                                    <span>Meetings</span>
+                                </a>
+                                <a href="#" class="flex items-center space-x-3 px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-lg" onclick="showSection('announcements')">
+                                    <i class="fas fa-bullhorn w-5"></i>
+                                    <span>Announcements</span>
+                                </a>
+                            </div>
+                        </div>
+
+                        <div class="pt-4 border-t border-gray-200">
+                            <button class="flex items-center space-x-3 px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-lg w-full" onclick="logout()">
+                                <i class="fas fa-sign-out-alt w-5"></i>
+                                <span>Logout</span>
+                            </button>
+                        </div>
+                    </nav>
+                </aside>
+                <!-- @END_COMPONENT: Sidebar -->
+
+                <!-- Main Content -->
+                <main class="flex-1 p-6">
+                    <!-- @COMPONENT: DashboardSection -->
+                    <div id="dashboardSection" class="space-y-6">
+                        <!-- Welcome Header -->
+                        <div class="bg-gradient-to-r from-primary-600 to-primary-700 rounded-xl p-6 text-white">
+                            <h2 class="text-2xl font-bold mb-2" data-bind="welcomeMessage">Welcome back, John!</h2>
+                            <p class="opacity-90">Ready to continue your learning journey?</p>
+                        </div>
+
+                        <!-- Quick Stats -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                            <div class="bg-white rounded-xl p-6 shadow-sm hover-lift">
+                                <div class="flex items-center justify-between mb-4">
+                                    <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                                        <i class="fas fa-book-open text-blue-600"></i>
+                                    </div>
+                                    <span class="text-2xl font-bold text-gray-900" data-bind="stats.subjects">6</span>
+                                </div>
+                                <h3 class="font-medium text-gray-900">Enrolled Subjects</h3>
+                                <p class="text-sm text-gray-500">Current semester</p>
+                            </div>
+
+                            <div class="bg-white rounded-xl p-6 shadow-sm hover-lift">
+                                <div class="flex items-center justify-between mb-4">
+                                    <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                                        <i class="fas fa-chart-line text-green-600"></i>
+                                    </div>
+                                    <span class="text-2xl font-bold text-gray-900" data-bind="stats.gpa">3.85</span>
+                                </div>
+                                <h3 class="font-medium text-gray-900">Current GPA</h3>
+                                <p class="text-sm text-green-600">▲ 0.2 from last quarter</p>
+                            </div>
+
+                            <div class="bg-white rounded-xl p-6 shadow-sm hover-lift">
+                                <div class="flex items-center justify-between mb-4">
+                                    <div class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
+                                        <i class="fas fa-tasks text-orange-600"></i>
+                                    </div>
+                                    <span class="text-2xl font-bold text-gray-900" data-bind="stats.pendingTasks">4</span>
+                                </div>
+                                <h3 class="font-medium text-gray-900">Pending Tasks</h3>
+                                <p class="text-sm text-orange-600">2 due this week</p>
+                            </div>
+
+                            <div class="bg-white rounded-xl p-6 shadow-sm hover-lift">
+                                <div class="flex items-center justify-between mb-4">
+                                    <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                                        <i class="fas fa-calendar text-purple-600"></i>
+                                    </div>
+                                    <span class="text-2xl font-bold text-gray-900" data-bind="stats.attendance">92%</span>
+                                </div>
+                                <h3 class="font-medium text-gray-900">Attendance</h3>
+                                <p class="text-sm text-purple-600">This semester</p>
+                            </div>
+                        </div>
+
+                        <!-- Recent Activity & Upcoming -->
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            <!-- Recent Activity -->
+                            <div class="bg-white rounded-xl shadow-sm">
+                                <div class="p-6 border-b border-gray-200">
+                                    <h3 class="text-lg font-semibold text-gray-900">Recent Activity</h3>
+                                </div>
+                                <div class="p-6 space-y-4">
+                                    <!-- @MAP: recentActivity.map(activity => ( -->
+                                    <div class="flex items-start space-x-3">
+                                        <div class="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center flex-shrink-0">
+                                            <i class="fas fa-book text-primary-600 text-sm"></i>
+                                        </div>
+                                        <div class="flex-1">
+                                            <p class="text-sm font-medium text-gray-900" data-mock="true">New module uploaded for Mathematics</p>
+                                            <p class="text-xs text-gray-500" data-mock="true">2 hours ago</p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-start space-x-3">
+                                        <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
+                                            <i class="fas fa-check text-green-600 text-sm"></i>
+                                        </div>
+                                        <div class="flex-1">
+                                            <p class="text-sm font-medium text-gray-900" data-mock="true">Assignment submitted for English</p>
+                                            <p class="text-xs text-gray-500" data-mock="true">1 day ago</p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-start space-x-3">
+                                        <div class="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center flex-shrink-0">
+                                            <i class="fas fa-exclamation text-orange-600 text-sm"></i>
+                                        </div>
+                                        <div class="flex-1">
+                                            <p class="text-sm font-medium text-gray-900" data-mock="true">Grade posted for Science Quiz</p>
+                                            <p class="text-xs text-gray-500" data-mock="true">2 days ago</p>
+                                        </div>
+                                    </div>
+                                    <!-- @END_MAP )) -->
+                                </div>
+                            </div>
+
+                            <!-- Upcoming Deadlines -->
+                            <div class="bg-white rounded-xl shadow-sm">
+                                <div class="p-6 border-b border-gray-200">
+                                    <h3 class="text-lg font-semibold text-gray-900">Upcoming Deadlines</h3>
+                                </div>
+                                <div class="p-6 space-y-4">
+                                    <!-- @MAP: upcomingDeadlines.map(deadline => ( -->
+                                    <div class="flex items-center justify-between p-3 bg-red-50 rounded-lg">
+                                        <div class="flex-1">
+                                            <p class="font-medium text-gray-900" data-mock="true">History Essay</p>
+                                            <p class="text-sm text-gray-600" data-mock="true">Due in 2 days</p>
+                                        </div>
+                                        <span class="px-2 py-1 bg-red-100 text-red-700 text-xs font-medium rounded-full">Urgent</span>
+                                    </div>
+                                    <div class="flex items-center justify-between p-3 bg-orange-50 rounded-lg">
+                                        <div class="flex-1">
+                                            <p class="font-medium text-gray-900" data-mock="true">Math Problem Set</p>
+                                            <p class="text-sm text-gray-600" data-mock="true">Due in 5 days</p>
+                                        </div>
+                                        <span class="px-2 py-1 bg-orange-100 text-orange-700 text-xs font-medium rounded-full">Soon</span>
+                                    </div>
+                                    <div class="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+                                        <div class="flex-1">
+                                            <p class="font-medium text-gray-900" data-mock="true">Science Lab Report</p>
+                                            <p class="text-sm text-gray-600" data-mock="true">Due in 1 week</p>
+                                        </div>
+                                        <span class="px-2 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-full">Normal</span>
+                                    </div>
+                                    <!-- @END_MAP )) -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- @END_COMPONENT: DashboardSection -->
+
+                    <!-- @COMPONENT: GradesSection -->
+                    <div id="gradesSection" class="hidden space-y-6">
+                        <div class="flex items-center justify-between">
+                            <h2 class="text-2xl font-bold text-gray-900">My Grades</h2>
+                            <div class="flex space-x-2">
+                                <select class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500">
+                                    <option>Current Quarter</option>
+                                    <option>Q1 2024</option>
+                                    <option>Q2 2024</option>
+                                    <option>Q3 2024</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Grades Overview -->
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div class="bg-white rounded-xl p-6 shadow-sm">
+                                <div class="text-center">
+                                    <div class="text-3xl font-bold text-primary-600 mb-2" data-bind="currentGPA">3.85</div>
+                                    <p class="text-gray-600 font-medium">Current GPA</p>
+                                </div>
+                            </div>
+                            <div class="bg-white rounded-xl p-6 shadow-sm">
+                                <div class="text-center">
+                                    <div class="text-3xl font-bold text-green-600 mb-2" data-bind="completedSubjects">4/6</div>
+                                    <p class="text-gray-600 font-medium">Subjects Graded</p>
+                                </div>
+                            </div>
+                            <div class="bg-white rounded-xl p-6 shadow-sm">
+                                <div class="text-center">
+                                    <div class="text-3xl font-bold text-orange-600 mb-2" data-bind="averageGrade">89.5</div>
+                                    <p class="text-gray-600 font-medium">Average Grade</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Subjects Grades Table -->
+                        <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+                            <div class="p-6 border-b border-gray-200">
+                                <h3 class="text-lg font-semibold text-gray-900">Subject Grades</h3>
+                            </div>
+                            <div class="overflow-x-auto">
+                                <table class="w-full">
+                                    <thead class="bg-gray-50">
+                                        <tr>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Subject</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Teacher</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Q1</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Q2</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Q3</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Q4</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Final</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="bg-white divide-y divide-gray-200">
+                                        <!-- @MAP: subjects.map(subject => ( -->
+                                        <tr class="hover:bg-gray-50">
+                                            <td class="px-6 py-4">
+                                                <div class="font-medium text-gray-900" data-mock="true">Mathematics</div>
+                                                <div class="text-sm text-gray-500" data-mock="true">Advanced Algebra</div>
+                                            </td>
+                                            <td class="px-6 py-4 text-sm text-gray-900" data-mock="true">Ms. Johnson</td>
+                                            <td class="px-6 py-4">
+                                                <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800" data-mock="true">92</span>
+                                            </td>
+                                            <td class="px-6 py-4">
+                                                <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800" data-mock="true">88</span>
+                                            </td>
+                                            <td class="px-6 py-4">
+                                                <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800" data-mock="true">85</span>
+                                            </td>
+                                            <td class="px-6 py-4">
+                                                <span class="text-gray-400" data-mock="true">-</span>
+                                            </td>
+                                            <td class="px-6 py-4">
+                                                <span class="text-gray-400" data-mock="true">-</span>
+                                            </td>
+                                        </tr>
+                                        <tr class="hover:bg-gray-50">
+                                            <td class="px-6 py-4">
+                                                <div class="font-medium text-gray-900" data-mock="true">English</div>
+                                                <div class="text-sm text-gray-500" data-mock="true">Literature & Composition</div>
+                                            </td>
+                                            <td class="px-6 py-4 text-sm text-gray-900" data-mock="true">Mr. Davis</td>
+                                            <td class="px-6 py-4">
+                                                <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800" data-mock="true">95</span>
+                                            </td>
+                                            <td class="px-6 py-4">
+                                                <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800" data-mock="true">91</span>
+                                            </td>
+                                            <td class="px-6 py-4">
+                                                <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800" data-mock="true">89</span>
+                                            </td>
+                                            <td class="px-6 py-4">
+                                                <span class="text-gray-400" data-mock="true">-</span>
+                                            </td>
+                                            <td class="px-6 py-4">
+                                                <span class="text-gray-400" data-mock="true">-</span>
+                                            </td>
+                                        </tr>
+                                        <!-- @END_MAP )) -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- @END_COMPONENT: GradesSection -->
+
+                    <!-- @COMPONENT: AssignmentsSection -->
+                    <div id="assignmentsSection" class="hidden space-y-6">
+                        <div class="flex items-center justify-between">
+                            <h2 class="text-2xl font-bold text-gray-900">Assignments & Tasks</h2>
+                            <div class="flex space-x-2">
+                                <button class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors">
+                                    <i class="fas fa-filter mr-2"></i>Filter
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Assignment Filters -->
+                        <div class="flex space-x-4 overflow-x-auto pb-2">
+                            <button class="px-4 py-2 bg-primary-100 text-primary-700 rounded-lg font-medium whitespace-nowrap">All</button>
+                            <button class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg font-medium whitespace-nowrap">Pending</button>
+                            <button class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg font-medium whitespace-nowrap">Submitted</button>
+                            <button class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg font-medium whitespace-nowrap">Graded</button>
+                            <button class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg font-medium whitespace-nowrap">Overdue</button>
+                        </div>
+
+                        <!-- Assignments Grid -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            <!-- @MAP: assignments.map(assignment => ( -->
+                            <div class="bg-white rounded-xl shadow-sm border border-gray-200 hover-lift">
+                                <div class="p-6">
+                                    <div class="flex items-center justify-between mb-4">
+                                        <span class="px-2 py-1 bg-red-100 text-red-700 text-xs font-medium rounded-full" data-mock="true">Due Tomorrow</span>
+                                        <div class="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
+                                            <i class="fas fa-file-alt text-red-600 text-sm"></i>
+                                        </div>
+                                    </div>
+                                    
+                                    <h3 class="font-semibold text-gray-900 mb-2" data-mock="true">History Essay: World War II</h3>
+                                    <p class="text-sm text-gray-600 mb-4" data-mock="true">Write a 1500-word essay analyzing the causes and effects of World War II on global politics.</p>
+                                    
+                                    <div class="space-y-2 mb-4">
+                                        <div class="flex items-center justify-between text-sm">
+                                            <span class="text-gray-500">Subject:</span>
+                                            <span class="font-medium" data-mock="true">History</span>
+                                        </div>
+                                        <div class="flex items-center justify-between text-sm">
+                                            <span class="text-gray-500">Teacher:</span>
+                                            <span class="font-medium" data-mock="true">Mr. Thompson</span>
+                                        </div>
+                                        <div class="flex items-center justify-between text-sm">
+                                            <span class="text-gray-500">Points:</span>
+                                            <span class="font-medium" data-mock="true">100</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="flex space-x-2">
+                                        <button class="flex-1 bg-primary-600 text-white py-2 px-4 rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors" data-event="click:submitAssignment">
+                                            Submit Work
+                                        </button>
+                                        <button class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg text-sm hover:bg-gray-50 transition-colors">
+                                            <i class="fas fa-download"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="bg-white rounded-xl shadow-sm border border-gray-200 hover-lift">
+                                <div class="p-6">
+                                    <div class="flex items-center justify-between mb-4">
+                                        <span class="px-2 py-1 bg-green-100 text-green-700 text-xs font-medium rounded-full" data-mock="true">Submitted</span>
+                                        <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                                            <i class="fas fa-check text-green-600 text-sm"></i>
+                                        </div>
+                                    </div>
+                                    
+                                    <h3 class="font-semibold text-gray-900 mb-2" data-mock="true">Math Problem Set 5</h3>
+                                    <p class="text-sm text-gray-600 mb-4" data-mock="true">Complete exercises 1-20 from Chapter 8: Quadratic Functions and Equations.</p>
+                                    
+                                    <div class="space-y-2 mb-4">
+                                        <div class="flex items-center justify-between text-sm">
+                                            <span class="text-gray-500">Subject:</span>
+                                            <span class="font-medium" data-mock="true">Mathematics</span>
+                                        </div>
+                                        <div class="flex items-center justify-between text-sm">
+                                            <span class="text-gray-500">Grade:</span>
+                                            <span class="font-medium text-green-600" data-mock="true">92/100</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <button class="w-full bg-gray-100 text-gray-600 py-2 px-4 rounded-lg text-sm font-medium">
+                                        View Feedback
+                                    </button>
+                                </div>
+                            </div>
+                            <!-- @END_MAP )) -->
+                        </div>
+                    </div>
+                    <!-- @END_COMPONENT: AssignmentsSection -->
+
+                    <!-- @COMPONENT: ModulesSection -->
+                    <div id="modulesSection" class="hidden space-y-6">
+                        <div class="flex items-center justify-between">
+                            <h2 class="text-2xl font-bold text-gray-900">Learning Modules</h2>
+                            <div class="flex space-x-2">
+                                <input type="search" placeholder="Search modules..." class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent" />
+                            </div>
+                        </div>
+
+                        <!-- Subject Tabs -->
+                        <div class="flex space-x-4 overflow-x-auto pb-2">
+                            <button class="px-4 py-2 bg-primary-100 text-primary-700 rounded-lg font-medium whitespace-nowrap">All Subjects</button>
+                            <button class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg font-medium whitespace-nowrap">Mathematics</button>
+                            <button class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg font-medium whitespace-nowrap">English</button>
+                            <button class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg font-medium whitespace-nowrap">Science</button>
+                            <button class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg font-medium whitespace-nowrap">History</button>
+                        </div>
+
+                        <!-- Modules Grid -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            <!-- @MAP: modules.map(module => ( -->
+                            <div class="bg-white rounded-xl shadow-sm border border-gray-200 hover-lift">
+                                <div class="p-6">
+                                    <div class="flex items-center justify-between mb-4">
+                                        <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                                            <i class="fas fa-file-pdf text-blue-600 text-xl"></i>
+                                        </div>
+                                        <span class="px-2 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-full" data-mock="true">PDF</span>
+                                    </div>
+                                    
+                                    <h3 class="font-semibold text-gray-900 mb-2" data-mock="true">Algebra Fundamentals</h3>
+                                    <p class="text-sm text-gray-600 mb-4" data-mock="true">Comprehensive guide to algebraic expressions, equations, and problem-solving techniques.</p>
+                                    
+                                    <div class="space-y-2 mb-4">
+                                        <div class="flex items-center justify-between text-sm">
+                                            <span class="text-gray-500">Subject:</span>
+                                            <span class="font-medium" data-mock="true">Mathematics</span>
+                                        </div>
+                                        <div class="flex items-center justify-between text-sm">
+                                            <span class="text-gray-500">Teacher:</span>
+                                            <span class="font-medium" data-mock="true">Ms. Johnson</span>
+                                        </div>
+                                        <div class="flex items-center justify-between text-sm">
+                                            <span class="text-gray-500">Size:</span>
+                                            <span class="font-medium" data-mock="true">2.4 MB</span>
+                                        </div>
+                                        <div class="flex items-center justify-between text-sm">
+                                            <span class="text-gray-500">Uploaded:</span>
+                                            <span class="font-medium" data-mock="true">2 days ago</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="flex space-x-2">
+                                        <button class="flex-1 bg-primary-600 text-white py-2 px-4 rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors" data-event="click:downloadModule">
+                                            <i class="fas fa-download mr-2"></i>Download
+                                        </button>
+                                        <button class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg text-sm hover:bg-gray-50 transition-colors">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="bg-white rounded-xl shadow-sm border border-gray-200 hover-lift">
+                                <div class="p-6">
+                                    <div class="flex items-center justify-between mb-4">
+                                        <div class="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
+                                            <i class="fas fa-play text-red-600 text-xl"></i>
+                                        </div>
+                                        <span class="px-2 py-1 bg-red-100 text-red-700 text-xs font-medium rounded-full" data-mock="true">Video</span>
+                                    </div>
+                                    
+                                    <h3 class="font-semibold text-gray-900 mb-2" data-mock="true">Chemical Reactions Explained</h3>
+                                    <p class="text-sm text-gray-600 mb-4" data-mock="true">Interactive video lesson covering different types of chemical reactions with real-world examples.</p>
+                                    
+                                    <div class="space-y-2 mb-4">
+                                        <div class="flex items-center justify-between text-sm">
+                                            <span class="text-gray-500">Subject:</span>
+                                            <span class="font-medium" data-mock="true">Science</span>
+                                        </div>
+                                        <div class="flex items-center justify-between text-sm">
+                                            <span class="text-gray-500">Duration:</span>
+                                            <span class="font-medium" data-mock="true">15:32</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <button class="w-full bg-primary-600 text-white py-2 px-4 rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors" data-event="click:watchVideo">
+                                        <i class="fas fa-play mr-2"></i>Watch Video
+                                    </button>
+                                </div>
+                            </div>
+                            <!-- @END_MAP )) -->
+                        </div>
+                    </div>
+                    <!-- @END_COMPONENT: ModulesSection -->
+                </main>
+
+                <!-- @COMPONENT: ChatPanel -->
+                <div id="chatPanel" class="hidden fixed right-0 top-16 bottom-0 w-80 bg-white shadow-2xl border-l border-gray-200 z-40">
+                    <div class="flex flex-col h-full">
+                        <!-- Chat Header -->
+                        <div class="p-4 border-b border-gray-200 bg-primary-600 text-white">
+                            <div class="flex items-center justify-between">
+                                <h3 class="font-semibold">Chat</h3>
+                                <button class="text-white hover:text-gray-200" onclick="toggleChat()">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Online Users -->
+                        <div class="p-4 border-b border-gray-200">
+                            <h4 class="font-medium text-gray-900 mb-3">Online Now</h4>
+                            <div class="space-y-2">
+                                <!-- @MAP: onlineUsers.map(user => ( -->
+                                <div class="flex items-center space-x-3">
+                                    <div class="relative">
+                                        <div class="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center">
+                                            <span class="text-primary-600 font-medium text-sm" data-mock="true">MJ</span>
+                                        </div>
+                                        <div class="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 rounded-full border-2 border-white online-indicator"></div>
+                                    </div>
+                                    <div class="flex-1">
+                                        <p class="text-sm font-medium text-gray-900" data-mock="true">Ms. Johnson</p>
+                                        <p class="text-xs text-gray-500" data-mock="true">Teacher - Mathematics</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center space-x-3">
+                                    <div class="relative">
+                                        <div class="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center">
+                                            <span class="text-primary-600 font-medium text-sm" data-mock="true">AS</span>
+                                        </div>
+                                        <div class="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 rounded-full border-2 border-white online-indicator"></div>
+                                    </div>
+                                    <div class="flex-1">
+                                        <p class="text-sm font-medium text-gray-900" data-mock="true">Alex Smith</p>
+                                        <p class="text-xs text-gray-500" data-mock="true">Student - Grade 11</p>
+                                    </div>
+                                </div>
+                                <!-- @END_MAP )) -->
+                            </div>
+                        </div>
+
+                        <!-- Chat Messages -->
+                        <div class="flex-1 p-4 overflow-y-auto space-y-4">
+                            <!-- @MAP: chatMessages.map(message => ( -->
+                            <div class="flex items-start space-x-2">
+                                <div class="w-6 h-6 bg-primary-100 rounded-full flex items-center justify-center flex-shrink-0">
+                                    <span class="text-primary-600 font-medium text-xs" data-mock="true">MJ</span>
+                                </div>
+                                <div class="flex-1">
+                                    <div class="flex items-center space-x-2 mb-1">
+                                        <span class="text-sm font-medium text-gray-900" data-mock="true">Ms. Johnson</span>
+                                        <span class="text-xs text-gray-500" data-mock="true">2:30 PM</span>
+                                    </div>
+                                    <div class="bg-gray-100 rounded-lg p-2">
+                                        <p class="text-sm text-gray-900" data-mock="true">Don't forget about tomorrow's quiz on quadratic equations!</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="flex items-start space-x-2 flex-row-reverse">
+                                <div class="w-6 h-6 bg-primary-600 rounded-full flex items-center justify-center flex-shrink-0">
+                                    <span class="text-white font-medium text-xs" data-mock="true">JD</span>
+                                </div>
+                                <div class="flex-1">
+                                    <div class="flex items-center space-x-2 mb-1 justify-end">
+                                        <span class="text-xs text-gray-500" data-mock="true">2:32 PM</span>
+                                        <span class="text-sm font-medium text-gray-900" data-mock="true">You</span>
+                                    </div>
+                                    <div class="bg-primary-600 text-white rounded-lg p-2">
+                                        <p class="text-sm" data-mock="true">Thanks for the reminder! I've been practicing.</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- @END_MAP )) -->
+                        </div>
+
+                        <!-- Chat Input -->
+                        <div class="p-4 border-t border-gray-200">
+                            <div class="flex space-x-2">
+                                <input type="text" placeholder="Type a message..." class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm" data-bind="chatMessage" />
+                                <button class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors" data-event="click:sendChatMessage">
+                                    <i class="fas fa-paper-plane"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- @END_COMPONENT: ChatPanel -->
+            </div>
+        </div>
+
+        <!-- @COMPONENT: EnrollmentPortal -->
+        <div id="enrollmentPortal" class="hidden min-h-screen bg-gray-50">
+            <!-- Modern university campus with students walking -->
+            <div class="absolute inset-0 bg-cover bg-center opacity-5" style="background-image: url('https://images.unsplash.com/photo-1562774053-701939374585?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&h=1080');"></div>
+            
+            <div class="relative z-10">
+                <!-- Enrollment Header -->
+                <header class="bg-white shadow-sm">
+                    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 bg-primary-600 rounded-xl flex items-center justify-center">
+                                    <i class="fas fa-graduation-cap text-white text-lg"></i>
+                                </div>
+                                <div>
+                                    <h1 class="text-2xl font-bold text-gray-900">Student Enrollment Portal</h1>
+                                    <p class="text-gray-600">Apply for admission to our school</p>
+                                </div>
+                            </div>
+                            <button class="text-gray-600 hover:text-primary-600" onclick="showLoginScreen()">
+                                <i class="fas fa-times text-xl"></i>
+                            </button>
+                        </div>
+                    </div>
+                </header>
+
+                <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                    <!-- Progress Indicator -->
+                    <div class="mb-8">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="flex items-center space-x-4">
+                                <div class="flex items-center space-x-2">
+                                    <div class="w-8 h-8 bg-primary-600 text-white rounded-full flex items-center justify-center text-sm font-medium">1</div>
+                                    <span class="font-medium text-primary-600">Personal Info</span>
+                                </div>
+                                <div class="w-12 h-0.5 bg-gray-300"></div>
+                                <div class="flex items-center space-x-2">
+                                    <div class="w-8 h-8 bg-gray-300 text-gray-600 rounded-full flex items-center justify-center text-sm font-medium">2</div>
+                                    <span class="text-gray-600">Academic Info</span>
+                                </div>
+                                <div class="w-12 h-0.5 bg-gray-300"></div>
+                                <div class="flex items-center space-x-2">
+                                    <div class="w-8 h-8 bg-gray-300 text-gray-600 rounded-full flex items-center justify-center text-sm font-medium">3</div>
+                                    <span class="text-gray-600">Documents</span>
+                                </div>
+                                <div class="w-12 h-0.5 bg-gray-300"></div>
+                                <div class="flex items-center space-x-2">
+                                    <div class="w-8 h-8 bg-gray-300 text-gray-600 rounded-full flex items-center justify-center text-sm font-medium">4</div>
+                                    <span class="text-gray-600">Payment</span>
+                                </div>
+                                <div class="w-12 h-0.5 bg-gray-300"></div>
+                                <div class="flex items-center space-x-2">
+                                    <div class="w-8 h-8 bg-gray-300 text-gray-600 rounded-full flex items-center justify-center text-sm font-medium">5</div>
+                                    <span class="text-gray-600">Review</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="w-full bg-gray-300 rounded-full h-2">
+                            <div class="bg-primary-600 h-2 rounded-full" style="width: 20%"></div>
+                        </div>
+                    </div>
+
+                    <!-- Enrollment Form -->
+                    <div class="bg-white rounded-xl shadow-sm p-8">
+                        <h2 class="text-xl font-semibold text-gray-900 mb-6">Personal Information</h2>
+                        
+                        <form class="space-y-6" data-implementation="Handle enrollment form submission">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">First Name *</label>
+                                    <input type="text" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent" placeholder="Enter first name" data-bind="firstName" required />
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Last Name *</label>
+                                    <input type="text" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent" placeholder="Enter last name" data-bind="lastName" required />
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Date of Birth *</label>
+                                    <input type="date" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent" data-bind="dateOfBirth" required />
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Gender *</label>
+                                    <select class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent" data-bind="gender" required>
+                                        <option value="">Select gender</option>
+                                        <option value="male">Male</option>
+                                        <option value="female">Female</option>
+                                        <option value="other">Other</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Email Address *</label>
+                                <input type="email" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent" placeholder="Enter email address" data-bind="email" required />
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Phone Number *</label>
+                                <input type="tel" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent" placeholder="Enter phone number" data-bind="phone" required />
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Complete Address *</label>
+                                <textarea class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent" rows="3" placeholder="Enter complete address" data-bind="address" required></textarea>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Parent/Guardian Name *</label>
+                                    <input type="text" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent" placeholder="Enter parent/guardian name" data-bind="parentName" required />
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Parent/Guardian Phone *</label>
+                                    <input type="tel" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent" placeholder="Enter parent/guardian phone" data-bind="parentPhone" required />
+                                </div>
+                            </div>
+
+                            <div class="flex justify-between pt-6">
+                                <button type="button" class="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors" onclick="showLoginScreen()">
+                                    Cancel
+                                </button>
+                                <button type="submit" class="px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors" data-event="click:nextStep">
+                                    Continue
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Status Tracking (for returning applicants) -->
+                    <div class="mt-8 bg-white rounded-xl shadow-sm p-6 border-l-4 border-blue-500">
+                        <h3 class="font-semibold text-gray-900 mb-2">Already Applied?</h3>
+                        <p class="text-gray-600 mb-4">Track your application status using your application ID.</p>
+                        <div class="flex space-x-3">
+                            <input type="text" placeholder="Enter Application ID" class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent" />
+                            <button class="px-4 py-2 bg-secondary-600 text-white rounded-lg hover:bg-secondary-700 transition-colors">
+                                Track Status
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- @END_COMPONENT: EnrollmentPortal -->
+    </div>
+    <!-- @END_COMPONENT: AuthenticationWrapper -->
+
+    <script>
+        // TODO: Implement Firebase integration, state management, and business logic
+        
+        (function() {
+            // App state management
+            let currentUser = null;
+            let currentView = 'login';
+            let chatPanelOpen = false;
+
+            // Navigation functions
+            window.showSection = function(sectionName) {
+                // Hide all sections
+                const sections = ['dashboard', 'grades', 'assignments', 'modules', 'meetings', 'announcements'];
+                sections.forEach(section => {
+                    const element = document.getElementById(section + 'Section');
+                    if (element) {
+                        element.classList.add('hidden');
+                    }
+                });
+
+                // Show selected section
+                const targetSection = document.getElementById(sectionName + 'Section');
+                if (targetSection) {
+                    targetSection.classList.remove('hidden');
+                }
+            };
+
+            window.toggleChat = function() {
+                const chatPanel = document.getElementById('chatPanel');
+                chatPanelOpen = !chatPanelOpen;
+                
+                if (chatPanelOpen) {
+                    chatPanel.classList.remove('hidden');
+                    document.body.style.marginRight = '320px';
+                } else {
+                    chatPanel.classList.add('hidden');
+                    document.body.style.marginRight = '0';
+                }
+            };
+
+            window.showEnrollmentPortal = function() {
+                document.getElementById('loginScreen').classList.add('hidden');
+                document.getElementById('enrollmentPortal').classList.remove('hidden');
+            };
+
+            window.showLoginScreen = function() {
+                document.getElementById('enrollmentPortal').classList.add('hidden');
+                document.getElementById('loginScreen').classList.remove('hidden');
+            };
+
+            window.showMainApp = function() {
+                document.getElementById('loginScreen').classList.add('hidden');
+                document.getElementById('mainApp').classList.remove('hidden');
+            };
+
+            window.logout = function() {
+                document.getElementById('mainApp').classList.add('hidden');
+                document.getElementById('loginScreen').classList.remove('hidden');
+                currentUser = null;
+            };
+
+            // Simulated login for demo
+            window.handleLogin = function(event) {
+                event.preventDefault();
+                // In real implementation, this would authenticate with Firebase
+                showMainApp();
+            };
+
+            // Add event listeners for forms
+            document.addEventListener('DOMContentLoaded', function() {
+                const loginForm = document.querySelector('#loginScreen form');
+                if (loginForm) {
+                    loginForm.addEventListener('submit', handleLogin);
+                }
+            });
+
+            // Responsive sidebar toggle for mobile
+            function initResponsiveFeatures() {
+                // Add mobile menu toggle if needed
+                // Handle responsive chat panel
+                if (window.innerWidth < 768) {
+                    document.body.style.marginRight = '0';
+                }
+            }
+
+            window.addEventListener('resize', initResponsiveFeatures);
+            initResponsiveFeatures();
+        })();
+    </script>
+</body>
+</html>

@@ -212,44 +212,45 @@ export function UserManagement() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
-      {/* Enhanced Header */}
+      {/* Enhanced Header - Mobile Responsive */}
       <div className="bg-white border-b border-gray-200 shadow-sm">
-        <div className="px-6 py-6">
-          <div className="flex items-center justify-between">
+        <div className="px-3 sm:px-6 py-4 sm:py-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
-                <div className="h-10 w-10 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center">
-                  <Users className="h-6 w-6 text-white" />
+              <h1 className="text-xl sm:text-3xl font-bold text-gray-900 flex items-center gap-2 sm:gap-3">
+                <div className="h-8 w-8 sm:h-10 sm:w-10 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center">
+                  <Users className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
                 </div>
-                User & Role Management
+                <span className="text-lg sm:text-3xl">User & Role Management</span>
               </h1>
-              <p className="text-gray-600 mt-2">Comprehensive user administration and role-based access control</p>
-              <div className="flex items-center gap-4 mt-3">
-                <Badge variant="outline" className="text-blue-600 border-blue-200">
+              <p className="text-gray-600 mt-1 sm:mt-2 text-sm sm:text-base">Comprehensive user administration and role-based access control</p>
+              <div className="flex flex-wrap items-center gap-2 sm:gap-4 mt-2 sm:mt-3">
+                <Badge variant="outline" className="text-blue-600 border-blue-200 text-xs sm:text-sm">
                   {users.length} Total Users
                 </Badge>
-                <Badge variant="outline" className="text-green-600 border-green-200">
+                <Badge variant="outline" className="text-green-600 border-green-200 text-xs sm:text-sm">
                   {users.filter((u: User) => u.isActive).length} Active
                 </Badge>
-                <Badge variant="outline" className="text-purple-600 border-purple-200">
+                <Badge variant="outline" className="text-purple-600 border-purple-200 text-xs sm:text-sm">
                   {roles.length} Roles Defined
                 </Badge>
               </div>
             </div>
-            <div className="flex items-center space-x-3">
-              <Button variant="outline" size="sm" className="border-gray-300">
-                <Search className="h-4 w-4 mr-2" />
-                Export Users
+            <div className="flex items-center space-x-2 sm:space-x-3">
+              <Button variant="outline" size="sm" className="border-gray-300 text-xs sm:text-sm">
+                <Search className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                <span className="hidden sm:inline">Export Users</span>
+                <span className="sm:hidden">Export</span>
               </Button>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="p-6 space-y-6">
+      <div className="p-3 sm:p-6 space-y-4 sm:space-y-6">
 
-        {/* Enhanced Statistics Cards */}
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-8">
+        {/* Enhanced Statistics Cards - Mobile Responsive */}
+        <div className="grid gap-3 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 mb-6 sm:mb-8">
           <Card className="bg-gradient-to-r from-blue-50 to-cyan-50 border-blue-200">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
@@ -270,7 +271,7 @@ export function UserManagement() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-green-700">Teachers</p>
-                  <p className="text-3xl font-bold text-green-900">{users.filter((u: User) => u.role === 4).length}</p>
+                  <p className="text-3xl font-bold text-green-900">{users.filter((u: User) => u.role === 'teacher').length}</p>
                   <p className="text-xs text-green-600 mt-1">Professional staff</p>
                 </div>
                 <div className="h-12 w-12 bg-green-100 rounded-lg flex items-center justify-center">
