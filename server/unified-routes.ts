@@ -2,6 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { Server as SocketIOServer } from "socket.io";
 import { storage } from "./unified-storage";
+import { db } from "./db";
 import bcrypt from "bcryptjs";
 
 // SMS Service using Semaphore API
@@ -713,10 +714,10 @@ export function registerRoutes(app: Express): Server {
       const users = await storage.getAllUsers();
       const safeUsers = users.map(user => ({
         id: user.id,
-        name: user.name || `${user.firstName} ${user.lastName}`,
+        name: `${user.firstName} ${user.lastName}`,
         email: user.email,
-        role: user.role || 'user',
-        isActive: user.isActive !== false
+        role: 'user',
+        isActive: true
       }));
       res.json(safeUsers);
     } catch (error) {
@@ -895,15 +896,15 @@ export function registerRoutes(app: Express): Server {
       // Send to specific recipient room for targeted notifications
       io.to(`user_${recipientId}`).emit("new_message", {
         ...message,
-        senderName: sender?.name || 'Unknown',
-        recipientName: recipient?.name || 'Unknown'
+        senderName: sender ? `${sender.firstName} ${sender.lastName}` : 'Unknown',
+        recipientName: recipient ? `${recipient.firstName} ${recipient.lastName}` : 'Unknown'
       });
       
       // Also emit to sender for confirmation
       io.to(`user_${senderId}`).emit("message_sent", {
         ...message,
-        senderName: sender?.name || 'Unknown',
-        recipientName: recipient?.name || 'Unknown'
+        senderName: sender ? `${sender.firstName} ${sender.lastName}` : 'Unknown',
+        recipientName: recipient ? `${recipient.firstName} ${recipient.lastName}` : 'Unknown'
       });
       
       res.status(201).json(message);
@@ -919,10 +920,10 @@ export function registerRoutes(app: Express): Server {
       // Return users without password hash for security
       const safeUsers = users.map(user => ({
         id: user.id,
-        name: user.name,
+        name: `${user.firstName} ${user.lastName}`,
         email: user.email,
-        role: user.role,
-        isActive: user.isActive
+        role: 'user',
+        isActive: true
       }));
       res.json(safeUsers);
     } catch (error) {

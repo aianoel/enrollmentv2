@@ -23,7 +23,7 @@ import {
   schedules, learningModules
 } from "@shared/unified-schema";
 import { db } from "./db";
-import { eq, desc, and, not, gte, lte, sql } from "drizzle-orm";
+import { eq, desc, and, not, gte, lte, sql, orderBy } from "drizzle-orm";
 
 export interface IStorage {
   // User management
@@ -652,28 +652,29 @@ export class DatabaseStorage implements IStorage {
       // Get all messages involving this user
       const allMessages = await db.select().from(messages);
       const userMessages = allMessages.filter(m => 
-        m.senderId === userId || m.recipientId === userId
+        m.senderId === userId || m.receiverId === userId
       );
       
       // Get unique partner IDs
       const partnerIds = new Set();
       userMessages.forEach(message => {
-        if (message.senderId === userId && message.recipientId) {
-          partnerIds.add(message.recipientId);
-        } else if (message.recipientId === userId && message.senderId) {
+        if (message.senderId === userId && message.receiverId) {
+          partnerIds.add(message.receiverId);
+        } else if (message.receiverId === userId && message.senderId) {
           partnerIds.add(message.senderId);
         }
       });
       
       // Build conversations
-      for (const partnerId of partnerIds) {
-        if (partnerId !== userId) {
-          const partner = await this.getUser(partnerId);
+      for (const partnerId of Array.from(partnerIds)) {
+        const partnerIdNum = Number(partnerId);
+        if (partnerIdNum !== userId) {
+          const partner = await this.getUser(partnerIdNum);
           if (partner) {
             const conversationMessages = userMessages.filter(m => 
-              (m.senderId === userId && m.recipientId === partnerId) ||
-              (m.senderId === partnerId && m.recipientId === userId)
-            ).sort((a, b) => new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime());
+              (m.senderId === userId && m.receiverId === partnerIdNum) ||
+              (m.senderId === partnerIdNum && m.receiverId === userId)
+            ).sort((a, b) => new Date(b.sentAt!).getTime() - new Date(a.sentAt!).getTime());
             
             const lastMessage = conversationMessages[0];
             const unreadCount = conversationMessages.filter(m => 
@@ -684,12 +685,12 @@ export class DatabaseStorage implements IStorage {
               id: `conv_${Math.min(partnerId, userId)}_${Math.max(partnerId, userId)}`,
               conversationType: "private",
               partnerId,
-              partnerName: partner.name || `${partner.firstName} ${partner.lastName}`,
-              partnerRole: partner.role || 'user',
-              lastMessage: lastMessage?.messageText || '',
-              lastMessageTime: lastMessage?.createdAt,
+              partnerName: `${partner.firstName} ${partner.lastName}`,
+              partnerRole: 'user',
+              lastMessage: lastMessage?.message || '',
+              lastMessageTime: lastMessage?.sentAt,
               unreadCount,
-              createdAt: lastMessage?.createdAt || new Date().toISOString()
+              createdAt: lastMessage?.sentAt || new Date().toISOString()
             });
           }
         }
@@ -790,6 +791,20 @@ export class DatabaseStorage implements IStorage {
       }));
     } catch (error) {
       console.error('Error getting online users:', error);
+      return [];
+    }
+  }
+
+  async getNotifications(recipientId: number): Promise<any[]> {
+    try {
+      const userNotifications = await db.select()
+        .from(notifications)
+        .where(eq(notifications.recipientId, recipientId))
+        .orderBy(notifications.createdAt);
+      
+      return userNotifications;
+    } catch (error) {
+      console.error('Error getting notifications:', error);
       return [];
     }
   }
