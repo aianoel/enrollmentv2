@@ -1,0 +1,41 @@
+[vite] connecting...
+[vite] connected.
+AuthContext: Checking for existing user session...
+AuthContext: Saved user: 
+Object {id: 1, name: "undefined undefined", email: "admin@school.edu", role: "admin", roleId: 1, …}
+AuthContext: User name is invalid, clearing cache and re-logging...
+User logged in successfully: undefined undefined (admin)
+user.role.replace is not a function
+at https://3e900d2e-df28-4d70-96f2-8b185abe54b7-00-29d2w07rj2cck.sisko.replit.dev/src/pages/admin/UserManagement.tsx:1097:404
+at Array.map (<anonymous>)
+at UserManagement (https://3e900d2e-df28-4d70-96f2-8b185abe54b7-00-29d2w07rj2cck.sisko.replit.dev/src/pages/admin/UserManagement.tsx:1041:187)
+at renderWithHooks (https://3e900d2e-df28-4d70-96f2-8b185abe54b7-00-29d2w07rj2cck.sisko.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-RPCDYKBN.js?v=e7b2ae60:11548:26)
+at updateFunctionComponent (https://3e900d2e-df28-4d70-96f2-8b185abe54b7-00-29d2w07rj2cck.sisko.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-RPCDYKBN.js?v=e7b2ae60:14582:28)
+at beginWork (https://3e900d2e-df28-4d70-96f2-8b185abe54b7-00-29d2w07rj2cck.sisko.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-RPCDYKBN.js?v=e7b2ae60:15924:22)
+at HTMLUnknownElement.callCallback2 (https://3e900d2e-df28-4d70-96f2-8b185abe54b7-00-29d2w07rj2cck.sisko.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-RPCDYKBN.js?v=e7b2ae60:3674:22)
+at Object.invokeGuardedCallbackDev (https://3e900d2e-df28-4d70-96f2-8b185abe54b7-00-29d2w07rj2cck.sisko.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-RPCDYKBN.js?v=e7b2ae60:3699:24)
+at invokeGuardedCallback (https://3e900d2e-df28-4d70-96f2-8b185abe54b7-00-29d2w07rj2cck.sisko.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-RPCDYKBN.js?v=e7b2ae60:3733:39)
+at beginWork$1 (https://3e900d2e-df28-4d70-96f2-8b185abe54b7-00-29d2w07rj2cck.sisko.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-RPCDYKBN.js?v=e7b2ae60:19765:15)
+user.role.replace is not a function
+The above error occurred in the <UserManagement> component:
+
+    at UserManagement (https://3e900d2e-df28-4d70-96f2-8b185abe54b7-00-29d2w07rj2cck.sisko.replit.dev/src/pages/admin/UserManagement.tsx:55:43)
+    at div
+    at main
+    at div
+    at div
+    at MainLayout (https://3e900d2e-df28-4d70-96f2-8b185abe54b7-00-29d2w07rj2cck.sisko.replit.dev/src/components/layout/MainLayout.tsx:52:20)
+    at ChatProvider (https://3e900d2e-df28-4d70-96f2-8b185abe54b7-00-29d2w07rj2cck.sisko.replit.dev/src/contexts/ChatContext.tsx:32:32)
+    at AppContent (https://3e900d2e-df28-4d70-96f2-8b185abe54b7-00-29d2w07rj2cck.sisko.replit.dev/src/App.tsx?v=TsKYhd9YiWuHkJBv50EIy:35:29)
+    at Route (https://3e900d2e-df28-4d70-96f2-8b185abe54b7-00-29d2w07rj2cck.sisko.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=e7b2ae60:323:16)
+    at Switch (https://3e900d2e-df28-4d70-96f2-8b185abe54b7-00-29d2w07rj2cck.sisko.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=e7b2ae60:379:17)
+    at Router
+    at AuthProvider (https://3e900d2e-df28-4d70-96f2-8b185abe54b7-00-29d2w07rj2cck.sisko.replit.dev/src/contexts/AuthContext.tsx:30:32)
+    at Provider (https://3e900d2e-df28-4d70-96f2-8b185abe54b7-00-29d2w07rj2cck.sisko.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-OXZDJRWN.js?v=e7b2ae60:38:15)
+    at TooltipProvider (https://3e900d2e-df28-4d70-96f2-8b185abe54b7-00-29d2w07rj2cck.sisko.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=e7b2ae60:64:5)
+    at QueryClientProvider (https://3e900d2e-df28-4d70-96f2-8b185abe54b7-00-29d2w07rj2cck.sisko.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=e7b2ae60:2805:3)
+    at App
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries.
+user.role.replace is not a function

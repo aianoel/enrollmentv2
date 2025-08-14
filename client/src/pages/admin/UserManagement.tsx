@@ -43,6 +43,12 @@ const roleFormSchema = z.object({
 type UserFormData = z.infer<typeof userFormSchema>;
 type RoleFormData = z.infer<typeof roleFormSchema>;
 
+// Helper function to convert role ID to role name
+const getRoleNameById = (roleId: number | string, roles: Role[]): string => {
+  const role = roles.find(r => r.id === Number(roleId));
+  return role?.roleName || 'unknown';
+};
+
 export function UserManagement() {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [selectedRole, setSelectedRole] = useState<Role | null>(null);
@@ -264,7 +270,7 @@ export function UserManagement() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-green-700">Teachers</p>
-                  <p className="text-3xl font-bold text-green-900">{users.filter((u: User) => u.role === 'teacher').length}</p>
+                  <p className="text-3xl font-bold text-green-900">{users.filter((u: User) => u.role === 4).length}</p>
                   <p className="text-xs text-green-600 mt-1">Professional staff</p>
                 </div>
                 <div className="h-12 w-12 bg-green-100 rounded-lg flex items-center justify-center">
@@ -528,8 +534,8 @@ export function UserManagement() {
                               </div>
                             </TableCell>
                             <TableCell>
-                              <Badge className={`${getRoleBadgeColor(user.role)} border-0 font-medium`}>
-                                {user.role.replace('_', ' ').toUpperCase()}
+                              <Badge className={`${getRoleBadgeColor(getRoleNameById(user.role, roles))} border-0 font-medium`}>
+                                {getRoleNameById(user.role, roles).replace('_', ' ').toUpperCase()}
                               </Badge>
                             </TableCell>
                             <TableCell>
@@ -601,8 +607,8 @@ export function UserManagement() {
                               <span>{user.email}</span>
                             </div>
                             <div className="flex items-center gap-2">
-                              <Badge className={`${getRoleBadgeColor(user.role)} text-xs border-0`}>
-                                {user.role.replace('_', ' ').toUpperCase()}
+                              <Badge className={`${getRoleBadgeColor(getRoleNameById(user.role, roles))} text-xs border-0`}>
+                                {getRoleNameById(user.role, roles).replace('_', ' ').toUpperCase()}
                               </Badge>
                             </div>
                             <div className="text-xs text-gray-500">
