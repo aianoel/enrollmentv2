@@ -595,6 +595,44 @@ export function registerRoutes(app: Express): Server {
         VALUES ($1, $2, $3, $4, $5) 
         RETURNING *
       `, [teacherId, subjectId, sectionId, schoolYear || '2024-2025', semester || '1st']);
+
+      // Get teacher, subject, and section details for notifications
+      const detailsResult = await pool.query(`
+        SELECT 
+          u.first_name || ' ' || u.last_name as teacher_name,
+          u.email as teacher_email,
+          sub.name as subject_name,
+          sec.name as section_name,
+          sec.grade_level
+        FROM users u
+        JOIN subjects sub ON sub.id = $2
+        JOIN sections sec ON sec.id = $3
+        WHERE u.id = $1
+      `, [teacherId, subjectId, sectionId]);
+
+      if (detailsResult.rows.length > 0) {
+        const { teacher_name, teacher_email, subject_name, section_name, grade_level } = detailsResult.rows[0];
+
+        // Create notification for the teacher
+        await pool.query(`
+          INSERT INTO notifications (user_id, title, body, type, is_read, created_at)
+          VALUES ($1, $2, $3, 'assignment', false, NOW())
+        `, [teacherId, 'New Teaching Assignment', `You have been assigned to teach ${subject_name} for ${section_name} (${grade_level}) - ${semester} Semester ${schoolYear}`]);
+
+        // Get all students in this section and notify them
+        const studentsResult = await pool.query(`
+          SELECT id FROM users WHERE role_id = 5 AND section_id = $1
+        `, [sectionId]);
+
+        for (const student of studentsResult.rows) {
+          await pool.query(`
+            INSERT INTO notifications (user_id, title, body, type, is_read, created_at)
+            VALUES ($1, $2, $3, 'teacher_assignment', false, NOW())
+          `, [student.id, 'New Teacher Assignment', `${teacher_name} has been assigned as your ${subject_name} teacher for ${section_name} - ${semester} Semester ${schoolYear}`]);
+        }
+
+        console.log(`Notifications sent: Teacher assignment for ${teacher_name} to teach ${subject_name} in ${section_name}`);
+      }
       
       res.status(201).json(result.rows[0]);
     } catch (error) {
@@ -606,7 +644,7 @@ export function registerRoutes(app: Express): Server {
   // POST endpoint for teacher schedules  
   app.post("/api/academic/schedules", async (req, res) => {
     try {
-      const { teacherId, subjectId, sectionId, dayOfWeek, startTime, endTime, room } = req.body;
+      const { teacherId, subjectId, sectionId, dayOfWeek, startTime, endTime, room, schoolYear, semester } = req.body;
       
       if (!teacherId || !subjectId || !sectionId || !dayOfWeek || !startTime || !endTime) {
         return res.status(400).json({ error: "All schedule fields are required" });
@@ -617,6 +655,44 @@ export function registerRoutes(app: Express): Server {
         VALUES ($1, $2, $3, $4, $5, $6, $7) 
         RETURNING *
       `, [teacherId, subjectId, sectionId, dayOfWeek, startTime, endTime, room || '']);
+
+      // Get schedule details for notifications
+      const detailsResult = await pool.query(`
+        SELECT 
+          u.first_name || ' ' || u.last_name as teacher_name,
+          sub.name as subject_name,
+          sec.name as section_name,
+          sec.grade_level
+        FROM users u
+        JOIN subjects sub ON sub.id = $2
+        JOIN sections sec ON sec.id = $3
+        WHERE u.id = $1
+      `, [teacherId, subjectId, sectionId]);
+
+      if (detailsResult.rows.length > 0) {
+        const { teacher_name, subject_name, section_name, grade_level } = detailsResult.rows[0];
+        const roomText = room ? ` in ${room}` : '';
+
+        // Create notification for the teacher about the schedule
+        await pool.query(`
+          INSERT INTO notifications (user_id, title, body, type, is_read, created_at)
+          VALUES ($1, $2, $3, 'schedule', false, NOW())
+        `, [teacherId, 'New Class Schedule', `New class schedule: ${subject_name} for ${section_name} on ${dayOfWeek} at ${startTime}-${endTime}${roomText}`]);
+
+        // Get all students in this section and notify them about the schedule
+        const studentsResult = await pool.query(`
+          SELECT id FROM users WHERE role_id = 5 AND section_id = $1
+        `, [sectionId]);
+
+        for (const student of studentsResult.rows) {
+          await pool.query(`
+            INSERT INTO notifications (user_id, title, body, type, is_read, created_at)
+            VALUES ($1, $2, $3, 'schedule', false, NOW())
+          `, [student.id, 'Class Schedule Update', `Class Schedule: ${subject_name} with ${teacher_name} on ${dayOfWeek} at ${startTime}-${endTime}${roomText}`]);
+        }
+
+        console.log(`Schedule notifications sent: ${subject_name} schedule for ${section_name} on ${dayOfWeek} to ${studentsResult.rows.length + 1} recipients`);
+      }
       
       res.status(201).json(result.rows[0]);
     } catch (error) {
