@@ -110,11 +110,21 @@
 
 @layer base {
   * {
-    @apply border-border;
+    @apply border-0;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  
+  html, body, #root {
+    height: 100vh;
+    width: 100vw;
+    overflow-x: hidden;
   }
   
   body {
     @apply bg-background text-foreground font-sans;
+    background: linear-gradient(135deg, hsl(var(--primary-50)) 0%, hsl(var(--gray-50)) 100%);
   }
 }
 
@@ -157,7 +167,7 @@
 
   /* SaaS Design Components */
   .saas-container {
-    @apply w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+    @apply w-full h-full;
   }
 
   .saas-grid {
@@ -165,7 +175,7 @@
   }
 
   .saas-card {
-    @apply bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-all duration-200 hover:border-gray-300;
+    @apply bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-200;
   }
 
   .saas-card-content {
@@ -210,7 +220,7 @@
 
   /* SaaS Sidebar */
   .saas-sidebar {
-    @apply fixed inset-y-0 left-0 z-50 w-72 bg-white border-r border-gray-200 shadow-lg transform -translate-x-full transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 lg:shadow-none;
+    @apply fixed inset-y-0 left-0 z-50 w-72 bg-white shadow-lg transform -translate-x-full transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 lg:shadow-none;
   }
 
   .saas-sidebar.open {
@@ -227,16 +237,16 @@
   }
 
   .saas-header {
-    @apply sticky top-0 z-30 bg-white border-b border-gray-200 shadow-sm backdrop-blur-sm;
+    @apply sticky top-0 z-30 bg-white shadow-sm backdrop-blur-sm;
   }
 
   .saas-main {
-    @apply flex-1 overflow-auto bg-gray-50;
+    @apply flex-1 overflow-auto bg-gray-50 h-full;
   }
 
   /* SaaS Chat Panel */
   .saas-chat-panel {
-    @apply fixed inset-y-0 right-0 z-40 w-full sm:w-96 bg-white border-l border-gray-200 shadow-xl transform translate-x-full transition-transform duration-300 ease-in-out;
+    @apply fixed inset-y-0 right-0 z-40 w-full sm:w-96 bg-white shadow-xl transform translate-x-full transition-transform duration-300 ease-in-out;
   }
 
   .saas-chat-panel.open {

@@ -12,15 +12,24 @@ export async function apiRequest(
   method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE" = "GET",
   data?: unknown | undefined,
 ): Promise<any> {
-  const res = await fetch(url, {
-    method: method,
-    headers: data ? { "Content-Type": "application/json" } : {},
-    body: data ? JSON.stringify(data) : undefined,
-    credentials: "include",
-  });
+  try {
+    const res = await fetch(url, {
+      method: method,
+      headers: {
+        "Content-Type": "application/json",
+        ...(data ? {} : {}),
+      },
+      body: data ? JSON.stringify(data) : undefined,
+      credentials: "include",
+      cache: "no-cache",
+    });
 
-  await throwIfResNotOk(res);
-  return await res.json();
+    await throwIfResNotOk(res);
+    return await res.json();
+  } catch (error) {
+    console.error('API Request failed:', { url, method, error });
+    throw error;
+  }
 }
 
 type UnauthorizedBehavior = "returnNull" | "throw";

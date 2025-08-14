@@ -135,8 +135,8 @@ export const MainLayout: React.FC = () => {
             isMobile={isMobile}
           />
         </div>
-        <main className="saas-main p-6 lg:p-8">
-          <div className="saas-container saas-fade-in">
+        <main className="flex-1 overflow-auto bg-gray-50 h-full">
+          <div className="w-full h-full saas-fade-in">
             {renderContent()}
           </div>
         </main>
