@@ -71,7 +71,7 @@ export function AdminDashboard() {
     description: string;
     color?: string;
   }) => (
-    <Card className="card-responsive">
+    <Card className="group hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-white via-gray-50 to-white backdrop-blur-sm">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="text-sm font-medium">{title}</CardTitle>
         <Icon className={`h-4 w-4 text-${color}-600`} />
@@ -88,9 +88,9 @@ export function AdminDashboard() {
   }
 
   return (
-    <div className="saas-container p-6 space-y-6">
-      {/* Admin Welcome Header with SaaS Design */}
-      <div className="saas-gradient-bg rounded-2xl p-8 text-white saas-slide-up shadow-xl" data-testid="welcome-header">
+    <div className="p-6 space-y-6 bg-gradient-to-br from-purple-50 via-white to-indigo-50 min-h-full">
+      {/* Enhanced Admin Welcome Header */}
+      <div className="bg-gradient-to-r from-purple-600 via-purple-700 to-indigo-800 shadow-2xl p-8 text-white backdrop-blur-lg" data-testid="welcome-header">
         <div className="flex items-center justify-between">
           <div className="flex-1 min-w-0">
             <h1 className="text-3xl font-bold mb-2">Admin Dashboard</h1>

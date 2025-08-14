@@ -63,6 +63,7 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import type { TeacherTask, TeacherMeeting, TaskSubmission, Notification, Grade } from "@shared/schema";
+import { SchoolHeader, SchoolCard } from "@/components/ui/school-ui";
 
 // Form schema for submissions
 const submissionFormSchema = z.object({
@@ -263,61 +264,46 @@ export function EnhancedStudentDashboard() {
     : 0;
 
   return (
-    <div className="space-y-6 p-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Student Dashboard</h1>
-          <p className="text-muted-foreground">Track your assignments, meetings, and progress</p>
-        </div>
-      </div>
+    <div className="p-6 space-y-6 bg-gradient-to-br from-blue-50 via-white to-indigo-50 min-h-full">
+      {/* Enhanced Student Header */}
+      <SchoolHeader 
+        title="Student Dashboard"
+        subtitle="Track your progress, complete assignments, and excel in your studies"
+        icon={BookOpen}
+        variant="student"
+        userName={user?.name}
+      />
 
-      {/* Stats Cards */}
+      {/* Enhanced Stats Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Pending Tasks</CardTitle>
-            <FileText className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{upcomingTasks.length}</div>
-            <p className="text-xs text-muted-foreground">
-              {overdueTasks.length} overdue
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Upcoming Meetings</CardTitle>
-            <Video className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{upcomingMeetings.length}</div>
-            <p className="text-xs text-muted-foreground">This week</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Average Grade</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{averageGrade.toFixed(1)}%</div>
-            <p className="text-xs text-muted-foreground">
-              {grades.length} graded assignments
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Notifications</CardTitle>
-            <Bell className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{unreadNotifications.length}</div>
-            <p className="text-xs text-muted-foreground">Unread messages</p>
-          </CardContent>
-        </Card>
+        <SchoolCard
+          icon={FileText}
+          title="Pending Tasks"
+          value={upcomingTasks.length}
+          description={`${overdueTasks.length} overdue`}
+          variant="student"
+        />
+        <SchoolCard
+          icon={Video}
+          title="Upcoming Meetings"
+          value={upcomingMeetings.length}
+          description="This week"
+          variant="student"
+        />
+        <SchoolCard
+          icon={TrendingUp}
+          title="Average Grade"
+          value={`${averageGrade.toFixed(1)}%`}
+          description={`${grades.length} graded assignments`}
+          variant="student"
+        />
+        <SchoolCard
+          icon={Bell}
+          title="Notifications"
+          value={unreadNotifications.length}
+          description="Unread messages"
+          variant="student"
+        />
       </div>
 
       {/* Overdue Tasks Alert */}

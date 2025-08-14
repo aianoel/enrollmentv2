@@ -67,6 +67,7 @@ import {
   ExternalLink,
 } from "lucide-react";
 import type { User, Section, TeacherTask, TeacherMeeting, TaskSubmission, Notification } from "@shared/schema";
+import { SchoolHeader, SchoolCard } from "@/components/ui/school-ui";
 
 // Form schemas
 const taskFormSchema = z.object({
@@ -206,13 +207,18 @@ export function EnhancedTeacherDashboard() {
   const unreadNotifications = notifications.filter((n: Notification) => !n.isRead);
 
   return (
-    <div className="space-y-6 p-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Teacher Dashboard</h1>
-          <p className="text-muted-foreground">Manage your classes, tasks, and meetings</p>
-        </div>
+    <div className="p-6 space-y-6 bg-gradient-to-br from-green-50 via-white to-emerald-50 min-h-full">
+      {/* Enhanced Teacher Header */}
+      <SchoolHeader 
+        title="Teacher Dashboard"
+        subtitle="Manage your classes, assignments, and student progress"
+        icon={Users}
+        variant="teacher"
+        userName={user?.name}
+      />
+      
+      {/* Action Buttons Header */}
+      <div className="flex items-center justify-end">
         <div className="flex gap-2">
           <Dialog open={isTaskDialogOpen} onOpenChange={setIsTaskDialogOpen}>
             <DialogTrigger asChild>
@@ -459,52 +465,36 @@ export function EnhancedTeacherDashboard() {
         </div>
       </div>
 
-      {/* Stats Cards */}
+      {/* Enhanced Stats Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Tasks</CardTitle>
-            <FileText className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{tasks.length}</div>
-            <p className="text-xs text-muted-foreground">
-              {tasks.filter((t: TeacherTask) => t.dueDate && new Date(t.dueDate) > new Date()).length} upcoming
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Scheduled Meetings</CardTitle>
-            <Video className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{meetings.length}</div>
-            <p className="text-xs text-muted-foreground">
-              {meetings.filter((m: TeacherMeeting) => new Date(m.scheduledAt) > new Date()).length} upcoming
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Sections</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{sections.length}</div>
-            <p className="text-xs text-muted-foreground">Classes assigned</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Notifications</CardTitle>
-            <Bell className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{unreadNotifications.length}</div>
-            <p className="text-xs text-muted-foreground">Unread messages</p>
-          </CardContent>
-        </Card>
+        <SchoolCard
+          icon={FileText}
+          title="Active Tasks"
+          value={tasks.length}
+          description={`${tasks.filter((t: TeacherTask) => t.dueDate && new Date(t.dueDate) > new Date()).length} upcoming`}
+          variant="teacher"
+        />
+        <SchoolCard
+          icon={Video}
+          title="Scheduled Meetings"
+          value={meetings.length}
+          description={`${meetings.filter((m: TeacherMeeting) => new Date(m.scheduledAt) > new Date()).length} upcoming`}
+          variant="teacher"
+        />
+        <SchoolCard
+          icon={Users}
+          title="Sections"
+          value={sections.length}
+          description="Classes assigned"
+          variant="teacher"
+        />
+        <SchoolCard
+          icon={Bell}
+          title="Notifications"
+          value={unreadNotifications.length}
+          description="Unread messages"
+          variant="teacher"
+        />
       </div>
 
       {/* Main Content Tabs */}
