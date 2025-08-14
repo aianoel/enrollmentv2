@@ -24,6 +24,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentSection, onSectionChang
           { id: 'grades', label: 'My Grades', icon: 'fas fa-chart-line' },
           { id: 'assignments', label: 'Assignments', icon: 'fas fa-tasks' },
           { id: 'modules', label: 'Learning Modules', icon: 'fas fa-book' },
+          { id: 'shared-folders', label: 'Learning Materials', icon: 'fas fa-folder-open' },
           { id: 'meetings', label: 'Meetings', icon: 'fas fa-video' },
           { id: 'payments', label: 'My Payments', icon: 'fas fa-credit-card' },
           { id: 'announcements', label: 'Announcements', icon: 'fas fa-bullhorn' },
@@ -35,6 +36,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentSection, onSectionChang
           { id: 'gradebook', label: 'Gradebook', icon: 'fas fa-clipboard-list' },
           { id: 'assignments', label: 'Manage Assignments', icon: 'fas fa-tasks' },
           { id: 'modules', label: 'Learning Modules', icon: 'fas fa-book' },
+          { id: 'folders', label: 'File Manager', icon: 'fas fa-folder' },
           { id: 'meetings', label: 'Schedule Meetings', icon: 'fas fa-video' },
           { id: 'announcements', label: 'Announcements', icon: 'fas fa-bullhorn' },
         ];

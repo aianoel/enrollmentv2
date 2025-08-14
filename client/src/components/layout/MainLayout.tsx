@@ -26,6 +26,8 @@ import { StudentPaymentPage } from '../../pages/student/StudentPaymentPage';
 import { FacebookStyleChat } from '../chat/FacebookStyleChat';
 import { AdminControlPanel } from '../admin/AdminControlSimple';
 import { UserManagement } from '../admin/UserManagement';
+import FolderManagement from '../../pages/teacher/FolderManagement';
+import SharedFolders from '../../pages/student/SharedFolders';
 import { useAuth } from '../../contexts/AuthContext';
 
 export const MainLayout: React.FC = () => {
@@ -99,6 +101,10 @@ export const MainLayout: React.FC = () => {
         return <UserManagement />;
       case 'admin-control':
         return <AdminControlPanel />;
+      case 'folders':
+        return user.role === 'teacher' ? <FolderManagement /> : <Dashboard />;
+      case 'shared-folders':
+        return user.role === 'student' ? <SharedFolders /> : <Dashboard />;
       default:
         return <Dashboard />;
     }

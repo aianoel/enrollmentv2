@@ -7,6 +7,7 @@ import {
   feeStructures, invoices, invoiceItems, payments, scholarships, schoolExpenses,
   conversations, conversationMembers, messages, userStatus,
   academicSubjects, teacherRegistrations, subjectAssignments, advisoryAssignments, classSchedules, teacherEvaluations,
+  teacherFolders, folderDocuments, folderSectionAccess,
   type User, type InsertUser, 
   type Announcement, type InsertAnnouncement, 
   type News, type InsertNews, 
@@ -43,15 +44,14 @@ import {
   type Conversation, type InsertConversation,
   type ConversationMember, type InsertConversationMember,
   type Message, type InsertMessage,
-  type UserStatus, type InsertUserStatus
-} from "@shared/unified-schema";
+  type UserStatus, type InsertUserStatus,
+  type TeacherFolder, type InsertTeacherFolder,
+  type FolderDocument, type InsertFolderDocument,
+  type FolderSectionAccess, type InsertFolderSectionAccess
+} from "@shared/schema";
 import { db } from "./db";
-import {
-  roles, users, sections, subjects, grades, tasks, meetings, modules,
-  announcements, events, news, messages, onlineStatus, fees, payments,
-  guidanceReports, enrollmentProgress
-} from "@shared/unified-schema";
-import { eq, desc, and, not, gte, lte } from "drizzle-orm";
+
+import { eq, desc, and, not, gte, lte, sql } from "drizzle-orm";
 
 // modify the interface with any CRUD methods
 // you might need
@@ -272,6 +272,14 @@ export interface IStorage {
   
   // User role lookup
   getUsersByRole(role: string): Promise<User[]>;
+
+  // Teacher Folder Management methods
+  getTeacherFolders(teacherId: number): Promise<TeacherFolder[]>;
+  createTeacherFolder(folder: InsertTeacherFolder): Promise<TeacherFolder>;
+  getFolderDocuments(folderId: number): Promise<FolderDocument[]>;
+  createFolderDocument(document: InsertFolderDocument): Promise<FolderDocument>;
+  shareFolderWithSections(folderId: number, sectionIds: number[], teacherId: number): Promise<void>;
+  getSharedFoldersForStudent(studentId: number): Promise<any[]>;
   
   getScholarships(studentId?: number): Promise<Scholarship[]>;
   createScholarship(scholarship: InsertScholarship): Promise<Scholarship>;
@@ -1826,6 +1834,107 @@ export class DatabaseStorage implements IStorage {
     // This would typically update a conversation_read_status table
     // For now, we'll implement a simple version
     console.log(`Marking conversation ${conversationId} as read for user ${userId}`);
+  }
+
+  // Teacher Folder Management Implementation
+  async getTeacherFolders(teacherId: number): Promise<TeacherFolder[]> {
+    return await db
+      .select()
+      .from(teacherFolders)
+      .where(eq(teacherFolders.teacherId, teacherId))
+      .orderBy(desc(teacherFolders.createdAt));
+  }
+
+  async createTeacherFolder(folder: InsertTeacherFolder): Promise<TeacherFolder> {
+    const [newFolder] = await db
+      .insert(teacherFolders)
+      .values(folder)
+      .returning();
+    return newFolder;
+  }
+
+  async getFolderDocuments(folderId: number): Promise<FolderDocument[]> {
+    return await db
+      .select()
+      .from(folderDocuments)
+      .where(eq(folderDocuments.folderId, folderId))
+      .orderBy(desc(folderDocuments.uploadedAt));
+  }
+
+  async createFolderDocument(document: InsertFolderDocument): Promise<FolderDocument> {
+    const [newDocument] = await db
+      .insert(folderDocuments)
+      .values(document)
+      .returning();
+    return newDocument;
+  }
+
+  async shareFolderWithSections(folderId: number, sectionIds: number[], teacherId: number): Promise<void> {
+    // First verify that the folder belongs to the teacher
+    const [folder] = await db
+      .select()
+      .from(teacherFolders)
+      .where(and(eq(teacherFolders.id, folderId), eq(teacherFolders.teacherId, teacherId)));
+    
+    if (!folder) {
+      throw new Error("Folder not found or unauthorized");
+    }
+
+    // Remove existing section access for this folder
+    await db
+      .delete(folderSectionAccess)
+      .where(eq(folderSectionAccess.folderId, folderId));
+
+    // Add new section access
+    if (sectionIds.length > 0) {
+      const accessEntries = sectionIds.map(sectionId => ({
+        folderId,
+        sectionId
+      }));
+      
+      await db.insert(folderSectionAccess).values(accessEntries);
+    }
+  }
+
+  async getSharedFoldersForStudent(studentId: number): Promise<any[]> {
+    // First get the student's section
+    const [student] = await db
+      .select({ sectionId: users.sectionId })
+      .from(users)
+      .where(eq(users.id, studentId));
+
+    if (!student || !student.sectionId) {
+      return [];
+    }
+
+    // Get folders shared with the student's section
+    return await db
+      .select({
+        id: teacherFolders.id,
+        name: teacherFolders.name,
+        description: teacherFolders.description,
+        teacherName: users.name,
+        createdAt: teacherFolders.createdAt,
+        documentsCount: sql<number>`(
+          SELECT COUNT(*)::int 
+          FROM folder_documents 
+          WHERE folder_id = ${teacherFolders.id}
+        )`
+      })
+      .from(teacherFolders)
+      .innerJoin(folderSectionAccess, eq(folderSectionAccess.folderId, teacherFolders.id))
+      .innerJoin(users, eq(users.id, teacherFolders.teacherId))
+      .where(eq(folderSectionAccess.sectionId, student.sectionId))
+      .orderBy(desc(teacherFolders.createdAt));
+  }
+
+  // Add missing methods for compatibility with unified-routes.ts
+  async getTasks(teacherId?: number): Promise<TeacherTask[]> {
+    return this.getTeacherTasks(teacherId);
+  }
+
+  async getMeetings(teacherId?: number): Promise<TeacherMeeting[]> {
+    return this.getTeacherMeetings(teacherId);
   }
 }
 

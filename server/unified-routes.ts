@@ -1,9 +1,19 @@
-import type { Express } from "express";
+import type { Express, Request } from "express";
 import { createServer, type Server } from "http";
 import { Server as SocketIOServer } from "socket.io";
-import { storage } from "./unified-storage";
+import { storage } from "./storage";
 import { db, pool } from "./db";
 import bcrypt from "bcryptjs";
+
+// Extend Express Request to include session
+interface AuthenticatedRequest extends Request {
+  session: { 
+    user?: { 
+      id: number; 
+      role: string; 
+    }; 
+  };
+}
 
 // SMS Service using Semaphore API
 class SMSService {
@@ -294,6 +304,131 @@ export function registerRoutes(app: Express): Server {
       res.json(tasks);
     } catch (error) {
       console.error("Error fetching teacher tasks:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  // Teacher Folder Management Routes
+  app.get('/api/teacher/folders', async (req: AuthenticatedRequest, res) => {
+    try {
+      const userId = req.session?.user?.id;
+      if (!userId) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+
+      const folders = await storage.getTeacherFolders(userId);
+      res.json(folders);
+    } catch (error) {
+      console.error("Error fetching teacher folders:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.post('/api/teacher/folders', async (req: AuthenticatedRequest, res) => {
+    try {
+      const userId = req.session?.user?.id;
+      if (!userId) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+
+      const { name, description } = req.body;
+      if (!name) {
+        return res.status(400).json({ error: "Folder name is required" });
+      }
+
+      const newFolder = await storage.createTeacherFolder({
+        teacherId: userId,
+        name,
+        description: description || null,
+      });
+
+      res.status(201).json(newFolder);
+    } catch (error) {
+      console.error("Error creating teacher folder:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.post('/api/teacher/folders/:folderId/share', async (req: AuthenticatedRequest, res) => {
+    try {
+      const userId = req.session?.user?.id;
+      const { folderId } = req.params;
+      const { sectionIds } = req.body;
+
+      if (!userId) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+
+      if (!sectionIds || !Array.isArray(sectionIds)) {
+        return res.status(400).json({ error: "Section IDs are required" });
+      }
+
+      await storage.shareFolderWithSections(Number(folderId), sectionIds, userId);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error sharing folder:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.get('/api/teacher/folders/:folderId/documents', async (req: AuthenticatedRequest, res) => {
+    try {
+      const userId = req.session?.user?.id;
+      const { folderId } = req.params;
+
+      if (!userId) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+
+      const documents = await storage.getFolderDocuments(Number(folderId));
+      res.json(documents);
+    } catch (error) {
+      console.error("Error fetching folder documents:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.post('/api/teacher/folders/:folderId/documents', async (req: AuthenticatedRequest, res) => {
+    try {
+      const userId = req.session?.user?.id;
+      const { folderId } = req.params;
+      const { name, fileUrl, fileType, fileSize } = req.body;
+
+      if (!userId) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+
+      if (!name || !fileUrl) {
+        return res.status(400).json({ error: "Document name and file URL are required" });
+      }
+
+      const newDocument = await storage.createFolderDocument({
+        folderId: Number(folderId),
+        name,
+        fileUrl,
+        fileType: fileType || null,
+        fileSize: fileSize || null,
+      });
+
+      res.status(201).json(newDocument);
+    } catch (error) {
+      console.error("Error creating folder document:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  // Student folder access routes
+  app.get('/api/student/shared-folders', async (req, res) => {
+    try {
+      const userId = req.session?.user?.id;
+      if (!userId) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+
+      const sharedFolders = await storage.getSharedFoldersForStudent(userId);
+      res.json(sharedFolders);
+    } catch (error) {
+      console.error("Error fetching shared folders:", error);
       res.status(500).json({ error: "Internal server error" });
     }
   });
@@ -1223,7 +1358,7 @@ export function registerRoutes(app: Express): Server {
     socket.on('join_user', async (userId) => {
       socket.join(`user_${userId}`);
       socket.data = { userId }; // Store user ID in socket data for disconnect handling
-      await storage.updateUserOnlineStatus(userId, true);
+      await storage.updateUserStatus(userId, { isOnline: true });
       
       // Broadcast that user is online
       io.emit('user_status_update', { userId, isOnline: true });
@@ -1282,7 +1417,7 @@ export function registerRoutes(app: Express): Server {
       // Get the user ID from the socket (you might need to store this when user joins)
       const userId = socket.data?.userId;
       if (userId) {
-        await storage.updateUserOnlineStatus(userId, false);
+        await storage.updateUserStatus(userId, { isOnline: false });
         // Broadcast that user is offline
         io.emit('user_status_update', { userId, isOnline: false });
         console.log(`User ${userId} disconnected and is now offline`);

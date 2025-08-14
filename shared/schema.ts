@@ -323,6 +323,51 @@ export const news = pgTable('news', {
   postedBy: integer('posted_by'),
 });
 
+// Teacher Folders for Learning Materials
+export const teacherFolders = pgTable('teacher_folders', {
+  id: serial('id').primaryKey(),
+  teacherId: integer('teacher_id').notNull().references(() => users.id),
+  name: varchar('name', { length: 255 }).notNull(),
+  description: text('description'),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+});
+
+// Folder Documents
+export const folderDocuments = pgTable('folder_documents', {
+  id: serial('id').primaryKey(),
+  folderId: integer('folder_id').notNull().references(() => teacherFolders.id),
+  name: varchar('name', { length: 255 }).notNull(),
+  fileUrl: text('file_url').notNull(),
+  fileType: varchar('file_type', { length: 50 }),
+  fileSize: integer('file_size'),
+  uploadedAt: timestamp('uploaded_at').defaultNow(),
+});
+
+// Folder Section Access - tracks which sections can access which folders
+export const folderSectionAccess = pgTable('folder_section_access', {
+  id: serial('id').primaryKey(),
+  folderId: integer('folder_id').notNull().references(() => teacherFolders.id),
+  sectionId: integer('section_id').notNull().references(() => sections.id),
+  grantedAt: timestamp('granted_at').defaultNow(),
+});
+
+// Insert and Select types for Teacher Folder System
+export const insertTeacherFolderSchema = createInsertSchema(teacherFolders);
+export const selectTeacherFolderSchema = createSelectSchema(teacherFolders);
+export type InsertTeacherFolder = z.infer<typeof insertTeacherFolderSchema>;
+export type TeacherFolder = z.infer<typeof selectTeacherFolderSchema>;
+
+export const insertFolderDocumentSchema = createInsertSchema(folderDocuments);
+export const selectFolderDocumentSchema = createSelectSchema(folderDocuments);
+export type InsertFolderDocument = z.infer<typeof insertFolderDocumentSchema>;
+export type FolderDocument = z.infer<typeof selectFolderDocumentSchema>;
+
+export const insertFolderSectionAccessSchema = createInsertSchema(folderSectionAccess);
+export const selectFolderSectionAccessSchema = createSelectSchema(folderSectionAccess);
+export type InsertFolderSectionAccess = z.infer<typeof insertFolderSectionAccessSchema>;
+export type FolderSectionAccess = z.infer<typeof selectFolderSectionAccessSchema>;
+
 // Events table
 export const events = pgTable('events', {
   id: serial('id').primaryKey(),
@@ -470,6 +515,7 @@ export const usersRelations = relations(users, ({ one, many }) => ({
   teacherAssignments: many(teacherAssignments),
   teacherRegistrations: many(teacherRegistrations),
   teacherEvaluations: many(teacherEvaluations),
+  teacherFolders: many(teacherFolders),
 }));
 
 export const rolesRelations = relations(roles, ({ many }) => ({
@@ -513,6 +559,7 @@ export const sectionsRelations = relations(sections, ({ one, many }) => ({
   assignments: many(assignments),
   meetings: many(meetings),
   teacherAssignments: many(teacherAssignments),
+  folderSectionAccess: many(folderSectionAccess),
 }));
 
 export const enrollmentsRelations = relations(enrollments, ({ one }) => ({
@@ -743,6 +790,34 @@ export const insertMessageSchema = createInsertSchema(messages).omit({ id: true,
 export const selectMessageSchema = createSelectSchema(messages);
 export const insertUserStatusSchema = createInsertSchema(userStatus);
 export const selectUserStatusSchema = createSelectSchema(userStatus);
+
+// Teacher Folder System Relations
+export const teacherFoldersRelations = relations(teacherFolders, ({ one, many }) => ({
+  teacher: one(users, {
+    fields: [teacherFolders.teacherId],
+    references: [users.id],
+  }),
+  documents: many(folderDocuments),
+  sectionAccess: many(folderSectionAccess),
+}));
+
+export const folderDocumentsRelations = relations(folderDocuments, ({ one }) => ({
+  folder: one(teacherFolders, {
+    fields: [folderDocuments.folderId],
+    references: [teacherFolders.id],
+  }),
+}));
+
+export const folderSectionAccessRelations = relations(folderSectionAccess, ({ one }) => ({
+  folder: one(teacherFolders, {
+    fields: [folderSectionAccess.folderId],
+    references: [teacherFolders.id],
+  }),
+  section: one(sections, {
+    fields: [folderSectionAccess.sectionId],
+    references: [sections.id],
+  }),
+}));
 
 // Inferred types
 export type User = typeof users.$inferSelect;
