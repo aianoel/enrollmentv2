@@ -1328,7 +1328,7 @@ export function registerRoutes(app: Express): Server {
     socket.on('join_user', async (userId) => {
       socket.join(`user_${userId}`);
       socket.data = { userId }; // Store user ID in socket data for disconnect handling
-      await storage.updateUserStatus(userId, { isOnline: true });
+      await storage.updateUserOnlineStatus(userId, true);
       
       // Broadcast that user is online
       io.emit('user_status_update', { userId, isOnline: true });
@@ -1350,7 +1350,10 @@ export function registerRoutes(app: Express): Server {
         // Emit to recipient only (private messaging)
         io.to(`user_${data.recipientId}`).emit('new_message', {
           ...message,
-          senderName: sender ? `${sender.firstName} ${sender.lastName}` : 'Unknown'
+          senderName: sender ? 
+            (sender.firstName && sender.lastName ? 
+              `${sender.firstName} ${sender.lastName}` : 
+              sender.name || `User ${sender.id}`) : 'Unknown'
         });
         
         // Confirm to sender only
@@ -1387,7 +1390,7 @@ export function registerRoutes(app: Express): Server {
       // Get the user ID from the socket (you might need to store this when user joins)
       const userId = socket.data?.userId;
       if (userId) {
-        await storage.updateUserStatus(userId, { isOnline: false });
+        await storage.updateUserOnlineStatus(userId, false);
         // Broadcast that user is offline
         io.emit('user_status_update', { userId, isOnline: false });
         console.log(`User ${userId} disconnected and is now offline`);

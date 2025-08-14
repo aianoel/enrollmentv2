@@ -2018,6 +2018,178 @@ export class DatabaseStorage implements IStorage {
   async getMeetings(teacherId?: number): Promise<TeacherMeeting[]> {
     return this.getTeacherMeetings(teacherId);
   }
+
+  // Chat System Methods
+  async getUserConversations(userId: number): Promise<any[]> {
+    try {
+      const conversations = [];
+      
+      // Get all messages involving this user using raw SQL since table structure varies
+      const result = await db.execute(sql`
+        SELECT * FROM messages 
+        WHERE sender_id = ${userId} OR receiver_id = ${userId}
+        ORDER BY sent_at DESC
+      `);
+      
+      const userMessages = result.rows as any[];
+      
+      // Get unique partner IDs
+      const partnerIds = new Set();
+      userMessages.forEach((message: any) => {
+        if (message.sender_id === userId && message.receiver_id) {
+          partnerIds.add(message.receiver_id);
+        } else if (message.receiver_id === userId && message.sender_id) {
+          partnerIds.add(message.sender_id);
+        }
+      });
+      
+      // Build conversations
+      for (const partnerId of Array.from(partnerIds)) {
+        const partnerIdNum = Number(partnerId);
+        if (partnerIdNum !== userId) {
+          const partner = await this.getUser(partnerIdNum);
+          if (partner) {
+            const conversationMessages = userMessages.filter((m: any) => 
+              (m.sender_id === userId && m.receiver_id === partnerIdNum) ||
+              (m.sender_id === partnerIdNum && m.receiver_id === userId)
+            ).sort((a: any, b: any) => new Date(b.sent_at).getTime() - new Date(a.sent_at).getTime());
+            
+            const lastMessage = conversationMessages[0];
+            const unreadCount = conversationMessages.filter((m: any) => 
+              m.sender_id === partnerIdNum && !m.is_read
+            ).length;
+            
+            conversations.push({
+              id: `conv_${Math.min(partnerIdNum, userId)}_${Math.max(partnerIdNum, userId)}`,
+              conversationType: "private",
+              partnerId: partnerIdNum,
+              partnerName: partner.name || `User ${partner.id}`,
+              partnerRole: 'user',
+              lastMessage: lastMessage?.message || '',
+              lastMessageTime: lastMessage?.sent_at,
+              unreadCount,
+              createdAt: lastMessage?.sent_at || new Date().toISOString()
+            });
+          }
+        }
+      }
+      
+      return conversations;
+    } catch (error) {
+      console.error('Error getting user conversations:', error);
+      return [];
+    }
+  }
+
+  async getConversationMessages(userId: number, partnerId: number, limit: number = 50): Promise<any[]> {
+    try {
+      // Use raw SQL to get messages between users
+      const result = await db.execute(sql`
+        SELECT * FROM messages 
+        WHERE (sender_id = ${userId} AND receiver_id = ${partnerId}) 
+           OR (sender_id = ${partnerId} AND receiver_id = ${userId})
+        ORDER BY sent_at ASC
+        LIMIT ${limit}
+      `);
+      
+      return result.rows.map((msg: any) => ({
+        id: msg.id,
+        senderId: msg.sender_id,
+        recipientId: msg.receiver_id,
+        messageText: msg.message,
+        createdAt: msg.sent_at,
+        isRead: msg.is_read
+      }));
+    } catch (error) {
+      console.error('Error getting conversation messages:', error);
+      return [];
+    }
+  }
+
+  async createMessage(data: any): Promise<any> {
+    try {
+      // Use raw SQL since the schema mapping is inconsistent
+      const result = await db.execute(sql`
+        INSERT INTO messages (sender_id, receiver_id, message, sent_at, is_read) 
+        VALUES (${data.senderId}, ${data.recipientId}, ${data.messageText || data.content || data.message}, NOW(), false) 
+        RETURNING *
+      `);
+      const message = result.rows[0] as any;
+      
+      return {
+        id: message.id,
+        senderId: message.sender_id,
+        recipientId: message.receiver_id,
+        messageText: message.message,
+        createdAt: message.sent_at,
+        isRead: message.is_read
+      };
+    } catch (error) {
+      console.error('Error creating message:', error);
+      throw error;
+    }
+  }
+
+  async markMessageAsRead(messageId: number): Promise<void> {
+    try {
+      await db.execute(sql`
+        UPDATE messages SET is_read = true WHERE id = ${messageId}
+      `);
+    } catch (error) {
+      console.error('Error marking message as read:', error);
+    }
+  }
+
+  async updateUserOnlineStatus(userId: number, isOnline: boolean): Promise<void> {
+    try {
+      // Use raw SQL since we need to work with the actual table structure
+      await db.execute(sql`
+        INSERT INTO online_status (user_id, is_online, last_seen)
+        VALUES (${userId}, ${isOnline}, NOW())
+        ON CONFLICT (user_id) 
+        DO UPDATE SET 
+          is_online = ${isOnline},
+          last_seen = NOW()
+      `);
+    } catch (error) {
+      console.error('Error updating user online status:', error);
+    }
+  }
+
+  async getOnlineUsers(): Promise<any[]> {
+    try {
+      // Get users with their online status from the online_status table
+      const result = await db.execute(sql`
+        SELECT 
+          u.id, 
+          u.first_name, 
+          u.last_name, 
+          u.name,
+          u.email, 
+          u.role_id,
+          COALESCE(os.is_online, false) as is_online,
+          COALESCE(os.last_seen, u.created_at) as last_seen
+        FROM users u
+        LEFT JOIN online_status os ON u.id = os.user_id
+        WHERE COALESCE(os.is_online, false) = true
+        ORDER BY COALESCE(u.first_name, u.name), COALESCE(u.last_name, '')
+      `);
+      
+      return result.rows.map((row: any) => ({
+        id: row.id,
+        name: row.first_name && row.last_name ? 
+          `${row.first_name} ${row.last_name}` : 
+          row.name || `User ${row.id}`,
+        email: row.email,
+        role: row.role_id,
+        isOnline: row.is_online,
+        lastSeen: row.last_seen
+      }));
+    } catch (error) {
+      console.error('Error getting online users:', error);
+      return [];
+    }
+  }
 }
 
 export const storage = new DatabaseStorage();

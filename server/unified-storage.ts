@@ -74,6 +74,14 @@ export interface IStorage {
   getAcademicStats(): Promise<any>;
   getAcademicCurriculumData(): Promise<any>;
   getAcademicTeacherPerformance(): Promise<any>;
+  
+  // Chat System Methods
+  getUserConversations(userId: number): Promise<any[]>;
+  getConversationMessages(userId: number, partnerId: number, limit?: number): Promise<any[]>;
+  createMessage(data: any): Promise<any>;
+  markMessageAsRead(messageId: number): Promise<void>;
+  updateUserOnlineStatus(userId: number, isOnline: boolean): Promise<void>;
+  getOnlineUsers(): Promise<any[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -685,7 +693,9 @@ export class DatabaseStorage implements IStorage {
               id: `conv_${Math.min(partnerId, userId)}_${Math.max(partnerId, userId)}`,
               conversationType: "private",
               partnerId,
-              partnerName: `${partner.firstName} ${partner.lastName}`,
+              partnerName: partner.firstName && partner.lastName ? 
+                `${partner.firstName} ${partner.lastName}` : 
+                partner.name || `User ${partner.id}`,
               partnerRole: 'user',
               lastMessage: lastMessage?.message || '',
               lastMessageTime: lastMessage?.sentAt,
@@ -758,21 +768,15 @@ export class DatabaseStorage implements IStorage {
 
   async updateUserOnlineStatus(userId: number, isOnline: boolean): Promise<void> {
     try {
-      // Check if onlineStatus record exists
-      const existing = await db.select().from(onlineStatus).where(eq(onlineStatus.userId, userId)).limit(1);
-      
-      if (existing.length > 0) {
-        await db.update(onlineStatus).set({
-          isOnline,
-          lastSeen: new Date()
-        }).where(eq(onlineStatus.userId, userId));
-      } else {
-        await db.insert(onlineStatus).values({
-          userId,
-          isOnline,
-          lastSeen: new Date()
-        });
-      }
+      // Use raw SQL since we need to work with the actual table structure
+      const result = await db.execute(sql`
+        INSERT INTO online_status (user_id, is_online, last_seen)
+        VALUES (${userId}, ${isOnline}, NOW())
+        ON CONFLICT (user_id) 
+        DO UPDATE SET 
+          is_online = ${isOnline},
+          last_seen = NOW()
+      `);
     } catch (error) {
       console.error('Error updating user online status:', error);
     }
@@ -780,7 +784,7 @@ export class DatabaseStorage implements IStorage {
 
   async getOnlineUsers(): Promise<any[]> {
     try {
-      // Get users with their online status from the onlineStatus table
+      // Get users with their online status from the online_status table
       const result = await db.execute(sql`
         SELECT 
           u.id, 
@@ -793,12 +797,14 @@ export class DatabaseStorage implements IStorage {
         FROM users u
         LEFT JOIN online_status os ON u.id = os.user_id
         WHERE COALESCE(os.is_online, false) = true
-        ORDER BY u.first_name, u.last_name
+        ORDER BY COALESCE(u.first_name, u.name), COALESCE(u.last_name, '')
       `);
       
       return result.rows.map((row: any) => ({
         id: row.id,
-        name: row.first_name + ' ' + row.last_name,
+        name: row.first_name && row.last_name ? 
+          `${row.first_name} ${row.last_name}` : 
+          row.name || `User ${row.id}`,
         email: row.email,
         role: row.role_id,
         isOnline: row.is_online,
