@@ -19,7 +19,7 @@ import {
   roles, users, sections, subjects, grades, tasks, meetings, modules,
   announcements, events, news, messages, onlineStatus, fees, payments,
   guidanceReports, enrollmentProgress, notifications, enrollmentApplications,
-  enrollmentDocuments, taskQuestions, taskSubmissions, teacherAssignments,
+  enrollmentDocuments, taskQuestions, taskSubmissions, teacherSubjects,
   schedules, learningModules
 } from "@shared/unified-schema";
 import { db } from "./db";
@@ -820,6 +820,107 @@ export class DatabaseStorage implements IStorage {
       return userNotifications;
     } catch (error) {
       console.error('Error getting notifications:', error);
+      return [];
+    }
+  }
+
+  // Academic Coordinator Methods
+  async createSubject(data: any): Promise<any> {
+    try {
+      const result = await db.execute(sql`
+        INSERT INTO subjects (name, description, code, units)
+        VALUES (${data.name}, ${data.description}, ${data.code}, ${data.units || 3})
+        RETURNING *
+      `);
+      return result.rows[0];
+    } catch (error) {
+      console.error('Error creating subject:', error);
+      throw error;
+    }
+  }
+
+  async createSection(data: any): Promise<any> {
+    try {
+      const result = await db.execute(sql`
+        INSERT INTO sections (name, grade_level, adviser_id, capacity, school_year)
+        VALUES (${data.name}, ${data.gradeLevel}, ${data.adviserId}, ${data.capacity || 40}, ${data.schoolYear})
+        RETURNING *
+      `);
+      return result.rows[0];
+    } catch (error) {
+      console.error('Error creating section:', error);
+      throw error;
+    }
+  }
+
+  async assignTeacherToSubject(data: any): Promise<any> {
+    try {
+      const result = await db.execute(sql`
+        INSERT INTO teacher_subjects (teacher_id, subject_id, section_id, school_year, semester)
+        VALUES (${data.teacherId}, ${data.subjectId}, ${data.sectionId}, ${data.schoolYear}, ${data.semester})
+        RETURNING *
+      `);
+      return result.rows[0];
+    } catch (error) {
+      console.error('Error assigning teacher to subject:', error);
+      throw error;
+    }
+  }
+
+  async createSchedule(data: any): Promise<any> {
+    try {
+      const result = await db.execute(sql`
+        INSERT INTO schedules (teacher_id, subject_id, section_id, day_of_week, start_time, end_time, room)
+        VALUES (${data.teacherId}, ${data.subjectId}, ${data.sectionId}, ${data.dayOfWeek}, ${data.startTime}, ${data.endTime}, ${data.room})
+        RETURNING *
+      `);
+      return result.rows[0];
+    } catch (error) {
+      console.error('Error creating schedule:', error);
+      throw error;
+    }
+  }
+
+  async getTeacherAssignments(): Promise<any[]> {
+    try {
+      const result = await db.execute(sql`
+        SELECT 
+          ts.*,
+          u.first_name || ' ' || u.last_name as teacher_name,
+          subj.name as subject_name,
+          sec.name as section_name
+        FROM teacher_subjects ts
+        LEFT JOIN users u ON ts.teacher_id = u.id
+        LEFT JOIN subjects subj ON ts.subject_id = subj.id
+        LEFT JOIN sections sec ON ts.section_id = sec.id
+        ORDER BY u.first_name, subj.name
+      `);
+      return result.rows;
+    } catch (error) {
+      console.error('Error getting teacher assignments:', error);
+      return [];
+    }
+  }
+
+  async getTeacherSchedules(teacherId?: number): Promise<any[]> {
+    try {
+      const whereClause = teacherId ? `WHERE s.teacher_id = ${teacherId}` : '';
+      const result = await db.execute(sql.raw(`
+        SELECT 
+          s.*, 
+          u.first_name || ' ' || u.last_name as teacher_name,
+          subj.name as subject_name,
+          sec.name as section_name
+        FROM schedules s
+        LEFT JOIN users u ON s.teacher_id = u.id
+        LEFT JOIN subjects subj ON s.subject_id = subj.id
+        LEFT JOIN sections sec ON s.section_id = sec.id
+        ${whereClause}
+        ORDER BY s.day_of_week, s.start_time
+      `));
+      return result.rows;
+    } catch (error) {
+      console.error('Error getting teacher schedules:', error);
       return [];
     }
   }

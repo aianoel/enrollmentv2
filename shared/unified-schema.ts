@@ -29,13 +29,45 @@ export const sections = pgTable("sections", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
   gradeLevel: text("grade_level").notNull(),
+  adviserId: integer("adviser_id").references(() => users.id, { onDelete: "set null" }),
+  capacity: integer("capacity").default(40),
+  schoolYear: text("school_year").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
 });
 
 export const subjects = pgTable("subjects", {
   id: serial("id").primaryKey(),
-  sectionId: integer("section_id").references(() => sections.id, { onDelete: "cascade" }),
   name: text("name").notNull(),
   description: text("description"),
+  code: text("code").notNull().unique(),
+  units: integer("units").default(3),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Teacher-Subject Assignments
+export const teacherSubjects = pgTable("teacher_subjects", {
+  id: serial("id").primaryKey(),
+  teacherId: integer("teacher_id").references(() => users.id, { onDelete: "cascade" }),
+  subjectId: integer("subject_id").references(() => subjects.id, { onDelete: "cascade" }),
+  sectionId: integer("section_id").references(() => sections.id, { onDelete: "cascade" }),
+  schoolYear: text("school_year").notNull(),
+  semester: text("semester").notNull(),
+  assignedAt: timestamp("assigned_at").defaultNow(),
+});
+
+// Teacher Schedules
+export const schedules = pgTable("schedules", {
+  id: serial("id").primaryKey(),
+  teacherId: integer("teacher_id").references(() => users.id, { onDelete: "cascade" }),
+  subjectId: integer("subject_id").references(() => subjects.id, { onDelete: "cascade" }),
+  sectionId: integer("section_id").references(() => sections.id, { onDelete: "cascade" }),
+  dayOfWeek: text("day_of_week").notNull(), // Monday, Tuesday, etc.
+  startTime: text("start_time").notNull(), // HH:MM format
+  endTime: text("end_time").notNull(), // HH:MM format
+  room: text("room"),
+  schoolYear: text("school_year").notNull(),
+  semester: text("semester").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
 });
 
 // =====================
@@ -244,15 +276,7 @@ export const taskSubmissions = pgTable("task_submissions", {
   gradedAt: timestamp("graded_at"),
 });
 
-// Teacher Assignments
-export const teacherAssignments = pgTable("teacher_assignments", {
-  id: serial("id").primaryKey(),
-  teacherId: integer("teacher_id").references(() => users.id, { onDelete: "cascade" }),
-  sectionId: integer("section_id").references(() => sections.id, { onDelete: "cascade" }),
-  subjectId: integer("subject_id").references(() => subjects.id, { onDelete: "cascade" }),
-  assignmentType: text("assignment_type").default("subject"), // "subject" or "advisory"
-  createdAt: timestamp("created_at").defaultNow(),
-});
+
 
 // Notifications
 export const notifications = pgTable("notifications", {
@@ -266,18 +290,7 @@ export const notifications = pgTable("notifications", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-// Schedules
-export const schedules = pgTable("schedules", {
-  id: serial("id").primaryKey(),
-  teacherId: integer("teacher_id").references(() => users.id, { onDelete: "cascade" }),
-  sectionId: integer("section_id").references(() => sections.id, { onDelete: "cascade" }),
-  subjectId: integer("subject_id").references(() => subjects.id, { onDelete: "cascade" }),
-  dayOfWeek: text("day_of_week").notNull(),
-  startTime: text("start_time").notNull(),
-  endTime: text("end_time").notNull(),
-  room: text("room"),
-  createdAt: timestamp("created_at").defaultNow(),
-});
+
 
 // Learning Modules
 export const learningModules = pgTable("learning_modules", {
@@ -370,6 +383,16 @@ export type Payment = typeof payments.$inferSelect;
 export const insertGuidanceReportSchema = createInsertSchema(guidanceReports);
 export type InsertGuidanceReport = z.infer<typeof insertGuidanceReportSchema>;
 export type GuidanceReport = typeof guidanceReports.$inferSelect;
+
+// Teacher Subjects
+export const insertTeacherSubjectSchema = createInsertSchema(teacherSubjects);
+export type InsertTeacherSubject = z.infer<typeof insertTeacherSubjectSchema>;
+export type TeacherSubject = typeof teacherSubjects.$inferSelect;
+
+// Schedules
+export const insertScheduleSchema = createInsertSchema(schedules);
+export type InsertSchedule = z.infer<typeof insertScheduleSchema>;
+export type Schedule = typeof schedules.$inferSelect;
 
 // Grades
 export const insertGradeSchema = createInsertSchema(grades);

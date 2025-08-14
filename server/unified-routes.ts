@@ -481,7 +481,7 @@ export function registerRoutes(app: Express): Server {
           s.id, 
           s.name, 
           s.grade_level,
-          COALESCE(u.first_name || ' ' || u.last_name, u.name) as adviser_name
+          COALESCE(u.first_name || ' ' || u.last_name, 'No Adviser') as adviser_name
         FROM sections s
         LEFT JOIN users u ON s.adviser_id = u.id
         ORDER BY s.grade_level, s.name
@@ -499,6 +499,89 @@ export function registerRoutes(app: Express): Server {
       res.json(result.rows || []);
     } catch (error) {
       console.error("Error fetching subjects:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  // Academic Coordinator Routes
+  app.post("/api/academic/subjects", async (req, res) => {
+    try {
+      const subject = await storage.createSubject(req.body);
+      res.status(201).json(subject);
+    } catch (error) {
+      console.error("Error creating subject:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.post("/api/academic/sections", async (req, res) => {
+    try {
+      const section = await storage.createSection(req.body);
+      res.status(201).json(section);
+    } catch (error) {
+      console.error("Error creating section:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.post("/api/academic/assign-teacher", async (req, res) => {
+    try {
+      const assignment = await storage.assignTeacherToSubject(req.body);
+      res.status(201).json(assignment);
+    } catch (error) {
+      console.error("Error assigning teacher:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.post("/api/academic/schedules", async (req, res) => {
+    try {
+      const schedule = await storage.createSchedule(req.body);
+      res.status(201).json(schedule);
+    } catch (error) {
+      console.error("Error creating schedule:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.get("/api/academic/teacher-assignments", async (req, res) => {
+    try {
+      const assignments = await storage.getTeacherAssignments();
+      res.json(assignments);
+    } catch (error) {
+      console.error("Error fetching teacher assignments:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.get("/api/academic/teacher-schedules", async (req, res) => {
+    try {
+      const teacherId = req.query.teacherId ? parseInt(req.query.teacherId as string) : undefined;
+      const schedules = await storage.getTeacherSchedules(teacherId);
+      res.json(schedules);
+    } catch (error) {
+      console.error("Error fetching teacher schedules:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.get("/api/academic/teachers", async (req, res) => {
+    try {
+      const result = await db.execute(`
+        SELECT id, first_name, last_name, email, role_id 
+        FROM users 
+        WHERE role_id = 4 
+        ORDER BY first_name, last_name
+      `);
+      const teachers = result.rows.map((teacher: any) => ({
+        id: teacher.id,
+        name: `${teacher.first_name} ${teacher.last_name}`,
+        email: teacher.email,
+        roleId: teacher.role_id
+      }));
+      res.json(teachers);
+    } catch (error) {
+      console.error("Error fetching teachers:", error);
       res.status(500).json({ error: "Internal server error" });
     }
   });

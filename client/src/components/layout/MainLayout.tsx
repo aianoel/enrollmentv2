@@ -21,7 +21,7 @@ import { EnhancedRegistrarDashboard } from '../../pages/registrar/EnhancedRegist
 import { AccountingDashboard } from '../../pages/accounting/AccountingDashboard';
 import { EnhancedAccountingDashboard } from '../../pages/accounting/EnhancedAccountingDashboard';
 import { PrincipalDashboard } from '../../pages/principal/PrincipalDashboard';
-import { AcademicCoordinatorDashboard } from '../../pages/academic/AcademicCoordinatorDashboard';
+import { EnhancedAcademicDashboard } from '../../pages/academic/EnhancedAcademicDashboard';
 import { StudentPaymentPage } from '../../pages/student/StudentPaymentPage';
 import { FacebookStyleChat } from '../chat/FacebookStyleChat';
 import { AdminControlPanel } from '../admin/AdminControlSimple';
@@ -59,7 +59,7 @@ export const MainLayout: React.FC = () => {
         case 'principal':
           return <PrincipalDashboard />;
         case 'academic_coordinator':
-          return <AcademicCoordinatorDashboard />;
+          return <EnhancedAcademicDashboard />;
         case 'teacher':
           return <EnhancedTeacherDashboard />;
         case 'student':
