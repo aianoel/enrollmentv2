@@ -116,40 +116,60 @@ export function AdminDashboard() {
   return (
     <DashboardLayout>
       {/* Header with navigation tabs */}
-      <div className="bg-white border-b border-gray-200">
+      <div className="bg-white border-b border-gray-200 shadow-sm">
         <div className="flex items-center justify-between p-6">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
             <p className="text-gray-600">Comprehensive school management and administrative controls</p>
           </div>
-          <div className="flex items-center space-x-2">
-            <Button variant="outline" size="sm">
+          <div className="flex items-center space-x-4">
+            <Button variant="outline" size="sm" className="border-gray-300 text-gray-700 hover:bg-gray-50">
               Source code
             </Button>
-            <div className="flex items-center space-x-1">
-              <Bell className="h-4 w-4 text-gray-400" />
-              <span className="text-sm text-gray-500">Admin User</span>
-              <span className="text-xs text-gray-400">Administrator</span>
+            <div className="flex items-center space-x-3 px-3 py-2 bg-gray-50 rounded-lg">
+              <Bell className="h-5 w-5 text-gray-600" />
+              <div className="flex flex-col">
+                <span className="text-sm font-medium text-gray-900">Admin User</span>
+                <span className="text-xs text-gray-500">Administrator</span>
+              </div>
             </div>
           </div>
         </div>
         
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-8 bg-gray-100">
-            <TabsTrigger value="overview" className="text-sm">Home</TabsTrigger>
-            <TabsTrigger value="users" className="text-sm">Users</TabsTrigger>
-            <TabsTrigger value="enrollment" className="text-sm">Enrollment</TabsTrigger>
-            <TabsTrigger value="academic" className="text-sm">Academic</TabsTrigger>
-            <TabsTrigger value="content" className="text-sm">Content</TabsTrigger>
-            <TabsTrigger value="monitoring" className="text-sm">Reports</TabsTrigger>
-            <TabsTrigger value="communication" className="text-sm">Chat</TabsTrigger>
-            <TabsTrigger value="settings" className="text-sm">Settings</TabsTrigger>
-          </TabsList>
-        </Tabs>
+        <div className="px-6 pb-0">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="grid w-full grid-cols-8 bg-gray-50 border border-gray-200">
+              <TabsTrigger value="overview" className="text-sm font-medium data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:border-blue-200">
+                Home
+              </TabsTrigger>
+              <TabsTrigger value="users" className="text-sm font-medium data-[state=active]:bg-white data-[state=active]:text-blue-600">
+                Users
+              </TabsTrigger>
+              <TabsTrigger value="enrollment" className="text-sm font-medium data-[state=active]:bg-white data-[state=active]:text-blue-600">
+                Enrollment
+              </TabsTrigger>
+              <TabsTrigger value="academic" className="text-sm font-medium data-[state=active]:bg-white data-[state=active]:text-blue-600">
+                Academic
+              </TabsTrigger>
+              <TabsTrigger value="content" className="text-sm font-medium data-[state=active]:bg-white data-[state=active]:text-blue-600">
+                Content
+              </TabsTrigger>
+              <TabsTrigger value="monitoring" className="text-sm font-medium data-[state=active]:bg-white data-[state=active]:text-blue-600">
+                Reports
+              </TabsTrigger>
+              <TabsTrigger value="communication" className="text-sm font-medium data-[state=active]:bg-white data-[state=active]:text-blue-600">
+                Chat
+              </TabsTrigger>
+              <TabsTrigger value="settings" className="text-sm font-medium data-[state=active]:bg-white data-[state=active]:text-blue-600">
+                Settings
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </div>
       </div>
 
       {/* Stats Cards Row */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-6">
+      <div className="p-6 grid gap-4 md:grid-cols-2 lg:grid-cols-6">
         <ModernStatCard 
           title="New Students" 
           value={43} 
@@ -200,7 +220,8 @@ export function AdminDashboard() {
         />
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+      <div className="p-6">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <TabsContent value="overview" className="space-y-6">
           {/* Main Content Grid */}
           <div className="grid gap-6 lg:grid-cols-3">
@@ -334,7 +355,8 @@ export function AdminDashboard() {
         <TabsContent value="settings" className="space-y-6">
           <SystemConfiguration />
         </TabsContent>
-      </Tabs>
+        </Tabs>
+      </div>
     </DashboardLayout>
   );
 }
