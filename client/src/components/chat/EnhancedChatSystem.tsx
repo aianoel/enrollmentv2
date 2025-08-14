@@ -60,6 +60,7 @@ import {
   Paperclip,
   Smile,
   X,
+  ArrowLeft,
 } from "lucide-react";
 import type { User, Conversation, Message, UserStatus } from "@shared/schema";
 
@@ -344,9 +345,9 @@ export function EnhancedChatSystem() {
   if (!user) return null;
 
   return (
-    <div className="flex h-[600px] border rounded-lg overflow-hidden bg-background">
+    <div className="flex flex-col lg:flex-row h-[500px] sm:h-[600px] border rounded-lg overflow-hidden bg-background">
       {/* Conversations Sidebar */}
-      <div className="w-80 border-r bg-muted/30">
+      <div className={`w-full lg:w-80 lg:border-r bg-muted/30 flex-shrink-0 ${selectedConversation ? 'hidden lg:block' : ''}`}>
         <div className="p-4 border-b">
           <div className="flex items-center justify-between mb-3">
             <h2 className="font-semibold">Messages</h2>
@@ -534,13 +535,22 @@ export function EnhancedChatSystem() {
       </div>
 
       {/* Chat Area */}
-      <div className="flex-1 flex flex-col">
+      <div className={`flex-1 flex flex-col ${!selectedConversation ? 'hidden lg:flex' : ''}`}>
         {selectedConversation ? (
           <>
             {/* Chat Header */}
             <div className="p-4 border-b">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
+                  {/* Back button for mobile */}
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="lg:hidden"
+                    onClick={() => setSelectedConversation(null)}
+                  >
+                    <ArrowLeft className="h-4 w-4" />
+                  </Button>
                   <Avatar>
                     <AvatarFallback>
                       {selectedConversation.conversationType === 'group' ? (
@@ -603,7 +613,13 @@ export function EnhancedChatSystem() {
                             </Badge>
                           </p>
                         )}
-                        <p className="text-sm">{message.messageText}</p>
+                        <p className="text-sm">
+                          {message.messageText || message.content || message.message || 
+                           (() => {
+                             console.log('Message debug:', message);
+                             return 'No content';
+                           })()}
+                        </p>
                         <p className={`text-xs mt-1 ${
                           message.senderId === user.id ? 'text-primary-foreground/70' : 'text-muted-foreground'
                         }`}>
