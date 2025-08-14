@@ -432,17 +432,7 @@ export class DatabaseStorage implements IStorage {
     await db.delete(roles).where(eq(roles.id, id));
   }
 
-  // Subject management methods
-  async getSubjects(): Promise<any[]> {
-    try {
-      // Use raw SELECT to work with actual table structure
-      const results = await db.execute(sql`SELECT id, name, description, section_id FROM subjects`);
-      return results.rows;
-    } catch (error) {
-      console.error('Error fetching subjects:', error);
-      return [];
-    }
-  }
+
 
   async createSubject(insertSubject: any): Promise<any> {
     const [subject] = await db.insert(subjects).values(insertSubject).returning();
@@ -613,9 +603,16 @@ export class DatabaseStorage implements IStorage {
     await db.delete(sections).where(eq(sections.id, id));
   }
 
-  // Subject management methods
+  // Subject management methods  
   async getSubjects(): Promise<Subject[]> {
-    return await db.select().from(subjects);
+    try {
+      // Work with actual database columns: id, name, description, section_id
+      const results = await db.execute(sql`SELECT id, name, description, section_id FROM subjects`);
+      return results.rows as Subject[];
+    } catch (error) {
+      console.error('Error fetching subjects:', error);
+      return [];
+    }
   }
 
   async createSubject(insertSubject: InsertSubject): Promise<Subject> {
