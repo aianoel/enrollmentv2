@@ -103,9 +103,12 @@ export function EnhancedChatSystem() {
   });
 
   const { data: messages = [] } = useQuery({
-    queryKey: ["/api/chat/conversations", selectedConversation?.id, "messages"],
-    queryFn: () => apiRequest(`/api/chat/conversations/${selectedConversation?.id}/messages`),
-    enabled: !!selectedConversation?.id,
+    queryKey: ["/api/chat/messages", user?.id, (selectedConversation as any)?.partnerId],
+    queryFn: () => {
+      const partnerId = (selectedConversation as any)?.partnerId;
+      return apiRequest(`/api/chat/messages?userId1=${user?.id}&userId2=${partnerId}`);
+    },
+    enabled: !!(selectedConversation as any)?.partnerId && !!user?.id,
     refetchInterval: 5000 // Fallback polling
   });
 
@@ -141,7 +144,9 @@ export function EnhancedChatSystem() {
   const sendMessageMutation = useMutation({
     mutationFn: (messageData: any) => apiRequest("/api/chat/messages", "POST", messageData),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/chat/conversations", selectedConversation?.id, "messages"] });
+      const partnerId = (selectedConversation as any)?.partnerId;
+      queryClient.invalidateQueries({ queryKey: ["/api/chat/messages", user?.id, partnerId] });
+      queryClient.invalidateQueries({ queryKey: ["/api/chat/conversations", user?.id] });
       setMessageText("");
     },
   });
@@ -158,11 +163,11 @@ export function EnhancedChatSystem() {
 
     // Listen for new messages
     newSocket.on('new_message', (message: Message) => {
-      queryClient.invalidateQueries({ queryKey: ["/api/chat/conversations", message.conversationId, "messages"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/chat/messages"] });
       queryClient.invalidateQueries({ queryKey: ["/api/chat/conversations"] });
       
-      // Show notification if message is not from current user and not in current conversation
-      if (message.senderId !== user.id && message.conversationId !== selectedConversation?.id) {
+      // Show notification if message is not from current user
+      if (message.senderId !== user.id) {
         const sender = users.find((u: User) => u.id === message.senderId);
         toast({
           title: `New message from ${sender?.name || 'Unknown'}`,
@@ -260,19 +265,26 @@ export function EnhancedChatSystem() {
   const handleSendMessage = () => {
     if (!messageText.trim() || !selectedConversation || !user) return;
 
+    // Extract recipient ID from conversation
+    const recipientId = (selectedConversation as any).partnerId;
+    
+    if (!recipientId) {
+      toast({
+        title: "Error",
+        description: "Cannot identify message recipient",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const messageData = {
-      conversationId: selectedConversation.id,
       senderId: user.id,
+      recipientId: recipientId,
       messageText: messageText.trim(),
     };
 
-    // Send via Socket.IO for real-time delivery
-    if (socket) {
-      socket.emit('send_message', messageData);
-    } else {
-      // Fallback to HTTP API
-      sendMessageMutation.mutate(messageData);
-    }
+    // Send via HTTP API
+    sendMessageMutation.mutate(messageData);
     
     setMessageText("");
     
