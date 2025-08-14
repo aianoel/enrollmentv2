@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+// Removed tabs import as we're using direct navigation now
 import { Button } from "@/components/ui/button";
 import {
   Users,
@@ -25,13 +25,7 @@ import {
 import { DashboardBackground } from '@/components/ui/dashboard-background';
 import { EnhancedCard, StatCard } from '@/components/ui/enhanced-card';
 import { StatCard as ModernStatCard, ActivityFeed, ChartCard, ProgressCard, SimpleDonutChart, DashboardLayout } from '@/components/ui/modern-dashboard';
-import { UserManagement } from "./UserManagement";
-import { EnrollmentManagement } from "./EnrollmentManagement";
-import { AcademicSetup } from "./AcademicSetup";
-import { ContentManagement } from "./ContentManagement";
-import { MonitoringReports } from "./MonitoringReports";
-import { CommunicationTools } from "./CommunicationTools";
-import { SystemConfiguration } from "./SystemConfiguration";
+// Removed component imports as we're using navigation to separate pages now
 
 interface DashboardStats {
   totalUsers: number;
@@ -40,8 +34,12 @@ interface DashboardStats {
   totalSections: number;
 }
 
-export function AdminDashboard() {
-  const [activeTab, setActiveTab] = useState("overview");
+interface AdminDashboardProps {
+  onNavigate?: (section: string) => void;
+}
+
+export function AdminDashboard({ onNavigate }: AdminDashboardProps = {}) {
+  // Using navigation callback for proper routing
 
   // Fetch dashboard stats
   const { data: dashboardStats, isLoading: statsLoading } = useQuery<DashboardStats>({
@@ -137,58 +135,90 @@ export function AdminDashboard() {
         </div>
         
         <div className="px-6 pb-0">
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-8 bg-gray-50 border border-gray-200">
-              <TabsTrigger value="overview" className="text-sm font-medium data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:border-blue-200">
+          <nav className="w-full">
+            <div className="grid w-full grid-cols-8 bg-gray-50 border border-gray-200 rounded-lg">
+              <button 
+                onClick={() => onNavigate?.('dashboard')}
+                className="px-4 py-2 text-sm font-medium bg-white text-blue-600 border-blue-200 rounded-l-lg border-r"
+                data-testid="nav-home"
+              >
                 Home
-              </TabsTrigger>
-              <TabsTrigger value="users" className="text-sm font-medium data-[state=active]:bg-white data-[state=active]:text-blue-600">
+              </button>
+              <button 
+                onClick={() => onNavigate?.('admin-users')}
+                className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 border-r"
+                data-testid="nav-users"
+              >
                 Users
-              </TabsTrigger>
-              <TabsTrigger value="enrollment" className="text-sm font-medium data-[state=active]:bg-white data-[state=active]:text-blue-600">
+              </button>
+              <button 
+                onClick={() => onNavigate?.('admin-enrollment')}
+                className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 border-r"
+                data-testid="nav-enrollment"
+              >
                 Enrollment
-              </TabsTrigger>
-              <TabsTrigger value="academic" className="text-sm font-medium data-[state=active]:bg-white data-[state=active]:text-blue-600">
+              </button>
+              <button 
+                onClick={() => onNavigate?.('admin-academic')}
+                className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 border-r"
+                data-testid="nav-academic"
+              >
                 Academic
-              </TabsTrigger>
-              <TabsTrigger value="content" className="text-sm font-medium data-[state=active]:bg-white data-[state=active]:text-blue-600">
+              </button>
+              <button 
+                onClick={() => onNavigate?.('admin-content')}
+                className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 border-r"
+                data-testid="nav-content"
+              >
                 Content
-              </TabsTrigger>
-              <TabsTrigger value="monitoring" className="text-sm font-medium data-[state=active]:bg-white data-[state=active]:text-blue-600">
+              </button>
+              <button 
+                onClick={() => onNavigate?.('admin-reports')}
+                className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 border-r"
+                data-testid="nav-reports"
+              >
                 Reports
-              </TabsTrigger>
-              <TabsTrigger value="communication" className="text-sm font-medium data-[state=active]:bg-white data-[state=active]:text-blue-600">
+              </button>
+              <button 
+                onClick={() => onNavigate?.('admin-communication')}
+                className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 border-r"
+                data-testid="nav-chat"
+              >
                 Chat
-              </TabsTrigger>
-              <TabsTrigger value="settings" className="text-sm font-medium data-[state=active]:bg-white data-[state=active]:text-blue-600">
+              </button>
+              <button 
+                onClick={() => onNavigate?.('admin-settings')}
+                className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-r-lg"
+                data-testid="nav-settings"
+              >
                 Settings
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
+              </button>
+            </div>
+          </nav>
         </div>
       </div>
 
       {/* Stats Cards Row */}
       <div className="p-6 grid gap-4 md:grid-cols-2 lg:grid-cols-6">
         <ModernStatCard 
-          title="New Students" 
-          value={dashboardStats?.newStudents || 0} 
+          title="Total Users" 
+          value={dashboardStats?.totalUsers || 0} 
           change={0}
           changeLabel=""
           icon={Users}
           variant="success"
         />
         <ModernStatCard 
-          title="Completed Today" 
-          value={dashboardStats?.completedToday || 0} 
+          title="Active Enrollments" 
+          value={dashboardStats?.activeEnrollments || 0} 
           change={0}
           changeLabel=""
           icon={CheckCircle}
           variant="success"
         />
         <ModernStatCard 
-          title="New Assignments" 
-          value={dashboardStats?.newAssignments || 0} 
+          title="Total Teachers" 
+          value={stats?.totalTeachers || 0} 
           change={0}
           changeLabel=""
           icon={FileText}
@@ -221,8 +251,7 @@ export function AdminDashboard() {
       </div>
 
       <div className="p-6">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsContent value="overview" className="space-y-6">
+        <div className="space-y-6">
           {/* Main Content Grid */}
           <div className="grid gap-6 lg:grid-cols-3">
             {/* Left Column - Charts */}
@@ -331,36 +360,7 @@ export function AdminDashboard() {
               </Card>
             </div>
           </div>
-        </TabsContent>
-        
-        <TabsContent value="users" className="space-y-6">
-          <UserManagement />
-        </TabsContent>
-        
-        <TabsContent value="enrollment" className="space-y-6">
-          <EnrollmentManagement />
-        </TabsContent>
-        
-        <TabsContent value="academic" className="space-y-6">
-          <AcademicSetup />
-        </TabsContent>
-        
-        <TabsContent value="content" className="space-y-6">
-          <ContentManagement />
-        </TabsContent>
-        
-        <TabsContent value="monitoring" className="space-y-6">
-          <MonitoringReports />
-        </TabsContent>
-        
-        <TabsContent value="communication" className="space-y-6">
-          <CommunicationTools />
-        </TabsContent>
-        
-        <TabsContent value="settings" className="space-y-6">
-          <SystemConfiguration />
-        </TabsContent>
-        </Tabs>
+        </div>
       </div>
     </DashboardLayout>
   );

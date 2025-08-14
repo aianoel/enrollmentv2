@@ -30,6 +30,15 @@ import FolderManagement from '../../pages/teacher/FolderManagement';
 import SharedFolders from '../../pages/student/SharedFolders';
 import { useAuth } from '../../contexts/AuthContext';
 
+// Import admin page components
+import { UserManagement as AdminUserManagement } from '../../pages/admin/UserManagement';
+import { EnrollmentManagement } from '../../pages/admin/EnrollmentManagement';
+import { AcademicSetup } from '../../pages/admin/AcademicSetup';
+import { ContentManagement } from '../../pages/admin/ContentManagement';
+import { MonitoringReports } from '../../pages/admin/MonitoringReports';
+import { CommunicationTools } from '../../pages/admin/CommunicationTools';
+import { SystemConfiguration } from '../../pages/admin/SystemConfiguration';
+
 export const MainLayout: React.FC = () => {
   const { user } = useAuth();
   const [currentSection, setCurrentSection] = useState('dashboard');
@@ -57,7 +66,7 @@ export const MainLayout: React.FC = () => {
     if (currentSection === 'dashboard') {
       switch (user.role) {
         case 'admin':
-          return <AdminDashboard />;
+          return <AdminDashboard onNavigate={setCurrentSection} />;
         case 'principal':
           return <PrincipalDashboard />;
         case 'academic_coordinator':
@@ -98,7 +107,20 @@ export const MainLayout: React.FC = () => {
       case 'classes':
         return <TeacherDashboard />; // For now, redirect to teacher dashboard
       case 'users':
-        return <UserManagement />;
+      case 'admin-users':
+        return <AdminUserManagement />;
+      case 'admin-enrollment':
+        return user.role === 'admin' ? <EnrollmentManagement /> : <Dashboard />;
+      case 'admin-academic':
+        return user.role === 'admin' ? <AcademicSetup /> : <Dashboard />;
+      case 'admin-content':
+        return user.role === 'admin' ? <ContentManagement /> : <Dashboard />;
+      case 'admin-reports':
+        return user.role === 'admin' ? <MonitoringReports /> : <Dashboard />;
+      case 'admin-communication':
+        return user.role === 'admin' ? <CommunicationTools /> : <Dashboard />;
+      case 'admin-settings':
+        return user.role === 'admin' ? <SystemConfiguration /> : <Dashboard />;
       case 'admin-control':
         return <AdminControlPanel />;
       case 'folders':
