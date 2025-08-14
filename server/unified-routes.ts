@@ -707,6 +707,61 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  // General API routes
+  app.get("/api/users", async (req, res) => {
+    try {
+      const users = await storage.getAllUsers();
+      const safeUsers = users.map(user => ({
+        id: user.id,
+        name: user.name || `${user.firstName} ${user.lastName}`,
+        email: user.email,
+        role: user.role || 'user',
+        isActive: user.isActive !== false
+      }));
+      res.json(safeUsers);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.get("/api/admin/stats", async (req, res) => {
+    try {
+      const stats = await storage.getPrincipalStats();
+      res.json(stats);
+    } catch (error) {
+      console.error("Error fetching admin stats:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.get("/api/admin/enrollments", async (req, res) => {
+    try {
+      const enrollments = await storage.getEnrollmentApplications();
+      res.json(enrollments);
+    } catch (error) {
+      console.error("Error fetching enrollments:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.get("/api/notifications/count", async (req, res) => {
+    try {
+      const recipientId = parseInt(req.query.recipientId as string);
+      if (!recipientId) {
+        return res.status(400).json({ error: "Recipient ID is required" });
+      }
+      
+      const notifications = await storage.getNotifications(recipientId);
+      const unreadCount = notifications.filter(n => !n.isRead).length;
+      
+      res.json({ count: unreadCount });
+    } catch (error) {
+      console.error("Error fetching notification count:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
   // Chat API Routes
   app.get("/api/chat/conversations", async (req, res) => {
     try {
