@@ -7,14 +7,27 @@ import { toast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 
 import {
-  Tabs, TabsContent, TabsList, TabsTrigger,
-  Card, CardContent, CardDescription, CardHeader, CardTitle,
-  Button, Input, Textarea, Badge,
-  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger,
-  Form, FormControl, FormField, FormItem, FormLabel, FormMessage,
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+  Tabs, TabsContent, TabsList, TabsTrigger
+} from "@/components/ui/tabs";
+import {
+  Card, CardContent, CardDescription, CardHeader, CardTitle
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import {
+  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger
+} from "@/components/ui/dialog";
+import {
+  Form, FormControl, FormField, FormItem, FormLabel, FormMessage
+} from "@/components/ui/form";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue
+} from "@/components/ui/select";
+import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow
-} from "@/components/ui";
+} from "@/components/ui/table";
 
 import {
   BookOpen, Plus, Users, UserPlus, GraduationCap, ClipboardList,
@@ -52,31 +65,75 @@ const scheduleSchema = z.object({
   room: z.string().optional(),
 });
 
+// Types
+interface Subject {
+  id: number;
+  name: string;
+  description?: string;
+}
+
+interface Section {
+  id: number;
+  name: string;
+  grade_level: string;
+  capacity?: number;
+  school_year?: string;
+  adviser_name?: string;
+}
+
+interface Teacher {
+  id: number;
+  name: string;
+  email: string;
+  sectionsCount?: number;
+  subjectsCount?: number;
+}
+
+interface Assignment {
+  id: number;
+  teacher_id: number;
+  subject_id: number;
+  section_id: number;
+  school_year?: string;
+  semester?: string;
+}
+
+interface Schedule {
+  id: number;
+  teacher_id: number;
+  subject_id: number;
+  section_id: number;
+  dayOfWeek: string;
+  startTime: string;
+  endTime: string;
+  room?: string;
+}
+
 export default function FixedAcademicDashboard() {
   const queryClient = useQueryClient();
 
   // Queries
-  const { data: subjects = [] } = useQuery({
+  const { data: subjects = [] } = useQuery<Subject[]>({
     queryKey: ['/api/academic/subjects'],
     refetchInterval: 30000
   });
 
-  const { data: sections = [] } = useQuery({
+  const { data: sections = [] } = useQuery<Section[]>({
     queryKey: ['/api/academic/sections'],
     refetchInterval: 30000
   });
 
-  const { data: teachers = [] } = useQuery({
+  const { data: teachers = [] } = useQuery<Teacher[]>({
     queryKey: ['/api/academic/teachers'],
     refetchInterval: 30000
   });
 
-  const { data: assignments = [] } = useQuery({
+  const { data: assignments = [] } = useQuery<Assignment[]>({
     queryKey: ['/api/academic/teacher-assignments'],
     refetchInterval: 30000
   });
 
-  const { data: schedules = [] } = useQuery({
+  const { data: schedules = [] } = useQuery<Schedule[]>({
     queryKey: ['/api/academic/teacher-schedules'],
     refetchInterval: 30000
   });
@@ -104,7 +161,7 @@ export default function FixedAcademicDashboard() {
   // Mutations
   const createSubjectMutation = useMutation({
     mutationFn: (data: z.infer<typeof subjectSchema>) => 
-      apiRequest('/api/academic/subjects', { method: 'POST', body: data }),
+      apiRequest('/api/academic/subjects', 'POST', data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/academic/subjects'] });
       subjectForm.reset();
@@ -117,7 +174,7 @@ export default function FixedAcademicDashboard() {
 
   const createSectionMutation = useMutation({
     mutationFn: (data: z.infer<typeof sectionSchema>) => 
-      apiRequest('/api/academic/sections', { method: 'POST', body: data }),
+      apiRequest('/api/academic/sections', 'POST', data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/academic/sections'] });
       sectionForm.reset();
@@ -130,7 +187,7 @@ export default function FixedAcademicDashboard() {
 
   const assignTeacherMutation = useMutation({
     mutationFn: (data: z.infer<typeof assignmentSchema>) => 
-      apiRequest('/api/academic/teacher-assignments', { method: 'POST', body: data }),
+      apiRequest('/api/academic/teacher-assignments', 'POST', data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/academic/teacher-assignments'] });
       assignmentForm.reset();
@@ -143,7 +200,7 @@ export default function FixedAcademicDashboard() {
 
   const createScheduleMutation = useMutation({
     mutationFn: (data: z.infer<typeof scheduleSchema>) => 
-      apiRequest('/api/academic/schedules', { method: 'POST', body: data }),
+      apiRequest('/api/academic/schedules', 'POST', data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/academic/teacher-schedules'] });
       scheduleForm.reset();

@@ -452,6 +452,16 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  app.get("/api/academic/teacher-schedules", async (req, res) => {
+    try {
+      const schedules = await storage.getTeacherSchedules();
+      res.json(schedules);
+    } catch (error) {
+      console.error("Error fetching teacher schedules:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
   app.post("/api/academic/modules", async (req, res) => {
     try {
       const moduleData = req.body;
@@ -481,6 +491,8 @@ export function registerRoutes(app: Express): Server {
           s.id, 
           s.name, 
           s.grade_level,
+          s.capacity,
+          s.school_year,
           COALESCE(u.first_name || ' ' || u.last_name, 'No Adviser') as adviser_name
         FROM sections s
         LEFT JOIN users u ON s.adviser_id = u.id
@@ -493,12 +505,56 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  // POST endpoint for creating sections
+  app.post("/api/academic/sections", async (req, res) => {
+    try {
+      const { name, gradeLevel, capacity, schoolYear } = req.body;
+      
+      if (!name || !gradeLevel || !schoolYear) {
+        return res.status(400).json({ error: "Name, grade level, and school year are required" });
+      }
+
+      const result = await db.execute(`
+        INSERT INTO sections (name, grade_level, capacity, school_year) 
+        VALUES (?, ?, ?, ?) 
+        RETURNING *
+      `, [name, gradeLevel, capacity || 40, schoolYear]);
+      
+      res.status(201).json(result.rows[0]);
+    } catch (error) {
+      console.error("Error creating section:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
   app.get("/api/academic/subjects", async (req, res) => {
     try {
       const result = await db.execute(`SELECT * FROM subjects ORDER BY name`);
       res.json(result.rows || []);
     } catch (error) {
       console.error("Error fetching subjects:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  // POST endpoint for creating subjects
+  app.post("/api/academic/subjects", async (req, res) => {
+    try {
+      const { name, description } = req.body;
+      
+      if (!name) {
+        return res.status(400).json({ error: "Subject name is required" });
+      }
+
+      const result = await db.execute(`
+        INSERT INTO subjects (name, description) 
+        VALUES (?, ?) 
+        RETURNING *
+      `, [name, description || '']);
+      
+      res.status(201).json(result.rows[0]);
+    } catch (error) {
+      console.error("Error creating subject:", error);
       res.status(500).json({ error: "Internal server error" });
     }
   });
@@ -550,6 +606,28 @@ export function registerRoutes(app: Express): Server {
       res.json(assignments);
     } catch (error) {
       console.error("Error fetching teacher assignments:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  // POST endpoint for creating teacher assignments
+  app.post("/api/academic/teacher-assignments", async (req, res) => {
+    try {
+      const { teacherId, subjectId, sectionId, schoolYear, semester } = req.body;
+      
+      if (!teacherId || !subjectId || !sectionId) {
+        return res.status(400).json({ error: "Teacher ID, subject ID, and section ID are required" });
+      }
+
+      const result = await db.execute(`
+        INSERT INTO teacher_assignments (teacher_id, subject_id, section_id, school_year, semester) 
+        VALUES (?, ?, ?, ?, ?) 
+        RETURNING *
+      `, [teacherId, subjectId, sectionId, schoolYear || '2024-2025', semester || '1st']);
+      
+      res.status(201).json(result.rows[0]);
+    } catch (error) {
+      console.error("Error creating teacher assignment:", error);
       res.status(500).json({ error: "Internal server error" });
     }
   });
@@ -821,7 +899,7 @@ export function registerRoutes(app: Express): Server {
 
   app.get("/api/admin/enrollments", async (req, res) => {
     try {
-      const enrollments = await storage.getEnrollmentApplications();
+      const enrollments = await storage.getEnrollmentApplications({});
       res.json(enrollments);
     } catch (error) {
       console.error("Error fetching enrollments:", error);
@@ -1088,7 +1166,7 @@ export function registerRoutes(app: Express): Server {
         // Emit to recipient only (private messaging)
         io.to(`user_${data.recipientId}`).emit('new_message', {
           ...message,
-          senderName: sender?.name || 'Unknown'
+          senderName: sender ? `${sender.firstName} ${sender.lastName}` : 'Unknown'
         });
         
         // Confirm to sender only
