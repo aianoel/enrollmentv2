@@ -2043,12 +2043,21 @@ export class DatabaseStorage implements IStorage {
         }
       });
       
-      // Build conversations
+      // Build conversations with proper user names and roles
       for (const partnerId of Array.from(partnerIds)) {
         const partnerIdNum = Number(partnerId);
         if (partnerIdNum !== userId) {
-          const partner = await this.getUser(partnerIdNum);
-          if (partner) {
+          // Get partner user with role information
+          const partnerResult = await db.execute(sql`
+            SELECT u.id, u.first_name, u.last_name, u.name, u.email, u.role_id, r.name as role_name
+            FROM users u
+            LEFT JOIN roles r ON u.role_id = r.id
+            WHERE u.id = ${partnerIdNum}
+            LIMIT 1
+          `);
+          
+          if (partnerResult.rows.length > 0) {
+            const partner = partnerResult.rows[0] as any;
             const conversationMessages = userMessages.filter((m: any) => 
               (m.sender_id === userId && m.receiver_id === partnerIdNum) ||
               (m.sender_id === partnerIdNum && m.receiver_id === userId)
@@ -2059,12 +2068,16 @@ export class DatabaseStorage implements IStorage {
               m.sender_id === partnerIdNum && !m.is_read
             ).length;
             
+            const partnerName = partner.first_name && partner.last_name ? 
+              `${partner.first_name} ${partner.last_name}` : 
+              partner.name || `User ${partner.id}`;
+            
             conversations.push({
               id: `conv_${Math.min(partnerIdNum, userId)}_${Math.max(partnerIdNum, userId)}`,
               conversationType: "private",
               partnerId: partnerIdNum,
-              partnerName: partner.name || `User ${partner.id}`,
-              partnerRole: 'user',
+              partnerName: partnerName,
+              partnerRole: partner.role_name || 'user',
               lastMessage: lastMessage?.message || '',
               lastMessageTime: lastMessage?.sent_at,
               unreadCount,
@@ -2158,7 +2171,7 @@ export class DatabaseStorage implements IStorage {
 
   async getOnlineUsers(): Promise<any[]> {
     try {
-      // Get users with their online status from the online_status table
+      // Get users with their online status and role names from the online_status table
       const result = await db.execute(sql`
         SELECT 
           u.id, 
@@ -2167,12 +2180,14 @@ export class DatabaseStorage implements IStorage {
           u.name,
           u.email, 
           u.role_id,
+          r.name as role_name,
           COALESCE(os.is_online, false) as is_online,
           COALESCE(os.last_seen, u.created_at) as last_seen
         FROM users u
         LEFT JOIN online_status os ON u.id = os.user_id
+        LEFT JOIN roles r ON u.role_id = r.id
         WHERE COALESCE(os.is_online, false) = true
-        ORDER BY COALESCE(u.first_name, u.name), COALESCE(u.last_name, '')
+        ORDER BY r.name, COALESCE(u.first_name, u.name), COALESCE(u.last_name, '')
       `);
       
       return result.rows.map((row: any) => ({
@@ -2181,7 +2196,8 @@ export class DatabaseStorage implements IStorage {
           `${row.first_name} ${row.last_name}` : 
           row.name || `User ${row.id}`,
         email: row.email,
-        role: row.role_id,
+        role: row.role_name || 'user',
+        roleId: row.role_id,
         isOnline: row.is_online,
         lastSeen: row.last_seen
       }));

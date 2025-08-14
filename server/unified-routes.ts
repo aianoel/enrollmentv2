@@ -1181,14 +1181,25 @@ export function registerRoutes(app: Express): Server {
 
   app.get("/api/chat/users", async (req, res) => {
     try {
-      const users = await storage.getAllUsers();
+      // Get all users with their role information using raw SQL
+      const result = await db.execute(sql`
+        SELECT u.id, u.first_name, u.last_name, u.name, u.email, u.role_id, r.name as role_name, u.is_active
+        FROM users u
+        LEFT JOIN roles r ON u.role_id = r.id
+        WHERE u.is_active = true OR u.is_active IS NULL
+        ORDER BY r.name, COALESCE(u.first_name, u.name), COALESCE(u.last_name, '')
+      `);
+      
       // Return users without password hash for security
-      const safeUsers = users.map(user => ({
+      const safeUsers = result.rows.map((user: any) => ({
         id: user.id,
-        name: `${user.firstName} ${user.lastName}`,
+        name: user.first_name && user.last_name ? 
+          `${user.first_name} ${user.last_name}` : 
+          user.name || `User ${user.id}`,
         email: user.email,
-        role: 'user',
-        isActive: true
+        role: user.role_name || 'user',
+        roleId: user.role_id,
+        isActive: user.is_active !== false
       }));
       res.json(safeUsers);
     } catch (error) {
