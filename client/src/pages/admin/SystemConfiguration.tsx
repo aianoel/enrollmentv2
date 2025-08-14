@@ -183,7 +183,7 @@ export function SystemConfiguration() {
 
   // Get system statistics
   const getSystemStats = () => {
-    const currentSettings = schoolSettings[0]; // Assuming single active setting
+    const currentSettings = schoolSettings; // schoolSettings is now a single object, not an array
     const totalFees = tuitionFees.reduce((sum: number, fee: TuitionFee) => sum + parseFloat(fee.amount), 0);
     const gradesCovered = new Set(tuitionFees.map((fee: TuitionFee) => fee.gradeLevel)).size;
     
