@@ -107,17 +107,22 @@ export const MainLayout: React.FC = () => {
   };
 
   return (
-    <div className="saas-layout flex h-screen overflow-hidden">
+    <div className="flex h-screen w-full overflow-hidden bg-gradient-to-br from-purple-50 via-white to-indigo-50">
       {/* Mobile sidebar overlay */}
       {isSidebarOpen && (
         <div 
-          className="saas-sidebar-overlay"
+          className="fixed inset-0 z-40 bg-black/20 backdrop-blur-sm lg:hidden"
           onClick={() => setIsSidebarOpen(false)}
         />
       )}
 
-      {/* Sidebar */}
-      <div className={`saas-sidebar ${isSidebarOpen ? 'open' : ''}`}>
+      {/* Sidebar - No borders, full height */}
+      <div className={`
+        ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} 
+        fixed lg:relative lg:translate-x-0 z-50 lg:z-auto
+        w-64 h-full bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900
+        transition-transform duration-300 ease-in-out
+      `}>
         <Sidebar 
           currentSection={currentSection} 
           onSectionChange={(section) => {
@@ -127,22 +132,23 @@ export const MainLayout: React.FC = () => {
         />
       </div>
       
-      {/* Main content */}
-      <div className="flex-1 flex flex-col min-w-0">
-        <div className="saas-header">
-          <Header 
-            onMenuClick={() => setIsSidebarOpen(!isSidebarOpen)}
-            isMobile={isMobile}
-          />
-        </div>
-        <main className="flex-1 overflow-auto bg-gray-50 h-full">
-          <div className="w-full h-full saas-fade-in">
+      {/* Main content area - No borders, full space utilization */}
+      <div className="flex-1 flex flex-col min-w-0 h-full">
+        {/* Header - No borders */}
+        <Header 
+          onMenuClick={() => setIsSidebarOpen(!isSidebarOpen)}
+          isMobile={isMobile}
+        />
+        
+        {/* Content area - No borders, full height */}
+        <main className="flex-1 overflow-auto h-full">
+          <div className="w-full h-full">
             {renderContent()}
           </div>
         </main>
       </div>
       
-      {/* Enhanced Chat panel with SaaS design */}
+      {/* Enhanced Chat panel with borderless design */}
       <div className={`saas-chat-panel ${isOpen ? 'open' : ''}`}>
         <EnhancedChatSystem />
       </div>
@@ -150,7 +156,7 @@ export const MainLayout: React.FC = () => {
       {/* Chat panel overlay for mobile */}
       {isOpen && isMobile && (
         <div 
-          className="fixed inset-0 z-30 bg-gray-900 bg-opacity-50"
+          className="fixed inset-0 z-30 bg-black/20 backdrop-blur-sm"
           onClick={() => {}} // Let chat handle its own closing
         />
       )}

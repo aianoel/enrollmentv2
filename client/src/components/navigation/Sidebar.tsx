@@ -87,36 +87,36 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentSection, onSectionChang
   const navigationItems = getNavigationItems();
 
   return (
-    <aside className="w-72 bg-white h-full flex flex-col border-r border-gray-200">
+    <aside className="w-full h-full flex flex-col">
       {/* Header */}
-      <div className="p-6 border-b border-gray-100">
+      <div className="p-6">
         <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 saas-gradient-bg rounded-xl flex items-center justify-center shadow-lg">
+          <div className="w-10 h-10 bg-gradient-to-br from-purple-400 to-indigo-500 flex items-center justify-center shadow-lg">
             <i className="fas fa-graduation-cap text-white text-lg"></i>
           </div>
           <div>
-            <h2 className="text-xl font-bold saas-text-gradient">EduManage</h2>
-            <p className="text-sm text-gray-500 capitalize font-medium">{user.role.replace('_', ' ')}</p>
+            <h2 className="text-xl font-bold text-white">EduManage</h2>
+            <p className="text-sm text-gray-300 capitalize font-medium">{user.role.replace('_', ' ')}</p>
           </div>
         </div>
       </div>
       
       {/* Navigation */}
-      <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
+      <nav className="flex-1 px-4 space-y-1 overflow-y-auto">
         {navigationItems.map((item) => (
           <Button
             key={item.id}
             variant="ghost"
-            className={`flex items-center space-x-3 w-full justify-start h-11 text-sm rounded-lg font-medium transition-all duration-200 ${
+            className={`flex items-center space-x-3 w-full justify-start h-12 text-sm font-medium transition-all duration-200 ${
               currentSection === item.id
-                ? 'bg-primary-50 text-primary-700 hover:bg-primary-100 shadow-sm border-l-3 border-primary-500'
-                : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                ? 'bg-gradient-to-r from-purple-500 to-indigo-600 text-white shadow-lg'
+                : 'text-gray-300 hover:bg-white/10 hover:text-white'
             }`}
             onClick={() => onSectionChange(item.id)}
             data-testid={`nav-${item.id}`}
           >
             <div className={`w-5 h-5 flex items-center justify-center ${
-              currentSection === item.id ? 'text-primary-600' : 'text-gray-400'
+              currentSection === item.id ? 'text-white' : 'text-gray-400'
             }`}>
               <i className={`${item.icon} text-sm`}></i>
             </div>
@@ -126,24 +126,24 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentSection, onSectionChang
       </nav>
 
       {/* User info and logout */}
-      <div className="p-4 border-t border-gray-100 bg-gray-50/50">
-        <div className="mb-4 p-3 bg-white rounded-xl border border-gray-100 shadow-sm">
+      <div className="p-4 bg-black/20 backdrop-blur-sm">
+        <div className="mb-4 p-3 bg-white/10 backdrop-blur-sm shadow-lg">
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 saas-gradient-bg rounded-full flex items-center justify-center shadow-sm">
+            <div className="w-10 h-10 bg-gradient-to-br from-purple-400 to-indigo-500 flex items-center justify-center shadow-sm">
               <span className="text-white text-sm font-semibold">
                 {user.name.split(' ').map(n => n[0]).join('').toUpperCase()}
               </span>
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-gray-900 truncate">{user.name}</p>
-              <p className="text-xs text-gray-500 truncate">{user.email}</p>
+              <p className="text-sm font-semibold text-white truncate">{user.name}</p>
+              <p className="text-xs text-gray-300 truncate">{user.email}</p>
             </div>
           </div>
         </div>
         
         <Button
           variant="ghost"
-          className="flex items-center space-x-3 w-full justify-start text-gray-600 hover:bg-red-50 hover:text-red-600 h-11 rounded-lg font-medium transition-all duration-200"
+          className="flex items-center space-x-3 w-full justify-start text-gray-300 hover:bg-red-500/20 hover:text-red-300 h-11 font-medium transition-all duration-200"
           onClick={logout}
           data-testid="nav-logout"
         >
