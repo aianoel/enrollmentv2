@@ -15,8 +15,16 @@ import {
   XCircle, 
   Eye,
   Users,
-  FileText
+  FileText,
+  Search,
+  Filter,
+  TrendingUp,
+  Activity,
+  GraduationCap
 } from "lucide-react";
+import { motion } from "framer-motion";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import type { Enrollment, Section } from "@shared/schema";
 
 export function EnrollmentManagement() {
@@ -116,62 +124,152 @@ export function EnrollmentManagement() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold">Enrollment Management</h2>
-          <p className="text-muted-foreground">Process and manage student enrollments</p>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+      {/* Enhanced Header */}
+      <div className="bg-white border-b border-gray-200 shadow-sm">
+        <div className="px-6 py-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
+                <div className="h-10 w-10 bg-gradient-to-br from-green-600 to-emerald-600 rounded-xl flex items-center justify-center">
+                  <GraduationCap className="h-6 w-6 text-white" />
+                </div>
+                Enrollment Management
+              </h1>
+              <p className="text-gray-600 mt-2">Process and manage student enrollment applications and approvals</p>
+              <div className="flex items-center gap-4 mt-3">
+                <Badge variant="outline" className="text-yellow-600 border-yellow-200">
+                  {enrollments.filter((e: Enrollment) => e.status === 'pending').length} Pending
+                </Badge>
+                <Badge variant="outline" className="text-green-600 border-green-200">
+                  {enrollments.filter((e: Enrollment) => e.status === 'approved').length} Approved
+                </Badge>
+                <Badge variant="outline" className="text-blue-600 border-blue-200">
+                  {enrollments.length} Total
+                </Badge>
+              </div>
+            </div>
+            <div className="flex items-center space-x-3">
+              <Button variant="outline" size="sm" className="border-gray-300">
+                <FileText className="h-4 w-4 mr-2" />
+                Export Report
+              </Button>
+            </div>
+          </div>
         </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Pending Enrollments</CardTitle>
-            <Clock className="h-4 w-4 text-yellow-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {enrollments.filter((e: Enrollment) => e.status === 'pending').length}
-            </div>
-            <p className="text-xs text-muted-foreground">Awaiting approval</p>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Approved Enrollments</CardTitle>
-            <CheckCircle className="h-4 w-4 text-green-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {enrollments.filter((e: Enrollment) => e.status === 'approved').length}
-            </div>
-            <p className="text-xs text-muted-foreground">Successfully enrolled</p>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Enrollments</CardTitle>
-            <Users className="h-4 w-4 text-blue-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{enrollments.length}</div>
-            <p className="text-xs text-muted-foreground">All enrollment requests</p>
-          </CardContent>
-        </Card>
-      </div>
+      <div className="p-6 space-y-6">
+        {/* Enhanced Statistics Cards */}
+        <motion.div 
+          className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-8"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, staggerChildren: 0.1 }}
+        >
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.4 }}
+          >
+            <Card className="bg-gradient-to-r from-yellow-50 to-amber-50 border-yellow-200">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-yellow-700">Pending Approval</p>
+                    <p className="text-3xl font-bold text-yellow-900">{enrollments.filter((e: Enrollment) => e.status === 'pending').length}</p>
+                    <p className="text-xs text-yellow-600 mt-1">Awaiting review</p>
+                  </div>
+                  <div className="h-12 w-12 bg-yellow-100 rounded-lg flex items-center justify-center">
+                    <Clock className="h-6 w-6 text-yellow-600" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+          
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.4, delay: 0.1 }}
+          >
+            <Card className="bg-gradient-to-r from-green-50 to-emerald-50 border-green-200">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-green-700">Approved</p>
+                    <p className="text-3xl font-bold text-green-900">{enrollments.filter((e: Enrollment) => e.status === 'approved').length}</p>
+                    <p className="text-xs text-green-600 mt-1">Successfully enrolled</p>
+                  </div>
+                  <div className="h-12 w-12 bg-green-100 rounded-lg flex items-center justify-center">
+                    <CheckCircle className="h-6 w-6 text-green-600" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+          
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.4, delay: 0.2 }}
+          >
+            <Card className="bg-gradient-to-r from-red-50 to-rose-50 border-red-200">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-red-700">Rejected</p>
+                    <p className="text-3xl font-bold text-red-900">{enrollments.filter((e: Enrollment) => e.status === 'rejected').length}</p>
+                    <p className="text-xs text-red-600 mt-1">Not approved</p>
+                  </div>
+                  <div className="h-12 w-12 bg-red-100 rounded-lg flex items-center justify-center">
+                    <XCircle className="h-6 w-6 text-red-600" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+          
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.4, delay: 0.3 }}
+          >
+            <Card className="bg-gradient-to-r from-blue-50 to-cyan-50 border-blue-200">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-blue-700">Total Requests</p>
+                    <p className="text-3xl font-bold text-blue-900">{enrollments.length}</p>
+                    <p className="text-xs text-blue-600 mt-1">All applications</p>
+                  </div>
+                  <div className="h-12 w-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                    <Users className="h-6 w-6 text-blue-600" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        </motion.div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <UserCheck className="h-5 w-5" />
-            Enrollment Requests
-          </CardTitle>
-          <CardDescription>Review and process student enrollment applications</CardDescription>
-        </CardHeader>
-        <CardContent>
+        {/* Main Enrollment Management Interface */}
+        <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm">
+          <CardHeader className="bg-gradient-to-r from-green-50 to-emerald-50 border-b border-green-100">
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="flex items-center gap-3 text-xl text-green-900">
+                  <div className="h-8 w-8 bg-green-600 rounded-lg flex items-center justify-center">
+                    <UserCheck className="h-5 w-5 text-white" />
+                  </div>
+                  Enrollment Processing Center
+                </CardTitle>
+                <CardDescription className="text-green-700 mt-2">
+                  Review, approve, and manage student enrollment applications
+                </CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="p-6">
           <Table>
             <TableHeader>
               <TableRow>
@@ -319,11 +417,7 @@ export function EnrollmentManagement() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      </div>
     </div>
   );
 }
-
-// Helper component for labels
-const Label = ({ className, ...props }: React.LabelHTMLAttributes<HTMLLabelElement>) => (
-  <label className={className} {...props} />
-);

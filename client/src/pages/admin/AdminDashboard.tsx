@@ -26,6 +26,7 @@ import {
 import { DashboardBackground } from '@/components/ui/dashboard-background';
 import { EnhancedCard, StatCard } from '@/components/ui/enhanced-card';
 import { StatCard as ModernStatCard, ActivityFeed, ChartCard, ProgressCard, SimpleDonutChart, DashboardLayout } from '@/components/ui/modern-dashboard';
+import { motion } from "framer-motion";
 // Removed component imports as we're using navigation to separate pages now
 
 interface DashboardStats {
@@ -272,41 +273,70 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps = {}) {
         </div>
       </div>
 
-      {/* Enhanced Stats Cards with Real Data */}
-      <div className="p-6 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <ModernStatCard 
-          title="Total Users" 
-          value={dashboardStats?.totalUsers || 0} 
-          change={8.2}
-          changeLabel="vs last month"
-          icon={Users}
-          variant="success"
-        />
-        <ModernStatCard 
-          title="Active Students" 
-          value={stats?.totalStudents || 0} 
-          change={12.5}
-          changeLabel="new enrollments"
-          icon={GraduationCap}
-          variant="success"
-        />
-        <ModernStatCard 
-          title="Total Subjects" 
-          value={subjects?.length || 0} 
-          change={3.1}
-          changeLabel="new this term"
-          icon={BookOpen}
-          variant="default"
-        />
-        <ModernStatCard 
-          title="Pending Tasks" 
-          value={dashboardStats?.pendingApprovals || 0} 
-          change={-15.2}
-          changeLabel="vs last week"
-          icon={Clock}
-          variant="warning"
-        />
-      </div>
+      {/* Enhanced Stats Cards with Motion */}
+      <motion.div 
+        className="p-6 grid gap-4 md:grid-cols-2 lg:grid-cols-4"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, staggerChildren: 0.1 }}
+      >
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.4 }}
+        >
+          <ModernStatCard 
+            title="Total Users" 
+            value={dashboardStats?.totalUsers || 0} 
+            change={8.2}
+            changeLabel="vs last month"
+            icon={Users}
+            variant="success"
+          />
+        </motion.div>
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.4, delay: 0.1 }}
+        >
+          <ModernStatCard 
+            title="Active Students" 
+            value={stats?.totalStudents || 0} 
+            change={12.5}
+            changeLabel="new enrollments"
+            icon={GraduationCap}
+            variant="success"
+          />
+        </motion.div>
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.4, delay: 0.2 }}
+        >
+          <ModernStatCard 
+            title="Total Subjects" 
+            value={subjects?.length || 0} 
+            change={3.1}
+            changeLabel="new this term"
+            icon={BookOpen}
+            variant="default"
+          />
+        </motion.div>
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.4, delay: 0.3 }}
+        >
+          <ModernStatCard 
+            title="Pending Tasks" 
+            value={dashboardStats?.pendingApprovals || 0} 
+            change={-15.2}
+            changeLabel="vs last week"
+            icon={Clock}
+            variant="warning"
+          />
+        </motion.div>
+      </motion.div>
 
       {/* Secondary Stats Row */}
       <div className="px-6 pb-6 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
