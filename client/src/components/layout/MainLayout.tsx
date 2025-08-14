@@ -24,6 +24,7 @@ import { PrincipalDashboard } from '../../pages/principal/PrincipalDashboard';
 import { AcademicCoordinatorDashboard } from '../../pages/academic/AcademicCoordinatorDashboard';
 import { StudentPaymentPage } from '../../pages/student/StudentPaymentPage';
 import { EnhancedChatSystem } from '../chat/EnhancedChatSystem';
+import { AdminControlPanel } from '../admin/AdminControlSimple';
 import { useAuth } from '../../contexts/AuthContext';
 import { useChat } from '../../contexts/ChatContext';
 
@@ -81,6 +82,8 @@ export const MainLayout: React.FC = () => {
         return <TeacherDashboard />; // For now, redirect to teacher dashboard
       case 'users':
         return <AdminDashboard />; // For now, redirect to admin dashboard
+      case 'admin-control':
+        return <AdminControlPanel />;
       default:
         return <Dashboard />;
     }
