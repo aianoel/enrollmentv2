@@ -14,7 +14,7 @@ interface HeaderProps {
 
 export const Header: React.FC<HeaderProps> = ({ onMenuClick, isMobile = false }) => {
   const { user } = useAuth();
-  const { isOpen, setIsOpen, onlineUsers } = useChat();
+  const { isOpen, setIsOpen, onlineUsers, unreadCount = 0, markChatAsRead } = useChat();
   const [isNotificationPanelOpen, setIsNotificationPanelOpen] = useState(false);
 
   // Temporarily disable notification count due to schema issues
@@ -62,11 +62,19 @@ export const Header: React.FC<HeaderProps> = ({ onMenuClick, isMobile = false })
               variant="ghost"
               size="sm"
               className="relative p-2.5 text-white/80 hover:text-white hover:bg-white/10 transition-all duration-200"
-              onClick={() => setIsOpen(!isOpen)}
+              onClick={() => {
+                setIsOpen(!isOpen);
+                if (!isOpen) markChatAsRead?.();
+              }}
               data-testid="button-chat-toggle"
             >
               <i className="fas fa-comments text-lg"></i>
-              {onlineUsers.length > 0 && (
+              {unreadCount > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-red-500 text-white text-xs flex items-center justify-center shadow-sm animate-pulse" data-testid="chat-unread-count">
+                  {unreadCount > 99 ? '99+' : unreadCount}
+                </span>
+              )}
+              {onlineUsers.length > 0 && unreadCount === 0 && (
                 <span className="absolute -top-0.5 -right-0.5 w-3 h-3 bg-green-400 shadow-sm" data-testid="chat-indicator"></span>
               )}
             </Button>

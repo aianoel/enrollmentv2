@@ -8,6 +8,7 @@ import { ChatProvider } from "./contexts/ChatContext";
 import { LoginForm } from "./components/auth/LoginForm";
 import { EnrollmentPortal } from "./components/enrollment/EnrollmentPortal";
 import { MainLayout } from "./components/layout/MainLayout";
+import { MessageNotification } from "./components/notifications/MessageNotification";
 import { LandingPage } from "./pages/LandingPage";
 import { useAuth } from "./contexts/AuthContext";
 import { useState, useEffect } from "react";
@@ -31,6 +32,7 @@ function AppContent() {
     return (
       <ChatProvider>
         <MainLayout />
+        <MessageNotification />
       </ChatProvider>
     );
   }

@@ -809,9 +809,20 @@ export function registerRoutes(app: Express): Server {
       
       // Emit the message via Socket.IO for real-time updates
       const sender = await storage.getUser(senderId);
-      io.emit("new_message", {
+      const recipient = await storage.getUser(recipientId);
+      
+      // Send to specific recipient room for targeted notifications
+      io.to(`user_${recipientId}`).emit("new_message", {
         ...message,
-        senderName: sender?.name || 'Unknown'
+        senderName: sender?.name || 'Unknown',
+        recipientName: recipient?.name || 'Unknown'
+      });
+      
+      // Also emit to sender for confirmation
+      io.to(`user_${senderId}`).emit("message_sent", {
+        ...message,
+        senderName: sender?.name || 'Unknown',
+        recipientName: recipient?.name || 'Unknown'
       });
       
       res.status(201).json(message);
