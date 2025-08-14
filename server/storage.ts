@@ -263,12 +263,12 @@ export interface IStorage {
   createPayment(payment: InsertPayment): Promise<Payment>;
   updatePayment(id: number, updates: Partial<InsertPayment>): Promise<Payment>;
   
-  // Enhanced fee management
-  getFees(): Promise<Fee[]>;
-  getFee(id: number): Promise<Fee>;
-  createFee(fee: InsertFee): Promise<Fee>;
-  updateFee(id: number, updates: Partial<InsertFee>): Promise<Fee>;
-  deleteFee(id: number): Promise<void>;
+  // Enhanced fee management - using tuitionFees
+  getTuitionFees(): Promise<TuitionFee[]>;
+  getTuitionFee(id: number): Promise<TuitionFee>;
+  createTuitionFee(fee: InsertTuitionFee): Promise<TuitionFee>;
+  updateTuitionFee(id: number, updates: Partial<InsertTuitionFee>): Promise<TuitionFee>;
+  deleteTuitionFee(id: number): Promise<void>;
   
   // User role lookup
   getUsersByRole(role: string): Promise<User[]>;
@@ -1292,32 +1292,32 @@ export class DatabaseStorage implements IStorage {
     return payment;
   }
 
-  async getFees(): Promise<Fee[]> {
-    return await db.select().from(fees);
+  async getTuitionFees(): Promise<TuitionFee[]> {
+    return await db.select().from(tuitionFees);
   }
 
-  async getFee(id: number): Promise<Fee> {
-    const [fee] = await db.select().from(fees).where(eq(fees.id, id));
-    if (!fee) throw new Error("Fee not found");
+  async getTuitionFee(id: number): Promise<TuitionFee> {
+    const [fee] = await db.select().from(tuitionFees).where(eq(tuitionFees.id, id));
+    if (!fee) throw new Error("Tuition fee not found");
     return fee;
   }
 
-  async createFee(fee: InsertFee): Promise<Fee> {
-    const [newFee] = await db.insert(fees).values(fee).returning();
+  async createTuitionFee(fee: InsertTuitionFee): Promise<TuitionFee> {
+    const [newFee] = await db.insert(tuitionFees).values(fee).returning();
     return newFee;
   }
 
-  async updateFee(id: number, updates: Partial<InsertFee>): Promise<Fee> {
+  async updateTuitionFee(id: number, updates: Partial<InsertTuitionFee>): Promise<TuitionFee> {
     const [updatedFee] = await db
-      .update(fees)
+      .update(tuitionFees)
       .set(updates)
-      .where(eq(fees.id, id))
+      .where(eq(tuitionFees.id, id))
       .returning();
     return updatedFee;
   }
 
-  async deleteFee(id: number): Promise<void> {
-    await db.delete(fees).where(eq(fees.id, id));
+  async deleteTuitionFee(id: number): Promise<void> {
+    await db.delete(tuitionFees).where(eq(tuitionFees.id, id));
   }
 
   async getUsersByRole(role: string): Promise<User[]> {
