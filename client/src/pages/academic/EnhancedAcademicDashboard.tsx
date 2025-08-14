@@ -110,28 +110,52 @@ export function EnhancedAcademicDashboard() {
   // Forms
   const subjectForm = useForm<z.infer<typeof subjectSchema>>({
     resolver: zodResolver(subjectSchema),
-    defaultValues: { description: "" }
+    defaultValues: { 
+      name: "",
+      description: "" 
+    }
   });
 
   const sectionForm = useForm<z.infer<typeof sectionSchema>>({
     resolver: zodResolver(sectionSchema),
-    defaultValues: { capacity: 40, schoolYear: "2024-2025" }
+    defaultValues: { 
+      name: "",
+      gradeLevel: "",
+      capacity: 40, 
+      schoolYear: "2024-2025" 
+    }
   });
 
   const assignmentForm = useForm<z.infer<typeof assignmentSchema>>({
     resolver: zodResolver(assignmentSchema),
-    defaultValues: { schoolYear: "2024-2025", semester: "1st" }
+    defaultValues: { 
+      teacherId: 0,
+      subjectId: 0,
+      sectionId: 0,
+      schoolYear: "2024-2025", 
+      semester: "1st" 
+    }
   });
 
   const scheduleForm = useForm<z.infer<typeof scheduleSchema>>({
     resolver: zodResolver(scheduleSchema),
-    defaultValues: { schoolYear: "2024-2025", semester: "1st" }
+    defaultValues: { 
+      teacherId: 0,
+      subjectId: 0,
+      sectionId: 0,
+      dayOfWeek: "",
+      startTime: "",
+      endTime: "",
+      room: "",
+      schoolYear: "2024-2025", 
+      semester: "1st" 
+    }
   });
 
   // Mutations
   const createSubjectMutation = useMutation({
     mutationFn: (data: z.infer<typeof subjectSchema>) => 
-      apiRequest("/api/academic/subjects", { method: "POST", body: data }),
+      apiRequest("/api/academic/subjects", "POST", data),
     onSuccess: () => {
       toast({ title: "Success", description: "Subject created successfully" });
       queryClient.invalidateQueries({ queryKey: ["/api/academic/subjects"] });
@@ -144,7 +168,7 @@ export function EnhancedAcademicDashboard() {
 
   const createSectionMutation = useMutation({
     mutationFn: (data: z.infer<typeof sectionSchema>) => 
-      apiRequest("/api/academic/sections", { method: "POST", body: data }),
+      apiRequest("/api/academic/sections", "POST", data),
     onSuccess: () => {
       toast({ title: "Success", description: "Section created successfully" });
       queryClient.invalidateQueries({ queryKey: ["/api/academic/sections"] });
@@ -157,7 +181,7 @@ export function EnhancedAcademicDashboard() {
 
   const assignTeacherMutation = useMutation({
     mutationFn: (data: z.infer<typeof assignmentSchema>) => 
-      apiRequest("/api/academic/assign-teacher", { method: "POST", body: data }),
+      apiRequest("/api/academic/assign-teacher", "POST", data),
     onSuccess: () => {
       toast({ title: "Success", description: "Teacher assigned successfully" });
       queryClient.invalidateQueries({ queryKey: ["/api/academic/teacher-assignments"] });
@@ -170,7 +194,7 @@ export function EnhancedAcademicDashboard() {
 
   const createScheduleMutation = useMutation({
     mutationFn: (data: z.infer<typeof scheduleSchema>) => 
-      apiRequest("/api/academic/schedules", { method: "POST", body: data }),
+      apiRequest("/api/academic/schedules", "POST", data),
     onSuccess: () => {
       toast({ title: "Success", description: "Schedule created successfully" });
       queryClient.invalidateQueries({ queryKey: ["/api/academic/teacher-schedules"] });
