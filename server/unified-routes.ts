@@ -1325,6 +1325,50 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  // Admin announcement management routes
+  app.post("/api/admin/announcements", async (req, res) => {
+    try {
+      const { title, content } = req.body;
+      const announcement = await storage.createAnnouncement({
+        title,
+        content,
+        postedBy: req.user?.id || 1, // Default to admin user
+        datePosted: new Date()
+      });
+      res.json(announcement);
+    } catch (error) {
+      console.error("Error creating announcement:", error);
+      res.status(500).json({ error: "Failed to create announcement" });
+    }
+  });
+
+  app.patch("/api/admin/announcements/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { title, content } = req.body;
+      const announcement = await storage.updateAnnouncement(parseInt(id), {
+        title,
+        content,
+        datePosted: new Date()
+      });
+      res.json(announcement);
+    } catch (error) {
+      console.error("Error updating announcement:", error);
+      res.status(500).json({ error: "Failed to update announcement" });
+    }
+  });
+
+  app.delete("/api/admin/announcements/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      await storage.deleteAnnouncement(parseInt(id));
+      res.json({ message: "Announcement deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting announcement:", error);
+      res.status(500).json({ error: "Failed to delete announcement" });
+    }
+  });
+
   // School Settings endpoints
   app.get("/api/admin/school-settings", async (req, res) => {
     try {

@@ -113,10 +113,7 @@ export function ContentManagement() {
 
   // Announcement mutations
   const createAnnouncementMutation = useMutation({
-    mutationFn: (data: AnnouncementFormData) => apiRequest("/api/admin/announcements", {
-      method: "POST",
-      body: JSON.stringify(data),
-    }),
+    mutationFn: (data: AnnouncementFormData) => apiRequest("/api/admin/announcements", "POST", data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/announcements"] });
       setIsAnnouncementDialogOpen(false);
@@ -130,10 +127,7 @@ export function ContentManagement() {
 
   const updateAnnouncementMutation = useMutation({
     mutationFn: ({ id, data }: { id: number; data: Partial<AnnouncementFormData> }) =>
-      apiRequest(`/api/admin/announcements/${id}`, {
-        method: "PATCH",
-        body: JSON.stringify(data),
-      }),
+      apiRequest(`/api/admin/announcements/${id}`, "PATCH", data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/announcements"] });
       setIsAnnouncementDialogOpen(false);
@@ -147,9 +141,7 @@ export function ContentManagement() {
   });
 
   const deleteAnnouncementMutation = useMutation({
-    mutationFn: (id: number) => apiRequest(`/api/admin/announcements/${id}`, {
-      method: "DELETE",
-    }),
+    mutationFn: (id: number) => apiRequest(`/api/admin/announcements/${id}`, "DELETE"),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/announcements"] });
       toast({ title: "Announcement deleted successfully" });
@@ -161,10 +153,7 @@ export function ContentManagement() {
 
   // News mutations
   const createNewsMutation = useMutation({
-    mutationFn: (data: NewsFormData) => apiRequest("/api/admin/news", {
-      method: "POST",
-      body: JSON.stringify(data),
-    }),
+    mutationFn: (data: NewsFormData) => apiRequest("/api/admin/news", "POST", data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/news"] });
       setIsNewsDialogOpen(false);
@@ -177,9 +166,7 @@ export function ContentManagement() {
   });
 
   const deleteNewsMutation = useMutation({
-    mutationFn: (id: number) => apiRequest(`/api/admin/news/${id}`, {
-      method: "DELETE",
-    }),
+    mutationFn: (id: number) => apiRequest(`/api/admin/news/${id}`, "DELETE"),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/news"] });
       toast({ title: "News deleted successfully" });
@@ -191,10 +178,7 @@ export function ContentManagement() {
 
   // Event mutations
   const createEventMutation = useMutation({
-    mutationFn: (data: EventFormData) => apiRequest("/api/admin/events", {
-      method: "POST",
-      body: JSON.stringify(data),
-    }),
+    mutationFn: (data: EventFormData) => apiRequest("/api/admin/events", "POST", data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/events"] });
       setIsEventDialogOpen(false);
@@ -207,9 +191,7 @@ export function ContentManagement() {
   });
 
   const deleteEventMutation = useMutation({
-    mutationFn: (id: number) => apiRequest(`/api/admin/events/${id}`, {
-      method: "DELETE",
-    }),
+    mutationFn: (id: number) => apiRequest(`/api/admin/events/${id}`, "DELETE"),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/events"] });
       toast({ title: "Event deleted successfully" });
@@ -221,10 +203,7 @@ export function ContentManagement() {
 
   // Org chart mutations
   const createOrgChartMutation = useMutation({
-    mutationFn: (data: OrgChartFormData) => apiRequest("/api/admin/org-chart", {
-      method: "POST",
-      body: JSON.stringify(data),
-    }),
+    mutationFn: (data: OrgChartFormData) => apiRequest("/api/admin/org-chart", "POST", data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/org-chart"] });
       setIsOrgChartDialogOpen(false);
@@ -237,9 +216,7 @@ export function ContentManagement() {
   });
 
   const deleteOrgChartMutation = useMutation({
-    mutationFn: (id: number) => apiRequest(`/api/admin/org-chart/${id}`, {
-      method: "DELETE",
-    }),
+    mutationFn: (id: number) => apiRequest(`/api/admin/org-chart/${id}`, "DELETE"),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/org-chart"] });
       toast({ title: "Organization chart entry deleted successfully" });
