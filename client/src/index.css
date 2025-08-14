@@ -138,6 +138,53 @@
     transform: translateX(100%);
     transition: transform 300ms ease-in-out;
   }
+
+  /* Responsive utilities */
+  .container-responsive {
+    @apply w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+
+  .grid-responsive {
+    @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-6;
+  }
+
+  .card-responsive {
+    @apply p-4 sm:p-6 rounded-lg bg-white shadow-sm hover:shadow-md transition-shadow;
+  }
+
+  .text-responsive {
+    @apply text-sm sm:text-base;
+  }
+
+  .heading-responsive {
+    @apply text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold;
+  }
+
+  .button-responsive {
+    @apply px-3 py-2 sm:px-4 sm:py-2 text-sm sm:text-base;
+  }
+
+  /* Mobile-first sidebar */
+  .sidebar-mobile {
+    @apply fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-xl transform -translate-x-full transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 lg:shadow-none;
+  }
+
+  .sidebar-mobile.open {
+    @apply translate-x-0;
+  }
+
+  .sidebar-overlay {
+    @apply fixed inset-0 z-40 bg-black bg-opacity-50 lg:hidden;
+  }
+
+  /* Responsive chat panel */
+  .chat-panel-responsive {
+    @apply fixed inset-y-0 right-0 z-50 w-full sm:w-80 bg-white shadow-xl transform translate-x-full transition-transform duration-300 ease-in-out;
+  }
+
+  .chat-panel-responsive.open {
+    @apply translate-x-0;
+  }
 }
 
 @keyframes pulse {

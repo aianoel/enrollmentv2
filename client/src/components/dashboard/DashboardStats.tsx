@@ -11,10 +11,10 @@ interface StatCard {
 }
 
 export const DashboardStats: React.FC = () => {
-  const { userProfile } = useAuth();
+  const { user } = useAuth();
 
   const getStatsForRole = (): StatCard[] => {
-    switch (userProfile?.role) {
+    switch (user?.role) {
       case 'student':
         return [
           {
@@ -126,22 +126,22 @@ export const DashboardStats: React.FC = () => {
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+    <div className="grid-responsive">
       {stats.map((stat, index) => (
-        <Card key={index} className="hover-lift" data-testid={`stat-card-${index}`}>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${getColorClasses(stat.color)}`}>
-                <i className={stat.icon}></i>
+        <Card key={index} className="card-responsive hover-lift" data-testid={`stat-card-${index}`}>
+          <CardContent className="p-4 sm:p-6">
+            <div className="flex items-center justify-between mb-3 sm:mb-4">
+              <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-lg flex items-center justify-center ${getColorClasses(stat.color)}`}>
+                <i className={`${stat.icon} text-sm sm:text-base`}></i>
               </div>
-              <span className="text-2xl font-bold text-gray-900" data-testid={`stat-value-${index}`}>
+              <span className="text-lg sm:text-2xl font-bold text-gray-900" data-testid={`stat-value-${index}`}>
                 {stat.value}
               </span>
             </div>
-            <h3 className="font-medium text-gray-900 mb-1" data-testid={`stat-title-${index}`}>
+            <h3 className="font-medium text-gray-900 mb-1 text-sm sm:text-base" data-testid={`stat-title-${index}`}>
               {stat.title}
             </h3>
-            <p className={`text-sm ${stat.color === 'green' ? 'text-green-600' : stat.color === 'orange' ? 'text-orange-600' : 'text-gray-500'}`} data-testid={`stat-subtitle-${index}`}>
+            <p className={`text-xs sm:text-sm ${stat.color === 'green' ? 'text-green-600' : stat.color === 'orange' ? 'text-orange-600' : 'text-gray-500'}`} data-testid={`stat-subtitle-${index}`}>
               {stat.subtitle}
             </p>
           </CardContent>

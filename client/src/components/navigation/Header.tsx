@@ -7,7 +7,12 @@ import { NotificationPanel } from '../notifications/NotificationPanel';
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 
-export const Header: React.FC = () => {
+interface HeaderProps {
+  onMenuClick?: () => void;
+  isMobile?: boolean;
+}
+
+export const Header: React.FC<HeaderProps> = ({ onMenuClick, isMobile = false }) => {
   const { user } = useAuth();
   const { isOpen, setIsOpen, onlineUsers } = useChat();
   const [isNotificationPanelOpen, setIsNotificationPanelOpen] = useState(false);
@@ -35,15 +40,28 @@ export const Header: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center">
+            {/* Mobile menu button */}
+            {isMobile && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="mr-3 p-2 text-gray-600 hover:text-primary-600"
+                onClick={onMenuClick}
+                data-testid="button-mobile-menu"
+              >
+                <i className="fas fa-bars text-lg"></i>
+              </Button>
+            )}
+            
             <div className="flex items-center space-x-3">
               <div className="w-8 h-8 bg-primary-600 rounded-lg flex items-center justify-center">
                 <i className="fas fa-graduation-cap text-white text-sm" data-testid="header-logo"></i>
               </div>
-              <h1 className="text-xl font-bold text-gray-900" data-testid="header-title">EduManage</h1>
+              <h1 className="text-lg sm:text-xl font-bold text-gray-900" data-testid="header-title">EduManage</h1>
             </div>
           </div>
 
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-2 sm:space-x-4">
             {/* Chat Toggle */}
             <Button
               variant="ghost"
@@ -52,7 +70,7 @@ export const Header: React.FC = () => {
               onClick={() => setIsOpen(!isOpen)}
               data-testid="button-chat-toggle"
             >
-              <i className="fas fa-comments text-xl"></i>
+              <i className="fas fa-comments text-lg sm:text-xl"></i>
               {onlineUsers.length > 0 && (
                 <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full" data-testid="chat-indicator"></span>
               )}
@@ -66,9 +84,9 @@ export const Header: React.FC = () => {
               onClick={() => setIsNotificationPanelOpen(!isNotificationPanelOpen)}
               data-testid="button-notifications"
             >
-              <i className="fas fa-bell text-xl"></i>
+              <i className="fas fa-bell text-lg sm:text-xl"></i>
               {notificationCount > 0 && (
-                <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center" data-testid="notification-count">
+                <span className="absolute -top-1 -right-1 w-4 h-4 sm:w-5 sm:h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center" data-testid="notification-count">
                   {notificationCount > 99 ? '99+' : notificationCount}
                 </span>
               )}

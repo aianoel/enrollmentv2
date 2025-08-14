@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Header } from '../navigation/Header';
 import { Sidebar } from '../navigation/Sidebar';
 import { ChatPanel } from '../chat/ChatPanel';
@@ -33,6 +33,22 @@ export const MainLayout: React.FC = () => {
   const { user } = useAuth();
   const { isOpen } = useChat();
   const [currentSection, setCurrentSection] = useState('dashboard');
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Handle responsive behavior
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 1024);
+      if (window.innerWidth >= 1024) {
+        setIsSidebarOpen(false); // Auto-close mobile sidebar on desktop
+      }
+    };
+
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   if (!user) return null;
 
@@ -92,23 +108,51 @@ export const MainLayout: React.FC = () => {
 
   return (
     <div className="flex h-screen bg-gradient-to-br from-gray-50 to-gray-100 overflow-hidden">
-      <Sidebar 
-        currentSection={currentSection} 
-        onSectionChange={setCurrentSection} 
-      />
+      {/* Mobile sidebar overlay */}
+      {isSidebarOpen && (
+        <div 
+          className="sidebar-overlay"
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      )}
+
+      {/* Sidebar */}
+      <div className={`sidebar-mobile ${isSidebarOpen ? 'open' : ''}`}>
+        <Sidebar 
+          currentSection={currentSection} 
+          onSectionChange={(section) => {
+            setCurrentSection(section);
+            if (isMobile) setIsSidebarOpen(false); // Close sidebar on mobile after selection
+          }}
+        />
+      </div>
+      
+      {/* Main content */}
       <div className="flex-1 flex flex-col min-w-0">
-        <Header />
-        <main className="flex-1 overflow-y-auto">
-          {renderContent()}
+        <Header 
+          onMenuClick={() => setIsSidebarOpen(!isSidebarOpen)}
+          isMobile={isMobile}
+        />
+        <main className="flex-1 overflow-y-auto p-4 sm:p-6">
+          <div className="container-responsive">
+            {renderContent()}
+          </div>
         </main>
       </div>
       
-      {/* Enhanced Chat panel with real-time users */}
-      {isOpen && (
-        <div className="w-80 border-l border-gray-200/50 bg-white/95 backdrop-blur-sm shadow-xl">
-          <EnhancedChatSystem />
-        </div>
+      {/* Enhanced Chat panel with responsive design */}
+      <div className={`chat-panel-responsive ${isOpen ? 'open' : ''}`}>
+        <EnhancedChatSystem />
+      </div>
+      
+      {/* Chat panel overlay for mobile */}
+      {isOpen && isMobile && (
+        <div 
+          className="fixed inset-0 z-40 bg-black bg-opacity-50"
+          onClick={() => {}} // Let chat handle its own closing
+        />
       )}
+      
       <ChatPanel />
     </div>
   );

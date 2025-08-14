@@ -87,42 +87,66 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentSection, onSectionChang
   const navigationItems = getNavigationItems();
 
   return (
-    <aside className="w-48 bg-white/90 backdrop-blur-sm shadow-lg border-r border-gray-200/50 h-full">
-      <div className="p-3 border-b border-gray-200/50">
-        <h2 className="text-lg font-bold text-gray-800">EduManage</h2>
-        <p className="text-xs text-gray-600 capitalize">{user.role}</p>
+    <aside className="w-64 bg-white shadow-lg h-full flex flex-col">
+      {/* Header */}
+      <div className="p-4 border-b border-gray-200">
+        <div className="flex items-center space-x-3">
+          <div className="w-8 h-8 bg-primary-600 rounded-lg flex items-center justify-center">
+            <i className="fas fa-graduation-cap text-white text-sm"></i>
+          </div>
+          <div>
+            <h2 className="text-lg font-bold text-gray-800">EduManage</h2>
+            <p className="text-xs text-gray-600 capitalize">{user.role}</p>
+          </div>
+        </div>
       </div>
       
-      <nav className="p-2 space-y-1">
+      {/* Navigation */}
+      <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
         {navigationItems.map((item) => (
           <Button
             key={item.id}
             variant={currentSection === item.id ? 'default' : 'ghost'}
-            className={`flex items-center space-x-2 w-full justify-start h-8 text-sm ${
+            className={`flex items-center space-x-3 w-full justify-start h-10 text-sm ${
               currentSection === item.id
-                ? 'bg-primary-50 text-primary-600 hover:bg-primary-100 border-r-2 border-primary-500'
-                : 'text-gray-700 hover:bg-gray-100/70'
+                ? 'bg-primary-50 text-primary-700 hover:bg-primary-100 border-r-2 border-primary-500'
+                : 'text-gray-700 hover:bg-gray-100'
             }`}
             onClick={() => onSectionChange(item.id)}
             data-testid={`nav-${item.id}`}
           >
-            <i className={`${item.icon} w-4 text-xs`}></i>
-            <span className="text-xs font-medium">{item.label}</span>
+            <i className={`${item.icon} w-5 text-sm`}></i>
+            <span className="font-medium">{item.label}</span>
           </Button>
         ))}
-
-        <div className="pt-3 border-t border-gray-200/50">
-          <Button
-            variant="ghost"
-            className="flex items-center space-x-2 w-full justify-start text-gray-700 hover:bg-gray-100/70 h-8 text-sm"
-            onClick={logout}
-            data-testid="nav-logout"
-          >
-            <i className="fas fa-sign-out-alt w-4 text-xs"></i>
-            <span className="text-xs">Logout</span>
-          </Button>
-        </div>
       </nav>
+
+      {/* User info and logout */}
+      <div className="p-3 border-t border-gray-200">
+        <div className="mb-3 p-2 bg-gray-50 rounded-lg">
+          <div className="flex items-center space-x-3">
+            <div className="w-8 h-8 bg-primary-600 rounded-full flex items-center justify-center">
+              <span className="text-white text-xs font-medium">
+                {user.name.split(' ').map(n => n[0]).join('').toUpperCase()}
+              </span>
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-gray-900 truncate">{user.name}</p>
+              <p className="text-xs text-gray-500 truncate">{user.email}</p>
+            </div>
+          </div>
+        </div>
+        
+        <Button
+          variant="ghost"
+          className="flex items-center space-x-3 w-full justify-start text-gray-700 hover:bg-red-50 hover:text-red-700 h-10"
+          onClick={logout}
+          data-testid="nav-logout"
+        >
+          <i className="fas fa-sign-out-alt w-5 text-sm"></i>
+          <span className="font-medium">Logout</span>
+        </Button>
+      </div>
     </aside>
   );
 };

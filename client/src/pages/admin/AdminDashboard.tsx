@@ -71,7 +71,7 @@ export function AdminDashboard() {
     description: string;
     color?: string;
   }) => (
-    <Card>
+    <Card className="card-responsive">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="text-sm font-medium">{title}</CardTitle>
         <Icon className={`h-4 w-4 text-${color}-600`} />
@@ -88,38 +88,38 @@ export function AdminDashboard() {
   }
 
   return (
-    <DashboardBackground userRole="admin" className="p-6">
-      <div className="space-y-6">
+    <DashboardBackground userRole="admin" className="p-4 sm:p-6">
+      <div className="space-y-4 sm:space-y-6">
         <EnhancedCard 
           variant="gradient" 
           className="bg-gradient-to-r from-blue-600 to-blue-700 text-white border-0"
           data-testid="welcome-header"
         >
           <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold">Admin Dashboard</h1>
-              <p className="opacity-90">
+            <div className="flex-1 min-w-0">
+              <h1 className="text-2xl sm:text-3xl font-bold">Admin Dashboard</h1>
+              <p className="opacity-90 text-sm sm:text-base">
                 Comprehensive school management and administrative controls
               </p>
             </div>
-            <Shield className="h-16 w-16 opacity-20" />
+            <Shield className="h-12 w-12 sm:h-16 sm:w-16 opacity-20 flex-shrink-0" />
           </div>
         </EnhancedCard>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="grid w-full grid-cols-8">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="users">Users</TabsTrigger>
-          <TabsTrigger value="enrollment">Enrollment</TabsTrigger>
-          <TabsTrigger value="academic">Academic</TabsTrigger>
-          <TabsTrigger value="content">Content</TabsTrigger>
-          <TabsTrigger value="monitoring">Reports</TabsTrigger>
-          <TabsTrigger value="communication">Chat</TabsTrigger>
-          <TabsTrigger value="settings">Settings</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-1">
+          <TabsTrigger value="overview" className="text-xs sm:text-sm">Overview</TabsTrigger>
+          <TabsTrigger value="users" className="text-xs sm:text-sm">Users</TabsTrigger>
+          <TabsTrigger value="enrollment" className="text-xs sm:text-sm">Enrollment</TabsTrigger>
+          <TabsTrigger value="academic" className="text-xs sm:text-sm">Academic</TabsTrigger>
+          <TabsTrigger value="content" className="text-xs sm:text-sm">Content</TabsTrigger>
+          <TabsTrigger value="monitoring" className="text-xs sm:text-sm">Reports</TabsTrigger>
+          <TabsTrigger value="communication" className="text-xs sm:text-sm">Chat</TabsTrigger>
+          <TabsTrigger value="settings" className="text-xs sm:text-sm">Settings</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <div className="grid-responsive">
             <StatCard
               icon={Users}
               title="Total Users"
