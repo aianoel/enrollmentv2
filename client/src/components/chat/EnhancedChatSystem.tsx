@@ -105,9 +105,11 @@ export function EnhancedChatSystem() {
 
   const { data: messages = [] } = useQuery({
     queryKey: ["/api/chat/messages", user?.id, (selectedConversation as any)?.partnerId],
-    queryFn: () => {
+    queryFn: async () => {
       const partnerId = (selectedConversation as any)?.partnerId;
-      return apiRequest(`/api/chat/messages?userId1=${user?.id}&userId2=${partnerId}`);
+      const result = await apiRequest(`/api/chat/messages?userId1=${user?.id}&userId2=${partnerId}`);
+      console.log('Messages API response:', result);
+      return result;
     },
     enabled: !!(selectedConversation as any)?.partnerId && !!user?.id,
     refetchInterval: 5000 // Fallback polling
@@ -345,9 +347,9 @@ export function EnhancedChatSystem() {
   if (!user) return null;
 
   return (
-    <div className="flex flex-col lg:flex-row h-[500px] sm:h-[600px] border rounded-lg overflow-hidden bg-background">
+    <div className="flex flex-col lg:flex-row h-[400px] sm:h-[500px] lg:h-[600px] border rounded-lg overflow-hidden bg-background">
       {/* Conversations Sidebar */}
-      <div className={`w-full lg:w-80 lg:border-r bg-muted/30 flex-shrink-0 ${selectedConversation ? 'hidden lg:block' : ''}`}>
+      <div className={`w-full lg:w-80 lg:border-r bg-muted/30 flex-shrink-0 ${selectedConversation ? 'hidden lg:block' : 'flex flex-col'}`}>
         <div className="p-4 border-b">
           <div className="flex items-center justify-between mb-3">
             <h2 className="font-semibold">Messages</h2>
@@ -587,20 +589,20 @@ export function EnhancedChatSystem() {
             </div>
 
             {/* Messages */}
-            <ScrollArea className="flex-1 p-4 max-h-[400px] sm:max-h-[500px]">
-              <div className="space-y-4">
+            <ScrollArea className="flex-1 p-2 sm:p-4 overflow-y-auto">
+              <div className="space-y-2 sm:space-y-4">
                 {messages.map((message: Message) => (
                   <div
                     key={message.id}
                     className={`flex ${message.senderId === user.id ? 'justify-end' : 'justify-start'}`}
                   >
-                    <div className={`flex items-end gap-2 max-w-[70%] ${message.senderId === user.id ? 'flex-row-reverse' : ''}`}>
-                      <Avatar className="h-6 w-6">
+                    <div className={`flex items-end gap-1 sm:gap-2 max-w-[85%] sm:max-w-[70%] ${message.senderId === user.id ? 'flex-row-reverse' : ''}`}>
+                      <Avatar className="h-5 w-5 sm:h-6 sm:w-6 flex-shrink-0">
                         <AvatarFallback className="text-xs">
                           {getInitials(getUserName(message.senderId))}
                         </AvatarFallback>
                       </Avatar>
-                      <div className={`rounded-lg px-3 py-2 ${
+                      <div className={`rounded-lg px-2 py-1 sm:px-3 sm:py-2 ${
                         message.senderId === user.id
                           ? 'bg-primary text-primary-foreground'
                           : 'bg-muted'
@@ -630,9 +632,9 @@ export function EnhancedChatSystem() {
             </ScrollArea>
 
             {/* Message Input */}
-            <div className="p-4 border-t bg-background/95 backdrop-blur-sm">
-              <div className="flex items-center gap-2">
-                <Button variant="ghost" size="sm">
+            <div className="p-2 sm:p-4 border-t bg-background/95 backdrop-blur-sm">
+              <div className="flex items-center gap-1 sm:gap-2">
+                <Button variant="ghost" size="sm" className="hidden sm:flex">
                   <Paperclip className="h-4 w-4" />
                 </Button>
                 <div className="flex-1">
@@ -649,18 +651,20 @@ export function EnhancedChatSystem() {
                         handleSendMessage();
                       }
                     }}
+                    className="text-sm sm:text-base"
                     data-testid="input-message"
                   />
                 </div>
-                <Button variant="ghost" size="sm">
+                <Button variant="ghost" size="sm" className="hidden sm:flex">
                   <Smile className="h-4 w-4" />
                 </Button>
                 <Button 
                   onClick={handleSendMessage} 
                   disabled={!messageText.trim()}
+                  size="sm"
                   data-testid="button-send-message"
                 >
-                  <Send className="h-4 w-4" />
+                  <Send className="h-3 w-3 sm:h-4 sm:w-4" />
                 </Button>
               </div>
             </div>
