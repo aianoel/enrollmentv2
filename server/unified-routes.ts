@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { Server as SocketIOServer } from "socket.io";
 import { storage } from "./unified-storage";
-import { db } from "./db";
+import { db, pool } from "./db";
 import bcrypt from "bcryptjs";
 
 // SMS Service using Semaphore API
@@ -486,14 +486,14 @@ export function registerRoutes(app: Express): Server {
   // Get all sections and subjects for assignment dropdowns
   app.get("/api/academic/sections", async (req, res) => {
     try {
-      const result = await db.execute(`
+      const result = await pool.query(`
         SELECT 
           s.id, 
           s.name, 
           s.grade_level,
           s.capacity,
           s.school_year,
-          COALESCE(u.first_name || ' ' || u.last_name, 'No Adviser') as adviser_name
+          COALESCE(u.name, 'No Adviser') as adviser_name
         FROM sections s
         LEFT JOIN users u ON s.adviser_id = u.id
         ORDER BY s.grade_level, s.name
@@ -514,9 +514,9 @@ export function registerRoutes(app: Express): Server {
         return res.status(400).json({ error: "Name, grade level, and school year are required" });
       }
 
-      const result = await db.execute(`
+      const result = await pool.query(`
         INSERT INTO sections (name, grade_level, capacity, school_year) 
-        VALUES (?, ?, ?, ?) 
+        VALUES ($1, $2, $3, $4) 
         RETURNING *
       `, [name, gradeLevel, capacity || 40, schoolYear]);
       
@@ -529,7 +529,7 @@ export function registerRoutes(app: Express): Server {
 
   app.get("/api/academic/subjects", async (req, res) => {
     try {
-      const result = await db.execute(`SELECT * FROM subjects ORDER BY name`);
+      const result = await pool.query(`SELECT * FROM subjects ORDER BY name`);
       res.json(result.rows || []);
     } catch (error) {
       console.error("Error fetching subjects:", error);
@@ -546,9 +546,9 @@ export function registerRoutes(app: Express): Server {
         return res.status(400).json({ error: "Subject name is required" });
       }
 
-      const result = await db.execute(`
+      const result = await pool.query(`
         INSERT INTO subjects (name, description) 
-        VALUES (?, ?) 
+        VALUES ($1, $2) 
         RETURNING *
       `, [name, description || '']);
       
@@ -559,41 +559,66 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  // Academic Coordinator Routes
-  app.post("/api/academic/subjects", async (req, res) => {
-    try {
-      const subject = await storage.createSubject(req.body);
-      res.status(201).json(subject);
-    } catch (error) {
-      console.error("Error creating subject:", error);
-      res.status(500).json({ error: "Internal server error" });
-    }
-  });
-
+  // POST endpoint for creating sections
   app.post("/api/academic/sections", async (req, res) => {
     try {
-      const section = await storage.createSection(req.body);
-      res.status(201).json(section);
+      const { name, gradeLevel, capacity, schoolYear } = req.body;
+      
+      if (!name || !gradeLevel) {
+        return res.status(400).json({ error: "Section name and grade level are required" });
+      }
+
+      const result = await pool.query(`
+        INSERT INTO sections (name, grade_level, capacity, school_year) 
+        VALUES ($1, $2, $3, $4) 
+        RETURNING *
+      `, [name, gradeLevel, capacity || 40, schoolYear || '2024-2025']);
+      
+      res.status(201).json(result.rows[0]);
     } catch (error) {
       console.error("Error creating section:", error);
       res.status(500).json({ error: "Internal server error" });
     }
   });
 
-  app.post("/api/academic/assign-teacher", async (req, res) => {
+  // POST endpoint for teacher assignments
+  app.post("/api/academic/teacher-assignments", async (req, res) => {
     try {
-      const assignment = await storage.assignTeacherToSubject(req.body);
-      res.status(201).json(assignment);
+      const { teacherId, subjectId, sectionId, schoolYear, semester } = req.body;
+      
+      if (!teacherId || !subjectId || !sectionId) {
+        return res.status(400).json({ error: "Teacher, subject, and section are required" });
+      }
+
+      const result = await pool.query(`
+        INSERT INTO teacher_assignments (teacher_id, subject_id, section_id, school_year, semester) 
+        VALUES ($1, $2, $3, $4, $5) 
+        RETURNING *
+      `, [teacherId, subjectId, sectionId, schoolYear || '2024-2025', semester || '1st']);
+      
+      res.status(201).json(result.rows[0]);
     } catch (error) {
-      console.error("Error assigning teacher:", error);
+      console.error("Error creating teacher assignment:", error);
       res.status(500).json({ error: "Internal server error" });
     }
   });
 
+  // POST endpoint for teacher schedules  
   app.post("/api/academic/schedules", async (req, res) => {
     try {
-      const schedule = await storage.createSchedule(req.body);
-      res.status(201).json(schedule);
+      const { teacherId, subjectId, sectionId, dayOfWeek, startTime, endTime, room } = req.body;
+      
+      if (!teacherId || !subjectId || !sectionId || !dayOfWeek || !startTime || !endTime) {
+        return res.status(400).json({ error: "All schedule fields are required" });
+      }
+
+      const result = await pool.query(`
+        INSERT INTO schedules (teacher_id, subject_id, section_id, day_of_week, start_time, end_time, room) 
+        VALUES ($1, $2, $3, $4, $5, $6, $7) 
+        RETURNING *
+      `, [teacherId, subjectId, sectionId, dayOfWeek, startTime, endTime, room || '']);
+      
+      res.status(201).json(result.rows[0]);
     } catch (error) {
       console.error("Error creating schedule:", error);
       res.status(500).json({ error: "Internal server error" });
@@ -606,28 +631,6 @@ export function registerRoutes(app: Express): Server {
       res.json(assignments);
     } catch (error) {
       console.error("Error fetching teacher assignments:", error);
-      res.status(500).json({ error: "Internal server error" });
-    }
-  });
-
-  // POST endpoint for creating teacher assignments
-  app.post("/api/academic/teacher-assignments", async (req, res) => {
-    try {
-      const { teacherId, subjectId, sectionId, schoolYear, semester } = req.body;
-      
-      if (!teacherId || !subjectId || !sectionId) {
-        return res.status(400).json({ error: "Teacher ID, subject ID, and section ID are required" });
-      }
-
-      const result = await db.execute(`
-        INSERT INTO teacher_assignments (teacher_id, subject_id, section_id, school_year, semester) 
-        VALUES (?, ?, ?, ?, ?) 
-        RETURNING *
-      `, [teacherId, subjectId, sectionId, schoolYear || '2024-2025', semester || '1st']);
-      
-      res.status(201).json(result.rows[0]);
-    } catch (error) {
-      console.error("Error creating teacher assignment:", error);
       res.status(500).json({ error: "Internal server error" });
     }
   });

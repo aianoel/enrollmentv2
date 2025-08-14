@@ -1,0 +1,42 @@
+Warning: Received NaN for the &#x60;strokeDashoffset&#x60; attribute. If this is expected, cast the value to a string.
+    at circle
+    at svg
+    at div
+    at div
+    at SimpleDonutChart (https://3e900d2e-df28-4d70-96f2-8b185abe54b7-00-29d2w07rj2cck.sisko.replit.dev/src/components/ui/modern-dashboard.tsx:342:36)
+    at div
+    at _c9 (https://3e900d2e-df28-4d70-96f2-8b185abe54b7-00-29d2w07rj2cck.sisko.replit.dev/src/components/ui/card.tsx:114:12)
+    at div
+    at _c (https://3e900d2e-df28-4d70-96f2-8b185abe54b7-00-29d2w07rj2cck.sisko.replit.dev/src/components/ui/card.tsx:20:11)
+    at ChartCard (https://3e900d2e-df28-4d70-96f2-8b185abe54b7-00-29d2w07rj2cck.sisko.replit.dev/src/components/ui/modern-dashboard.tsx:248:29)
+    at div
+    at div
+    at div
+    at https://3e900d2e-df28-4d70-96f2-8b185abe54b7-00-29d2w07rj2cck.sisko.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-BOL2CCOG.js?v=75df800f:42:13
+    at Presence (https://3e900d2e-df28-4d70-96f2-8b185abe54b7-00-29d2w07rj2cck.sisko.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-VCJEE5DL.js?v=75df800f:24:11)
+    at https://3e900d2e-df28-4d70-96f2-8b185abe54b7-00-29d2w07rj2cck.sisko.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tabs.js?v=75df800f:389:13
+    at _c5 (https://3e900d2e-df28-4d70-96f2-8b185abe54b7-00-29d2w07rj2cck.sisko.replit.dev/src/components/ui/tabs.tsx:72:12)
+    at div
+    at https://3e900d2e-df28-4d70-96f2-8b185abe54b7-00-29d2w07rj2cck.sisko.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-BOL2CCOG.js?v=75df800f:42:13
+    at Provider (https://3e900d2e-df28-4d70-96f2-8b185abe54b7-00-29d2w07rj2cck.sisko.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-OXZDJRWN.js?v=75df800f:38:15)
+    at https://3e900d2e-df28-4d70-96f2-8b185abe54b7-00-29d2w07rj2cck.sisko.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tabs.js?v=75df800f:267:7
+    at div
+    at div
+    at div
+    at DashboardLayout (https://3e900d2e-df28-4d70-96f2-8b185abe54b7-00-29d2w07rj2cck.sisko.replit.dev/src/components/ui/modern-dashboard.tsx:476:35)
+    at AdminDashboard (https://3e900d2e-df28-4d70-96f2-8b185abe54b7-00-29d2w07rj2cck.sisko.replit.dev/src/pages/admin/AdminDashboard.tsx:43:37)
+    at div
+    at main
+    at div
+    at div
+    at MainLayout (https://3e900d2e-df28-4d70-96f2-8b185abe54b7-00-29d2w07rj2cck.sisko.replit.dev/src/components/layout/MainLayout.tsx:44:20)
+    at ChatProvider (https://3e900d2e-df28-4d70-96f2-8b185abe54b7-00-29d2w07rj2cck.sisko.replit.dev/src/contexts/ChatContext.tsx:32:32)
+    at AppContent (https://3e900d2e-df28-4d70-96f2-8b185abe54b7-00-29d2w07rj2cck.sisko.replit.dev/src/App.tsx?v=Bv7aWb57S00ZLxx_iAYvI:35:29)
+    at Route (https://3e900d2e-df28-4d70-96f2-8b185abe54b7-00-29d2w07rj2cck.sisko.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=75df800f:323:16)
+    at Switch (https://3e900d2e-df28-4d70-96f2-8b185abe54b7-00-29d2w07rj2cck.sisko.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=75df800f:379:17)
+    at Router
+    at AuthProvider (https://3e900d2e-df28-4d70-96f2-8b185abe54b7-00-29d2w07rj2cck.sisko.replit.dev/src/contexts/AuthContext.tsx:30:32)
+    at Provider (https://3e900d2e-df28-4d70-96f2-8b185abe54b7-00-29d2w07rj2cck.sisko.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-OXZDJRWN.js?v=75df800f:38:15)
+    at TooltipProvider (https://3e900d2e-df28-4d70-96f2-8b185abe54b7-00-29d2w07rj2cck.sisko.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=75df800f:64:5)
+    at QueryClientProvider (https://3e900d2e-df28-4d70-96f2-8b185abe54b7-00-29d2w07rj2cck.sisko.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=75df800f:2805:3)
+    at App
