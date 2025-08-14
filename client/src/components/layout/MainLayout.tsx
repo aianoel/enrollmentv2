@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Header } from '../navigation/Header';
 import { Sidebar } from '../navigation/Sidebar';
-import { ChatPanel } from '../chat/ChatPanel';
+
 import { Dashboard } from '../../pages/Dashboard';
 import { Grades } from '../../pages/Grades';
 import { Assignments } from '../../pages/Assignments';
@@ -23,15 +23,13 @@ import { EnhancedAccountingDashboard } from '../../pages/accounting/EnhancedAcco
 import { PrincipalDashboard } from '../../pages/principal/PrincipalDashboard';
 import { AcademicCoordinatorDashboard } from '../../pages/academic/AcademicCoordinatorDashboard';
 import { StudentPaymentPage } from '../../pages/student/StudentPaymentPage';
-import { EnhancedChatSystem } from '../chat/EnhancedChatSystem';
+import { FacebookStyleChat } from '../chat/FacebookStyleChat';
 import { AdminControlPanel } from '../admin/AdminControlSimple';
 import { UserManagement } from '../admin/UserManagement';
 import { useAuth } from '../../contexts/AuthContext';
-import { useChat } from '../../contexts/ChatContext';
 
 export const MainLayout: React.FC = () => {
   const { user } = useAuth();
-  const { isOpen } = useChat();
   const [currentSection, setCurrentSection] = useState('dashboard');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
@@ -148,20 +146,8 @@ export const MainLayout: React.FC = () => {
         </main>
       </div>
       
-      {/* Enhanced Chat panel with borderless design */}
-      <div className={`saas-chat-panel ${isOpen ? 'open' : ''}`}>
-        <EnhancedChatSystem />
-      </div>
-      
-      {/* Chat panel overlay for mobile */}
-      {isOpen && isMobile && (
-        <div 
-          className="fixed inset-0 z-30 bg-black/20 backdrop-blur-sm"
-          onClick={() => {}} // Let chat handle its own closing
-        />
-      )}
-      
-      <ChatPanel />
+      {/* Facebook Style Chat */}
+      <FacebookStyleChat />
     </div>
   );
 };
