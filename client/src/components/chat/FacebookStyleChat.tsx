@@ -295,14 +295,14 @@ export function FacebookStyleChat() {
     if (onlineUsers.length > 0 && 'id' in onlineUsers[0]) {
       return onlineUsers.filter((u: User) => 
         u.id !== user?.id && 
-        u.name.toLowerCase().includes(searchTerm.toLowerCase())
+        u.name && u.name.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
     // Otherwise, filter from all users and check online status
     return (users as User[]).filter((u: User) => 
       u.id !== user?.id && 
       isUserOnline(u.id) &&
-      u.name.toLowerCase().includes(searchTerm.toLowerCase())
+      u.name && u.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
   })();
 
