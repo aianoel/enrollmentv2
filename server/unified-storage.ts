@@ -23,7 +23,7 @@ import {
   schedules, learningModules
 } from "@shared/unified-schema";
 import { db } from "./db";
-import { eq, desc, and, not, gte, lte } from "drizzle-orm";
+import { eq, desc, and, not, gte, lte, sql } from "drizzle-orm";
 
 export interface IStorage {
   // User management
@@ -702,20 +702,22 @@ export class DatabaseStorage implements IStorage {
 
   async getConversationMessages(userId: number, partnerId: number, limit: number = 50): Promise<any[]> {
     try {
-      // Get all messages between these two users
-      const allMessages = await db.select().from(messages);
-      const conversationMessages = allMessages.filter(m => 
-        (m.senderId === userId && m.recipientId === partnerId) ||
-        (m.senderId === partnerId && m.recipientId === userId)
-      ).sort((a, b) => new Date(a.createdAt!).getTime() - new Date(b.createdAt!).getTime());
+      // Use raw SQL to get messages between users
+      const result = await db.execute(sql`
+        SELECT * FROM messages 
+        WHERE (sender_id = ${userId} AND receiver_id = ${partnerId}) 
+           OR (sender_id = ${partnerId} AND receiver_id = ${userId})
+        ORDER BY sent_at ASC
+        LIMIT ${limit}
+      `);
       
-      return conversationMessages.slice(-limit).map(msg => ({
+      return result.rows.map((msg: any) => ({
         id: msg.id,
-        senderId: msg.senderId,
-        recipientId: msg.recipientId,
-        message: msg.messageText,
-        createdAt: msg.createdAt,
-        isRead: msg.isRead
+        senderId: msg.sender_id,
+        recipientId: msg.receiver_id,
+        message: msg.message,
+        createdAt: msg.sent_at,
+        isRead: msg.is_read
       }));
     } catch (error) {
       console.error('Error getting conversation messages:', error);
@@ -725,21 +727,21 @@ export class DatabaseStorage implements IStorage {
 
   async createMessage(data: any): Promise<any> {
     try {
-      const [message] = await db.insert(messages).values({
-        senderId: data.senderId,
-        recipientId: data.recipientId,
-        messageText: data.content || data.message,
-        createdAt: new Date(),
-        isRead: false
-      }).returning();
+      // Use raw SQL since the schema mapping is inconsistent
+      const result = await db.execute(sql`
+        INSERT INTO messages (sender_id, receiver_id, message, sent_at, is_read) 
+        VALUES (${data.senderId}, ${data.recipientId}, ${data.content || data.message}, NOW(), false) 
+        RETURNING *
+      `);
+      const message = result.rows[0] as any;
       
       return {
         id: message.id,
-        senderId: message.senderId,
-        recipientId: message.recipientId,
-        message: message.messageText,
-        createdAt: message.createdAt,
-        isRead: message.isRead
+        senderId: message.sender_id,
+        recipientId: message.receiver_id,
+        message: message.message,
+        createdAt: message.sent_at,
+        isRead: message.is_read
       };
     } catch (error) {
       console.error('Error creating message:', error);
