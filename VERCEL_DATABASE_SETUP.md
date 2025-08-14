@@ -13,7 +13,12 @@ You need to configure the following environment variables in your Vercel dashboa
 DATABASE_URL=postgresql://username:password@hostname/database?sslmode=require
 ```
 
-### 2. Authentication Secrets
+### 2. Vercel Blob Storage (File Storage)
+```
+BLOB_READ_WRITE_TOKEN=vercel_blob_rw_fy8GdRLMhpGvIW7Y_Uvhws9tXqLX4Tj5X8A8BEOwsXsodyk
+```
+
+### 3. Authentication Secrets
 ```
 JWT_SECRET=your-super-secure-jwt-secret-key-here
 SESSION_SECRET=your-session-secret-key-here

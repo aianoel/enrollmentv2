@@ -47,7 +47,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       endpoints: {
         students: '/api/students',
         enrollments: '/api/enrollments',
-        database: '/api/db/init'
+        database: '/api/db/init',
+        fileUpload: '/api/upload',
+        studentDocuments: '/api/students/documents?studentId=123'
+      },
+      storage: {
+        provider: 'Vercel Blob',
+        status: 'configured',
+        features: ['file upload', 'document management', 'public access']
       },
       method,
       url,
