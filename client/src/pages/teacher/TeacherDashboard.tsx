@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { DashboardStats } from '../../components/dashboard/DashboardStats';
@@ -7,10 +7,13 @@ import { useAuth } from '../../contexts/AuthContext';
 import { DashboardBackground } from '@/components/ui/dashboard-background';
 import { EnhancedCard, StatCard, ActionCard } from '@/components/ui/enhanced-card';
 import { EnhancedButton, QuickActionButton } from '@/components/ui/enhanced-button';
-import { BookOpen, Calendar, Trophy, Clock, FileText, Video, MessageSquare, BarChart3, Upload, Users, GraduationCap } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { GradeManagement } from '@/components/teacher/GradeManagement';
+import { BookOpen, Calendar, Trophy, Clock, FileText, Video, MessageSquare, BarChart3, Upload, Users, GraduationCap, ClipboardList } from 'lucide-react';
 
 export const TeacherDashboard: React.FC = () => {
   const { user } = useAuth();
+  const [activeTab, setActiveTab] = useState("overview");
 
   if (!user || user.role !== 'teacher') {
     return <EmptyState message="Access denied. Teacher role required." />;
@@ -42,11 +45,12 @@ export const TeacherDashboard: React.FC = () => {
         {/* Quick Actions */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <QuickActionButton
-            title="Grade Assignments"
-            description="Review and grade student work"
-            icon={BarChart3}
+            title="Manage Grades"
+            description="Encode and view student grades"
+            icon={ClipboardList}
             color="green"
             data-testid="quick-grade"
+            onClick={() => setActiveTab("grades")}
           />
           <QuickActionButton
             title="Upload Module"
@@ -71,72 +75,110 @@ export const TeacherDashboard: React.FC = () => {
           />
         </div>
 
-        {/* Teacher-specific content */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* My Classes */}
-        <Card>
-          <CardContent className="p-0">
-            <div className="p-6 border-b border-gray-200">
-              <h3 className="text-lg font-semibold text-gray-900">My Classes</h3>
-            </div>
-            <div className="p-6">
-              <EmptyState 
-                icon="fas fa-users"
-                message="No classes assigned yet"
-                description="Classes will appear here once sections are assigned to you"
-              />
-            </div>
-          </CardContent>
-        </Card>
+        {/* Main Content Tabs */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="overview" className="flex items-center gap-2">
+              <GraduationCap className="h-4 w-4" />
+              Overview
+            </TabsTrigger>
+            <TabsTrigger value="grades" className="flex items-center gap-2">
+              <ClipboardList className="h-4 w-4" />
+              Grade Management
+            </TabsTrigger>
+            <TabsTrigger value="assignments" className="flex items-center gap-2">
+              <FileText className="h-4 w-4" />
+              Assignments
+            </TabsTrigger>
+          </TabsList>
 
-        {/* Recent Submissions */}
-        <Card>
-          <CardContent className="p-0">
-            <div className="p-6 border-b border-gray-200">
-              <h3 className="text-lg font-semibold text-gray-900">Recent Submissions</h3>
-            </div>
-            <div className="p-6">
-              <EmptyState 
-                icon="fas fa-file-alt"
-                message="No recent submissions"
-                description="Student submissions will appear here for grading"
-              />
-            </div>
-          </CardContent>
-        </Card>
+          <TabsContent value="overview" className="space-y-6">
+            {/* Teacher-specific content */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* My Classes */}
+              <Card>
+                <CardContent className="p-0">
+                  <div className="p-6 border-b border-gray-200">
+                    <h3 className="text-lg font-semibold text-gray-900">My Classes</h3>
+                  </div>
+                  <div className="p-6">
+                    <EmptyState 
+                      icon="fas fa-users"
+                      message="No classes assigned yet"
+                      description="Classes will appear here once sections are assigned to you"
+                    />
+                  </div>
+                </CardContent>
+              </Card>
 
-        {/* Grade Distribution */}
-        <Card>
-          <CardContent className="p-0">
-            <div className="p-6 border-b border-gray-200">
-              <h3 className="text-lg font-semibold text-gray-900">Grade Distribution</h3>
-            </div>
-            <div className="p-6">
-              <EmptyState 
-                icon="fas fa-chart-pie"
-                message="No grade data available"
-                description="Grade distribution charts will appear here"
-              />
-            </div>
-          </CardContent>
-        </Card>
+              {/* Recent Submissions */}
+              <Card>
+                <CardContent className="p-0">
+                  <div className="p-6 border-b border-gray-200">
+                    <h3 className="text-lg font-semibold text-gray-900">Recent Submissions</h3>
+                  </div>
+                  <div className="p-6">
+                    <EmptyState 
+                      icon="fas fa-file-alt"
+                      message="No recent submissions"
+                      description="Student submissions will appear here for grading"
+                    />
+                  </div>
+                </CardContent>
+              </Card>
 
-        {/* Upcoming Meetings */}
-        <Card>
-          <CardContent className="p-0">
-            <div className="p-6 border-b border-gray-200">
-              <h3 className="text-lg font-semibold text-gray-900">Upcoming Meetings</h3>
+              {/* Grade Distribution */}
+              <Card>
+                <CardContent className="p-0">
+                  <div className="p-6 border-b border-gray-200">
+                    <h3 className="text-lg font-semibold text-gray-900">Grade Distribution</h3>
+                  </div>
+                  <div className="p-6">
+                    <EmptyState 
+                      icon="fas fa-chart-pie"
+                      message="No grade data available"
+                      description="Grade distribution charts will appear here"
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Upcoming Meetings */}
+              <Card>
+                <CardContent className="p-0">
+                  <div className="p-6 border-b border-gray-200">
+                    <h3 className="text-lg font-semibold text-gray-900">Upcoming Meetings</h3>
+                  </div>
+                  <div className="p-6">
+                    <EmptyState 
+                      icon="fas fa-calendar"
+                      message="No scheduled meetings"
+                      description="Your scheduled meetings will appear here"
+                    />
+                  </div>
+                </CardContent>
+              </Card>
             </div>
-            <div className="p-6">
-              <EmptyState 
-                icon="fas fa-calendar"
-                message="No scheduled meetings"
-                description="Your scheduled meetings will appear here"
-              />
-            </div>
-          </CardContent>
-        </Card>
-        </div>
+          </TabsContent>
+
+          <TabsContent value="grades" className="space-y-6">
+            <GradeManagement />
+          </TabsContent>
+
+          <TabsContent value="assignments" className="space-y-6">
+            <Card>
+              <CardContent className="p-6">
+                <div className="text-center py-12">
+                  <FileText className="mx-auto h-12 w-12 text-gray-400" />
+                  <h3 className="mt-2 text-sm font-semibold text-gray-900">Assignment Management</h3>
+                  <p className="mt-1 text-sm text-gray-500">
+                    Assignment creation and management features coming soon.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
     </DashboardBackground>
   );

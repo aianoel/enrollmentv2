@@ -320,6 +320,192 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  // Teacher Grade Management Routes
+
+  // Teacher Assignments (sections and subjects assigned to teacher)
+  app.get("/api/teacher/assignments", async (req, res) => {
+    try {
+      const result = await db.execute(sql`
+        SELECT 
+          ta.id,
+          ta.section_id,
+          ta.subject_id,
+          s.name as section_name,
+          s.grade_level,
+          sub.name as subject_name
+        FROM teacher_assignments ta
+        JOIN sections s ON ta.section_id = s.id
+        LEFT JOIN subjects sub ON ta.subject_id = sub.id
+        WHERE ta.teacher_id = ${req.session.userId}
+        ORDER BY s.name, sub.name
+      `);
+      res.json(result.rows);
+    } catch (error) {
+      console.error("Error fetching teacher assignments:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  // Students in a specific section
+  app.get("/api/teacher/students", async (req, res) => {
+    try {
+      const { sectionId } = req.query;
+      if (!sectionId) {
+        return res.status(400).json({ error: "Section ID is required" });
+      }
+
+      const result = await db.execute(sql`
+        SELECT 
+          u.id,
+          u.first_name,
+          u.last_name,
+          u.name,
+          u.email
+        FROM users u
+        JOIN enrollments e ON u.id = e.student_id
+        WHERE e.section_id = ${parseInt(sectionId as string)} AND u.role_id = 5
+        ORDER BY u.last_name, u.first_name
+      `);
+      res.json(result.rows);
+    } catch (error) {
+      console.error("Error fetching students:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  // Subjects for a specific section (assigned to current teacher)
+  app.get("/api/teacher/section-subjects", async (req, res) => {
+    try {
+      const { sectionId } = req.query;
+      if (!sectionId) {
+        return res.status(400).json({ error: "Section ID is required" });
+      }
+
+      const result = await db.execute(sql`
+        SELECT DISTINCT
+          sub.id,
+          sub.name
+        FROM subjects sub
+        JOIN teacher_assignments ta ON sub.id = ta.subject_id
+        WHERE ta.section_id = ${parseInt(sectionId as string)} 
+          AND ta.teacher_id = ${req.session.userId}
+        ORDER BY sub.name
+      `);
+      res.json(result.rows);
+    } catch (error) {
+      console.error("Error fetching section subjects:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  // Grades for a specific section and quarter
+  app.get("/api/teacher/grades", async (req, res) => {
+    try {
+      const { sectionId, quarter } = req.query;
+      if (!sectionId || !quarter) {
+        return res.status(400).json({ error: "Section ID and quarter are required" });
+      }
+
+      const result = await db.execute(sql`
+        SELECT 
+          g.id,
+          g.student_id,
+          g.subject_id,
+          g.teacher_id,
+          g.grade,
+          g.quarter,
+          g.school_year,
+          u.first_name || ' ' || u.last_name as student_name,
+          sub.name as subject_name
+        FROM grades g
+        JOIN users u ON g.student_id = u.id
+        JOIN subjects sub ON g.subject_id = sub.id
+        JOIN enrollments e ON g.student_id = e.student_id
+        WHERE e.section_id = ${parseInt(sectionId as string)}
+          AND g.quarter = ${quarter as string}
+          AND g.teacher_id = ${req.session.userId}
+        ORDER BY u.last_name, u.first_name, sub.name
+      `);
+      res.json(result.rows);
+    } catch (error) {
+      console.error("Error fetching grades:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  // Add new grade
+  app.post("/api/teacher/grades", async (req, res) => {
+    try {
+      const { studentId, subjectId, grade, quarter, schoolYear } = req.body;
+      
+      if (!studentId || !subjectId || !grade || !quarter || !schoolYear) {
+        return res.status(400).json({ error: "All fields are required" });
+      }
+
+      // Check if grade already exists
+      const existingGrade = await db.execute(sql`
+        SELECT id FROM grades 
+        WHERE student_id = ${studentId} 
+          AND subject_id = ${subjectId} 
+          AND quarter = ${quarter}
+          AND school_year = ${schoolYear}
+          AND teacher_id = ${req.session.userId}
+      `);
+
+      if (existingGrade.rows.length > 0) {
+        return res.status(400).json({ error: "Grade already exists for this student, subject, and quarter" });
+      }
+
+      const result = await db.execute(sql`
+        INSERT INTO grades (student_id, subject_id, teacher_id, grade, quarter, school_year)
+        VALUES (${studentId}, ${subjectId}, ${req.session.userId}, ${grade}, ${quarter}, ${schoolYear})
+        RETURNING id
+      `);
+
+      res.status(201).json({ id: result.rows[0].id, message: "Grade added successfully" });
+    } catch (error) {
+      console.error("Error adding grade:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  // Update existing grade
+  app.put("/api/teacher/grades/:studentId/:subjectId", async (req, res) => {
+    try {
+      const { studentId, subjectId } = req.params;
+      const { grade, quarter, schoolYear } = req.body;
+
+      if (!grade || !quarter || !schoolYear) {
+        return res.status(400).json({ error: "Grade, quarter, and school year are required" });
+      }
+
+      const result = await db.execute(sql`
+        UPDATE grades 
+        SET grade = ${grade}, quarter = ${quarter}, school_year = ${schoolYear}
+        WHERE student_id = ${parseInt(studentId)} 
+          AND subject_id = ${parseInt(subjectId)}
+          AND teacher_id = ${req.session.userId}
+          AND quarter = ${quarter}
+        RETURNING id
+      `);
+
+      if (result.rows.length === 0) {
+        // If no existing grade, insert new one
+        const insertResult = await db.execute(sql`
+          INSERT INTO grades (student_id, subject_id, teacher_id, grade, quarter, school_year)
+          VALUES (${parseInt(studentId)}, ${parseInt(subjectId)}, ${req.session.userId}, ${grade}, ${quarter}, ${schoolYear})
+          RETURNING id
+        `);
+        res.json({ id: insertResult.rows[0].id, message: "Grade created successfully" });
+      } else {
+        res.json({ id: result.rows[0].id, message: "Grade updated successfully" });
+      }
+    } catch (error) {
+      console.error("Error updating grade:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
   // Principal routes
   app.get("/api/principal/stats", async (req, res) => {
     try {
