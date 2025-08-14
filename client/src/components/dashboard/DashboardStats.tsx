@@ -126,26 +126,30 @@ export const DashboardStats: React.FC = () => {
   };
 
   return (
-    <div className="grid-responsive">
+    <div className="saas-grid">
       {stats.map((stat, index) => (
-        <Card key={index} className="card-responsive hover-lift" data-testid={`stat-card-${index}`}>
-          <CardContent className="p-4 sm:p-6">
-            <div className="flex items-center justify-between mb-3 sm:mb-4">
-              <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-lg flex items-center justify-center ${getColorClasses(stat.color)}`}>
-                <i className={`${stat.icon} text-sm sm:text-base`}></i>
+        <div key={index} className="saas-card saas-scale-in group" data-testid={`stat-card-${index}`}>
+          <div className="saas-card-content">
+            <div className="flex items-center justify-between mb-4">
+              <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${getColorClasses(stat.color)} group-hover:scale-110 transition-transform duration-200`}>
+                <i className={`${stat.icon} text-base`}></i>
               </div>
-              <span className="text-lg sm:text-2xl font-bold text-gray-900" data-testid={`stat-value-${index}`}>
-                {stat.value}
-              </span>
+              <div className="text-right">
+                <span className="text-2xl font-bold text-gray-900" data-testid={`stat-value-${index}`}>
+                  {stat.value}
+                </span>
+              </div>
             </div>
-            <h3 className="font-medium text-gray-900 mb-1 text-sm sm:text-base" data-testid={`stat-title-${index}`}>
-              {stat.title}
-            </h3>
-            <p className={`text-xs sm:text-sm ${stat.color === 'green' ? 'text-green-600' : stat.color === 'orange' ? 'text-orange-600' : 'text-gray-500'}`} data-testid={`stat-subtitle-${index}`}>
-              {stat.subtitle}
-            </p>
-          </CardContent>
-        </Card>
+            <div>
+              <h3 className="font-semibold text-gray-900 mb-1" data-testid={`stat-title-${index}`}>
+                {stat.title}
+              </h3>
+              <p className={`text-sm font-medium ${stat.color === 'green' ? 'text-green-600' : stat.color === 'orange' ? 'text-orange-600' : stat.color === 'purple' ? 'text-purple-600' : 'text-gray-500'}`} data-testid={`stat-subtitle-${index}`}>
+                {stat.subtitle}
+              </p>
+            </div>
+          </div>
+        </div>
       ))}
     </div>
   );

@@ -87,51 +87,55 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentSection, onSectionChang
   const navigationItems = getNavigationItems();
 
   return (
-    <aside className="w-64 bg-white shadow-lg h-full flex flex-col">
+    <aside className="w-72 bg-white h-full flex flex-col border-r border-gray-200">
       {/* Header */}
-      <div className="p-4 border-b border-gray-200">
+      <div className="p-6 border-b border-gray-100">
         <div className="flex items-center space-x-3">
-          <div className="w-8 h-8 bg-primary-600 rounded-lg flex items-center justify-center">
-            <i className="fas fa-graduation-cap text-white text-sm"></i>
+          <div className="w-10 h-10 saas-gradient-bg rounded-xl flex items-center justify-center shadow-lg">
+            <i className="fas fa-graduation-cap text-white text-lg"></i>
           </div>
           <div>
-            <h2 className="text-lg font-bold text-gray-800">EduManage</h2>
-            <p className="text-xs text-gray-600 capitalize">{user.role}</p>
+            <h2 className="text-xl font-bold saas-text-gradient">EduManage</h2>
+            <p className="text-sm text-gray-500 capitalize font-medium">{user.role.replace('_', ' ')}</p>
           </div>
         </div>
       </div>
       
       {/* Navigation */}
-      <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
+      <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
         {navigationItems.map((item) => (
           <Button
             key={item.id}
-            variant={currentSection === item.id ? 'default' : 'ghost'}
-            className={`flex items-center space-x-3 w-full justify-start h-10 text-sm ${
+            variant="ghost"
+            className={`flex items-center space-x-3 w-full justify-start h-11 text-sm rounded-lg font-medium transition-all duration-200 ${
               currentSection === item.id
-                ? 'bg-primary-50 text-primary-700 hover:bg-primary-100 border-r-2 border-primary-500'
-                : 'text-gray-700 hover:bg-gray-100'
+                ? 'bg-primary-50 text-primary-700 hover:bg-primary-100 shadow-sm border-l-3 border-primary-500'
+                : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
             }`}
             onClick={() => onSectionChange(item.id)}
             data-testid={`nav-${item.id}`}
           >
-            <i className={`${item.icon} w-5 text-sm`}></i>
-            <span className="font-medium">{item.label}</span>
+            <div className={`w-5 h-5 flex items-center justify-center ${
+              currentSection === item.id ? 'text-primary-600' : 'text-gray-400'
+            }`}>
+              <i className={`${item.icon} text-sm`}></i>
+            </div>
+            <span>{item.label}</span>
           </Button>
         ))}
       </nav>
 
       {/* User info and logout */}
-      <div className="p-3 border-t border-gray-200">
-        <div className="mb-3 p-2 bg-gray-50 rounded-lg">
+      <div className="p-4 border-t border-gray-100 bg-gray-50/50">
+        <div className="mb-4 p-3 bg-white rounded-xl border border-gray-100 shadow-sm">
           <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-primary-600 rounded-full flex items-center justify-center">
-              <span className="text-white text-xs font-medium">
+            <div className="w-10 h-10 saas-gradient-bg rounded-full flex items-center justify-center shadow-sm">
+              <span className="text-white text-sm font-semibold">
                 {user.name.split(' ').map(n => n[0]).join('').toUpperCase()}
               </span>
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-gray-900 truncate">{user.name}</p>
+              <p className="text-sm font-semibold text-gray-900 truncate">{user.name}</p>
               <p className="text-xs text-gray-500 truncate">{user.email}</p>
             </div>
           </div>
@@ -139,12 +143,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentSection, onSectionChang
         
         <Button
           variant="ghost"
-          className="flex items-center space-x-3 w-full justify-start text-gray-700 hover:bg-red-50 hover:text-red-700 h-10"
+          className="flex items-center space-x-3 w-full justify-start text-gray-600 hover:bg-red-50 hover:text-red-600 h-11 rounded-lg font-medium transition-all duration-200"
           onClick={logout}
           data-testid="nav-logout"
         >
-          <i className="fas fa-sign-out-alt w-5 text-sm"></i>
-          <span className="font-medium">Logout</span>
+          <div className="w-5 h-5 flex items-center justify-center">
+            <i className="fas fa-sign-out-alt text-sm"></i>
+          </div>
+          <span>Sign Out</span>
         </Button>
       </div>
     </aside>

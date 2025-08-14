@@ -88,23 +88,23 @@ export function AdminDashboard() {
   }
 
   return (
-    <DashboardBackground userRole="admin" className="p-4 sm:p-6">
-      <div className="space-y-4 sm:space-y-6">
-        <EnhancedCard 
-          variant="gradient" 
-          className="bg-gradient-to-r from-blue-600 to-blue-700 text-white border-0"
-          data-testid="welcome-header"
-        >
-          <div className="flex items-center justify-between">
-            <div className="flex-1 min-w-0">
-              <h1 className="text-2xl sm:text-3xl font-bold">Admin Dashboard</h1>
-              <p className="opacity-90 text-sm sm:text-base">
-                Comprehensive school management and administrative controls
-              </p>
-            </div>
-            <Shield className="h-12 w-12 sm:h-16 sm:w-16 opacity-20 flex-shrink-0" />
+    <div className="saas-container p-6 space-y-6">
+      {/* Admin Welcome Header with SaaS Design */}
+      <div className="saas-gradient-bg rounded-2xl p-8 text-white saas-slide-up shadow-xl" data-testid="welcome-header">
+        <div className="flex items-center justify-between">
+          <div className="flex-1 min-w-0">
+            <h1 className="text-3xl font-bold mb-2">Admin Dashboard</h1>
+            <p className="opacity-90 text-lg font-medium">
+              Comprehensive school management and administrative controls
+            </p>
           </div>
-        </EnhancedCard>
+          <div className="hidden sm:block">
+            <div className="w-16 h-16 bg-white/10 rounded-2xl flex items-center justify-center backdrop-blur-sm">
+              <Shield className="h-8 w-8" />
+            </div>
+          </div>
+        </div>
+      </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
         <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-1">
@@ -118,105 +118,145 @@ export function AdminDashboard() {
           <TabsTrigger value="settings" className="text-xs sm:text-sm">Settings</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="overview" className="space-y-4">
-          <div className="grid-responsive">
-            <StatCard
-              icon={Users}
-              title="Total Users"
-              value={dashboardStats.totalUsers}
-              description="Active system users"
-              color="blue"
-            />
-            <StatCard
-              icon={UserCheck}
-              title="Active Enrollments"
-              value={dashboardStats.activeEnrollments}
-              description="Approved student enrollments"
-              color="green"
-            />
-            <StatCard
-              icon={FileText}
-              title="Pending Approvals"
-              value={dashboardStats.pendingApprovals}
-              description="Enrollment requests awaiting approval"
-              color="orange"
-            />
-            <StatCard
-              icon={GraduationCap}
-              title="Total Sections"
-              value={dashboardStats.totalSections}
-              description="Academic sections available"
-              color="purple"
-            />
+        <TabsContent value="overview" className="space-y-6 saas-fade-in">
+          <div className="saas-grid">
+            <div className="saas-card saas-scale-in group">
+              <div className="saas-card-content">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-blue-100 text-blue-600 group-hover:scale-110 transition-transform duration-200">
+                    <Users className="h-6 w-6" />
+                  </div>
+                  <div className="text-right">
+                    <div className="text-2xl font-bold text-gray-900">{dashboardStats.totalUsers}</div>
+                  </div>
+                </div>
+                <div>
+                  <h3 className="font-semibold text-gray-900 mb-1">Total Users</h3>
+                  <p className="text-sm font-medium text-gray-500">Active system users</p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="saas-card saas-scale-in group">
+              <div className="saas-card-content">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-green-100 text-green-600 group-hover:scale-110 transition-transform duration-200">
+                    <UserCheck className="h-6 w-6" />
+                  </div>
+                  <div className="text-right">
+                    <div className="text-2xl font-bold text-gray-900">{dashboardStats.activeEnrollments}</div>
+                  </div>
+                </div>
+                <div>
+                  <h3 className="font-semibold text-gray-900 mb-1">Active Enrollments</h3>
+                  <p className="text-sm font-medium text-gray-500">Approved student enrollments</p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="saas-card saas-scale-in group">
+              <div className="saas-card-content">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-orange-100 text-orange-600 group-hover:scale-110 transition-transform duration-200">
+                    <FileText className="h-6 w-6" />
+                  </div>
+                  <div className="text-right">
+                    <div className="text-2xl font-bold text-gray-900">{dashboardStats.pendingApprovals}</div>
+                  </div>
+                </div>
+                <div>
+                  <h3 className="font-semibold text-gray-900 mb-1">Pending Approvals</h3>
+                  <p className="text-sm font-medium text-gray-500">Enrollment requests awaiting approval</p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="saas-card saas-scale-in group">
+              <div className="saas-card-content">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-purple-100 text-purple-600 group-hover:scale-110 transition-transform duration-200">
+                    <GraduationCap className="h-6 w-6" />
+                  </div>
+                  <div className="text-right">
+                    <div className="text-2xl font-bold text-gray-900">{dashboardStats.totalSections}</div>
+                  </div>
+                </div>
+                <div>
+                  <h3 className="font-semibold text-gray-900 mb-1">Total Sections</h3>
+                  <p className="text-sm font-medium text-gray-500">Academic sections available</p>
+                </div>
+              </div>
+            </div>
           </div>
 
           <div className="grid gap-6 md:grid-cols-2">
-            <Card>
-              <CardHeader>
-                <CardTitle>Quick Actions</CardTitle>
-                <CardDescription>Common administrative tasks</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                <Button 
-                  variant="outline" 
-                  className="w-full justify-start"
-                  onClick={() => setActiveTab("users")}
-                >
-                  <Users className="mr-2 h-4 w-4" />
-                  Manage Users & Roles
-                </Button>
-                <Button 
-                  variant="outline" 
-                  className="w-full justify-start"
-                  onClick={() => setActiveTab("enrollment")}
-                >
-                  <UserCheck className="mr-2 h-4 w-4" />
-                  Process Enrollments
-                </Button>
-                <Button 
-                  variant="outline" 
-                  className="w-full justify-start"
-                  onClick={() => setActiveTab("academic")}
-                >
-                  <BookOpen className="mr-2 h-4 w-4" />
-                  Academic Setup
-                </Button>
-                <Button 
-                  variant="outline" 
-                  className="w-full justify-start"
-                  onClick={() => setActiveTab("content")}
-                >
-                  <FileText className="mr-2 h-4 w-4" />
-                  Content Management
-                </Button>
-              </CardContent>
-            </Card>
+            <div className="saas-card">
+              <div className="saas-card-content">
+                <div className="mb-6">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-1">Quick Actions</h3>
+                  <p className="text-sm text-gray-500">Common administrative tasks</p>
+                </div>
+                <div className="space-y-3">
+                  <button 
+                    className="saas-button-secondary w-full justify-start text-left flex items-center"
+                    onClick={() => setActiveTab("users")}
+                  >
+                    <Users className="mr-3 h-4 w-4" />
+                    Manage Users & Roles
+                  </button>
+                  <button 
+                    className="saas-button-secondary w-full justify-start text-left flex items-center"
+                    onClick={() => setActiveTab("enrollment")}
+                  >
+                    <UserCheck className="mr-3 h-4 w-4" />
+                    Process Enrollments
+                  </button>
+                  <button 
+                    className="saas-button-secondary w-full justify-start text-left flex items-center"
+                    onClick={() => setActiveTab("academic")}
+                  >
+                    <BookOpen className="mr-3 h-4 w-4" />
+                    Academic Setup
+                  </button>
+                  <button 
+                    className="saas-button-secondary w-full justify-start text-left flex items-center"
+                    onClick={() => setActiveTab("content")}
+                  >
+                    <FileText className="mr-3 h-4 w-4" />
+                    Content Management
+                  </button>
+                </div>
+              </div>
+            </div>
 
-            <Card>
-              <CardHeader>
-                <CardTitle>System Status</CardTitle>
-                <CardDescription>Current system health and alerts</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm">Database Status</span>
-                  <Badge variant="default" className="bg-green-100 text-green-800">Healthy</Badge>
+            <div className="saas-card">
+              <div className="saas-card-content">
+                <div className="mb-6">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-1">System Status</h3>
+                  <p className="text-sm text-gray-500">Current system health and alerts</p>
                 </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm">User Sessions</span>
-                  <Badge variant="secondary">{dashboardStats.totalUsers} Active</Badge>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">Database Status</span>
+                    <span className="saas-badge saas-badge-success">Healthy</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">User Sessions</span>
+                    <span className="saas-badge saas-badge-primary">{dashboardStats.totalUsers} Active</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">Pending Actions</span>
+                    <span className="saas-badge saas-badge-warning">{dashboardStats.pendingApprovals} Items</span>
+                  </div>
+                  <div className="border-t border-gray-100 pt-4 mt-4">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium">Last Backup</span>
+                      <span className="text-sm text-gray-500">2 hours ago</span>
+                    </div>
+                  </div>
                 </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm">Pending Actions</span>
-                  <Badge variant="destructive">{dashboardStats.pendingApprovals} Items</Badge>
-                </div>
-                <Separator />
-                <div className="flex items-center justify-between">
-                  <span className="text-sm">Last Backup</span>
-                  <span className="text-xs text-muted-foreground">2 hours ago</span>
-                </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           </div>
         </TabsContent>
 
@@ -248,7 +288,6 @@ export function AdminDashboard() {
           <SystemConfiguration />
         </TabsContent>
       </Tabs>
-      </div>
-    </DashboardBackground>
+    </div>
   );
 }
