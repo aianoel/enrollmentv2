@@ -1,4 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { db } from '../server/db';
+import { users } from '../shared/schema';
 
 // Vercel serverless function handler
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -14,24 +16,50 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    // For now, return a simple API response
-    // This will be expanded to handle your actual routes
     const { method, url } = req;
-    
     console.log(`${method} ${url}`);
+
+    // Test database connection
+    let dbStatus = 'unknown';
+    let userCount = 0;
     
-    // Basic API response
+    try {
+      const result = await db.select().from(users).limit(1);
+      dbStatus = 'connected';
+      
+      // Get total user count for dashboard info
+      const countResult = await db.select().from(users);
+      userCount = countResult.length;
+    } catch (dbError) {
+      console.error('Database connection error:', dbError);
+      dbStatus = 'error';
+    }
+
+    // API response with database status
     res.status(200).json({
-      message: 'School Enrollment API is running',
+      message: 'School Enrollment Management System API',
+      status: 'running',
+      database: {
+        status: dbStatus,
+        totalUsers: userCount,
+        provider: 'Neon Database (PostgreSQL)'
+      },
+      endpoints: {
+        students: '/api/students',
+        enrollments: '/api/enrollments',
+        database: '/api/db/init'
+      },
       method,
       url,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
+      environment: process.env.NODE_ENV || 'development'
     });
   } catch (error) {
     console.error('API Error:', error);
     res.status(500).json({
       message: 'Internal Server Error',
-      error: error instanceof Error ? error.message : 'Unknown error'
+      error: error instanceof Error ? error.message : 'Unknown error',
+      timestamp: new Date().toISOString()
     });
   }
 }
