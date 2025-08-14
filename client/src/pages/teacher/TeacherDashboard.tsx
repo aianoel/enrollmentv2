@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Card, CardContent } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
-import { DashboardStats } from '../../components/dashboard/DashboardStats';
 import { EmptyState } from '../../components/common/EmptyState';
 import { useAuth } from '../../contexts/AuthContext';
 import { DashboardBackground } from '@/components/ui/dashboard-background';
@@ -9,6 +8,9 @@ import { EnhancedCard, StatCard, ActionCard } from '@/components/ui/enhanced-car
 import { EnhancedButton, QuickActionButton } from '@/components/ui/enhanced-button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { GradeManagement } from '@/components/teacher/GradeManagement';
+import { TeacherStats } from '@/components/teacher/TeacherStats';
+import { TeacherClasses } from '@/components/teacher/TeacherClasses';
+import { RecentGrades } from '@/components/teacher/RecentGrades';
 import { BookOpen, Calendar, Trophy, Clock, FileText, Video, MessageSquare, BarChart3, Upload, Users, GraduationCap, ClipboardList } from 'lucide-react';
 
 export const TeacherDashboard: React.FC = () => {
@@ -40,7 +42,7 @@ export const TeacherDashboard: React.FC = () => {
         </EnhancedCard>
 
         {/* Quick Stats */}
-        <DashboardStats />
+        <TeacherStats />
 
         {/* Quick Actions */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -96,52 +98,10 @@ export const TeacherDashboard: React.FC = () => {
             {/* Teacher-specific content */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* My Classes */}
-              <Card>
-                <CardContent className="p-0">
-                  <div className="p-6 border-b border-gray-200">
-                    <h3 className="text-lg font-semibold text-gray-900">My Classes</h3>
-                  </div>
-                  <div className="p-6">
-                    <EmptyState 
-                      icon="fas fa-users"
-                      message="No classes assigned yet"
-                      description="Classes will appear here once sections are assigned to you"
-                    />
-                  </div>
-                </CardContent>
-              </Card>
+              <TeacherClasses />
 
-              {/* Recent Submissions */}
-              <Card>
-                <CardContent className="p-0">
-                  <div className="p-6 border-b border-gray-200">
-                    <h3 className="text-lg font-semibold text-gray-900">Recent Submissions</h3>
-                  </div>
-                  <div className="p-6">
-                    <EmptyState 
-                      icon="fas fa-file-alt"
-                      message="No recent submissions"
-                      description="Student submissions will appear here for grading"
-                    />
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Grade Distribution */}
-              <Card>
-                <CardContent className="p-0">
-                  <div className="p-6 border-b border-gray-200">
-                    <h3 className="text-lg font-semibold text-gray-900">Grade Distribution</h3>
-                  </div>
-                  <div className="p-6">
-                    <EmptyState 
-                      icon="fas fa-chart-pie"
-                      message="No grade data available"
-                      description="Grade distribution charts will appear here"
-                    />
-                  </div>
-                </CardContent>
-              </Card>
+              {/* Recent Grades */}
+              <RecentGrades />
 
               {/* Upcoming Meetings */}
               <Card>
@@ -155,6 +115,33 @@ export const TeacherDashboard: React.FC = () => {
                       message="No scheduled meetings"
                       description="Your scheduled meetings will appear here"
                     />
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Quick Actions Card */}
+              <Card>
+                <CardContent className="p-0">
+                  <div className="p-6 border-b border-gray-200">
+                    <h3 className="text-lg font-semibold text-gray-900">Quick Actions</h3>
+                  </div>
+                  <div className="p-6 space-y-3">
+                    <Button 
+                      variant="outline" 
+                      className="w-full justify-start" 
+                      onClick={() => setActiveTab("grades")}
+                    >
+                      <ClipboardList className="h-4 w-4 mr-2" />
+                      Manage Grades
+                    </Button>
+                    <Button variant="outline" className="w-full justify-start">
+                      <FileText className="h-4 w-4 mr-2" />
+                      Create Assignment
+                    </Button>
+                    <Button variant="outline" className="w-full justify-start">
+                      <Video className="h-4 w-4 mr-2" />
+                      Schedule Meeting
+                    </Button>
                   </div>
                 </CardContent>
               </Card>

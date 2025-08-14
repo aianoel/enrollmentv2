@@ -373,6 +373,29 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  // All students taught by the teacher (across all sections)
+  app.get("/api/teacher/all-students", async (req, res) => {
+    try {
+      const result = await db.execute(sql`
+        SELECT DISTINCT
+          u.id,
+          u.first_name,
+          u.last_name,
+          u.name,
+          u.email
+        FROM users u
+        JOIN enrollments e ON u.id = e.student_id
+        JOIN teacher_assignments ta ON e.section_id = ta.section_id
+        WHERE ta.teacher_id = ${req.session.userId} AND u.role_id = 5
+        ORDER BY u.last_name, u.first_name
+      `);
+      res.json(result.rows);
+    } catch (error) {
+      console.error("Error fetching all students:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
   // Subjects for a specific section (assigned to current teacher)
   app.get("/api/teacher/section-subjects", async (req, res) => {
     try {
