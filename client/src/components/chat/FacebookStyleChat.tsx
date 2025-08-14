@@ -277,19 +277,27 @@ export function FacebookStyleChat() {
   if (isMinimized) {
     return (
       <div className="fixed bottom-4 right-4 z-50">
-        <Button
-          onClick={() => setIsMinimized(false)}
-          className="rounded-full h-12 w-12 bg-primary hover:bg-primary/90 shadow-lg"
-          data-testid="button-expand-chat"
-        >
-          <MessageCircle className="h-6 w-6" />
-        </Button>
+        <div className="relative">
+          <Button
+            onClick={() => setIsMinimized(false)}
+            className="rounded-full h-14 w-14 bg-blue-600 hover:bg-blue-700 shadow-xl"
+            data-testid="button-expand-chat"
+          >
+            <MessageCircle className="h-7 w-7 text-white" />
+          </Button>
+          {filteredOnlineUsers.length > 0 && (
+            <div className="absolute -top-1 -right-1 bg-green-500 text-white text-xs rounded-full h-6 w-6 flex items-center justify-center font-bold">
+              {filteredOnlineUsers.length}
+            </div>
+          )}
+          <div className="absolute bottom-0 right-1 bg-green-500 rounded-full h-4 w-4 border-2 border-white"></div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="fixed bottom-0 right-4 w-80 h-96 bg-white dark:bg-gray-900 shadow-2xl border border-gray-200 dark:border-gray-700 rounded-t-lg z-40 flex flex-col">
+    <div className="fixed bottom-0 right-4 w-96 h-[500px] bg-white dark:bg-gray-900 shadow-2xl border border-gray-200 dark:border-gray-700 rounded-t-lg z-50 flex flex-col">
       {/* Chat Header */}
       <div className="flex items-center justify-between p-3 bg-primary text-primary-foreground rounded-t-lg">
         <div className="flex items-center gap-2">
