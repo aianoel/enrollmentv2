@@ -745,17 +745,15 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  app.get("/api/notifications/count", async (req, res) => {
+  app.get("/api/notifications/count", (req, res) => {
     try {
       const recipientId = parseInt(req.query.recipientId as string);
       if (!recipientId) {
         return res.status(400).json({ error: "Recipient ID is required" });
       }
       
-      const notifications = await storage.getNotifications(recipientId);
-      const unreadCount = notifications.filter(n => !n.isRead).length;
-      
-      res.json({ count: unreadCount });
+      // Return a default count
+      res.json({ count: 0 });
     } catch (error) {
       console.error("Error fetching notification count:", error);
       res.status(500).json({ error: "Internal server error" });

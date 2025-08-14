@@ -145,14 +145,10 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
     if (!user || !recipientId) return;
     
     try {
-      await apiRequest('/api/chat/messages', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          senderId: user.id,
-          recipientId: parseInt(recipientId),
-          content: message
-        })
+      await apiRequest('/api/chat/messages', 'POST', {
+        senderId: user.id,
+        recipientId: parseInt(recipientId),
+        content: message
       });
 
       // Also emit via socket for real-time updates
@@ -181,13 +177,9 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
   const updateUserStatus = async (isOnline: boolean) => {
     if (!user) return;
     try {
-      await apiRequest('/api/chat/user-status', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userId: user.id,
-          isOnline
-        })
+      await apiRequest('/api/chat/user-status', 'PUT', {
+        userId: user.id,
+        isOnline
       });
     } catch (error) {
       console.error('Error updating user status:', error);

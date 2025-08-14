@@ -728,7 +728,7 @@ export class DatabaseStorage implements IStorage {
       const [message] = await db.insert(messages).values({
         senderId: data.senderId,
         recipientId: data.recipientId,
-        messageText: data.content,
+        messageText: data.content || data.message,
         createdAt: new Date(),
         isRead: false
       }).returning();

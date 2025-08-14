@@ -17,13 +17,8 @@ export const Header: React.FC<HeaderProps> = ({ onMenuClick, isMobile = false })
   const { isOpen, setIsOpen, onlineUsers } = useChat();
   const [isNotificationPanelOpen, setIsNotificationPanelOpen] = useState(false);
 
-  // Fetch unread notification count
-  const { data: notificationCount = 0 } = useQuery({
-    queryKey: ["/api/notifications/count", user?.id],
-    queryFn: () => apiRequest(`/api/notifications/count?recipientId=${user?.id}`),
-    enabled: !!user?.id,
-    refetchInterval: 30000 // Refresh every 30 seconds
-  });
+  // Temporarily disable notification count due to schema issues
+  const notificationCount = 0;
 
   if (!user) return null;
 

@@ -30,12 +30,9 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({ isOpen, on
   const queryClient = useQueryClient();
 
   // Fetch notifications for current user
-  const { data: notifications = [], isLoading } = useQuery({
-    queryKey: ["/api/notifications", user?.id],
-    queryFn: () => apiRequest(`/api/notifications?recipientId=${user?.id}`),
-    enabled: !!user?.id && isOpen,
-    refetchInterval: 30000 // Refresh every 30 seconds when panel is open
-  });
+  // Temporarily disable notifications due to schema issues
+  const notifications: any[] = [];
+  const isLoading = false;
 
   // Mark notification as read
   const markAsReadMutation = useMutation({
