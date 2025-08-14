@@ -136,8 +136,9 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
 
   const showBrowserNotification = (senderName: string, message: string) => {
     if ('Notification' in window && Notification.permission === 'granted') {
+      const messageText = message || 'New message';
       const notification = new Notification(`New message from ${senderName}`, {
-        body: message.length > 50 ? message.substring(0, 50) + '...' : message,
+        body: messageText.length > 50 ? messageText.substring(0, 50) + '...' : messageText,
         icon: '/favicon.ico',
         tag: 'chat-message'
       });
