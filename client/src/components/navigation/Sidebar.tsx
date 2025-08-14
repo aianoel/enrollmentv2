@@ -42,7 +42,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentSection, onSectionChang
         return [
           ...baseItems,
           { id: 'admin-control', label: 'System Control', icon: 'fas fa-cog' },
-          { id: 'users', label: 'Manage Users', icon: 'fas fa-users-cog' },
+          { id: 'users', label: 'User Management', icon: 'fas fa-users-cog' },
           { id: 'sections', label: 'Manage Sections', icon: 'fas fa-layer-group' },
           { id: 'subjects', label: 'Manage Subjects', icon: 'fas fa-book-open' },
           { id: 'announcements', label: 'Announcements', icon: 'fas fa-bullhorn' },
