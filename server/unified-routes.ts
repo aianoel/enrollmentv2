@@ -1285,6 +1285,48 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  app.post("/api/admin/org-chart", async (req, res) => {
+    try {
+      const { name, position, photoUrl } = req.body;
+      const orgChartEntry = await storage.createOrgChartEntry({
+        name,
+        position,
+        photoUrl: photoUrl || null
+      });
+      res.json(orgChartEntry);
+    } catch (error) {
+      console.error("Error creating org chart entry:", error);
+      res.status(500).json({ error: "Failed to create org chart entry" });
+    }
+  });
+
+  app.patch("/api/admin/org-chart/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { name, position, photoUrl } = req.body;
+      const orgChartEntry = await storage.updateOrgChartEntry(parseInt(id), {
+        name,
+        position,
+        photoUrl
+      });
+      res.json(orgChartEntry);
+    } catch (error) {
+      console.error("Error updating org chart entry:", error);
+      res.status(500).json({ error: "Failed to update org chart entry" });
+    }
+  });
+
+  app.delete("/api/admin/org-chart/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      await storage.deleteOrgChartEntry(parseInt(id));
+      res.json({ message: "Org chart entry deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting org chart entry:", error);
+      res.status(500).json({ error: "Failed to delete org chart entry" });
+    }
+  });
+
   app.get("/api/admin/grades", async (req, res) => {
     try {
       const grades = await storage.getAdminGrades();
