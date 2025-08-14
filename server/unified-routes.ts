@@ -1223,6 +1223,17 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  // Admin dashboard stats endpoint
+  app.get("/api/admin/dashboard-stats", async (req, res) => {
+    try {
+      const stats = await storage.getDashboardStats();
+      res.json(stats);
+    } catch (error) {
+      console.error("Error fetching dashboard stats:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
   app.get("/api/admin/stats", async (req, res) => {
     try {
       const stats = await storage.getPrincipalStats();

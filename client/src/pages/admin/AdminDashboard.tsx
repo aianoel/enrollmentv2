@@ -102,15 +102,15 @@ export function AdminDashboard() {
   ];
 
   const chartData = [
-    { label: "Students", value: (dashboardStats?.totalUsers || 0) * 0.8, color: "#3b82f6" },
-    { label: "Teachers", value: (dashboardStats?.totalUsers || 0) * 0.15, color: "#10b981" },
-    { label: "Staff", value: (dashboardStats?.totalUsers || 0) * 0.05, color: "#f59e0b" }
+    { label: "Students", value: stats?.totalStudents || 0, color: "#3b82f6" },
+    { label: "Teachers", value: stats?.totalTeachers || 0, color: "#10b981" },
+    { label: "Staff", value: Math.max(0, (dashboardStats?.totalUsers || 0) - (stats?.totalStudents || 0) - (stats?.totalTeachers || 0)), color: "#f59e0b" }
   ];
 
   const progressData = [
-    { label: "Course Completion", value: 145, max: 200 },
-    { label: "Assignment Submissions", value: 89, max: 100 },
-    { label: "Attendance Rate", value: 95, max: 100 }
+    { label: "Active Enrollments", value: dashboardStats?.activeEnrollments || 0, max: dashboardStats?.totalUsers || 1 },
+    { label: "Pending Approvals", value: dashboardStats?.pendingApprovals || 0, max: (dashboardStats?.activeEnrollments || 0) + (dashboardStats?.pendingApprovals || 1) },
+    { label: "Total Sections", value: dashboardStats?.totalSections || 0, max: Math.max(dashboardStats?.totalSections || 1, 10) }
   ];
 
   return (
@@ -172,51 +172,51 @@ export function AdminDashboard() {
       <div className="p-6 grid gap-4 md:grid-cols-2 lg:grid-cols-6">
         <ModernStatCard 
           title="New Students" 
-          value={43} 
-          change={6}
+          value={dashboardStats?.newStudents || 0} 
+          change={0}
           changeLabel=""
           icon={Users}
           variant="success"
         />
         <ModernStatCard 
           title="Completed Today" 
-          value={17} 
-          change={-3}
+          value={dashboardStats?.completedToday || 0} 
+          change={0}
           changeLabel=""
           icon={CheckCircle}
-          variant="error"
+          variant="success"
         />
         <ModernStatCard 
           title="New Assignments" 
-          value={7} 
-          change={9}
+          value={dashboardStats?.newAssignments || 0} 
+          change={0}
           changeLabel=""
           icon={FileText}
           variant="success"
         />
         <ModernStatCard 
           title="Total Enrolled" 
-          value="27.3k" 
-          change={3}
+          value={dashboardStats?.activeEnrollments || 0} 
+          change={0}
           changeLabel=""
           icon={GraduationCap}
           variant="success"
         />
         <ModernStatCard 
-          title="Daily Earnings" 
-          value="$95" 
-          change={-2}
+          title="Pending Approvals" 
+          value={dashboardStats?.pendingApprovals || 0} 
+          change={0}
           changeLabel=""
-          icon={DollarSign}
-          variant="error"
+          icon={Clock}
+          variant="warning"
         />
         <ModernStatCard 
-          title="Active Courses" 
-          value={621} 
-          change={-1}
+          title="Total Sections" 
+          value={dashboardStats?.totalSections || 0} 
+          change={0}
           changeLabel=""
-          icon={BookOpen}
-          variant="error"
+          icon={Building2}
+          variant="success"
         />
       </div>
 
@@ -285,31 +285,35 @@ export function AdminDashboard() {
                 <SimpleDonutChart data={chartData} />
               </ChartCard>
 
-              <ChartCard title="Course Progress">
+              <ChartCard title="Enrollment Status">
                 <SimpleDonutChart data={[
-                  { label: "Completed", value: 60, color: "#10b981" },
-                  { label: "In Progress", value: 30, color: "#3b82f6" },
-                  { label: "Not Started", value: 10, color: "#e5e7eb" }
+                  { label: "Approved", value: dashboardStats?.activeEnrollments || 0, color: "#10b981" },
+                  { label: "Pending", value: dashboardStats?.pendingApprovals || 0, color: "#f59e0b" },
+                  { label: "Available", value: Math.max(0, (dashboardStats?.totalSections || 0) * 25 - (dashboardStats?.activeEnrollments || 0) - (dashboardStats?.pendingApprovals || 0)), color: "#e5e7eb" }
                 ]} />
               </ChartCard>
 
               {/* Progress Cards */}
               <ProgressCard title="School Metrics" items={progressData} />
 
-              {/* Recent Activity */}
+              {/* School Metrics */}
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-sm">New feedback</CardTitle>
+                  <CardTitle className="text-sm">School Metrics</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
                     <div className="flex justify-between items-center">
-                      <span className="text-sm">Student satisfaction</span>
-                      <span className="text-sm font-medium">4.8/5</span>
+                      <span className="text-sm">Total Users</span>
+                      <span className="text-sm font-medium">{dashboardStats?.totalUsers || 0}</span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-sm">Course completion</span>
-                      <span className="text-sm font-medium">89%</span>
+                      <span className="text-sm">Total Teachers</span>
+                      <span className="text-sm font-medium">{stats?.totalTeachers || 0}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm">Average Grade</span>
+                      <span className="text-sm font-medium">{stats?.averageGrade || 'N/A'}</span>
                     </div>
                   </div>
                 </CardContent>
@@ -317,11 +321,12 @@ export function AdminDashboard() {
 
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-sm">Today profit</CardTitle>
+                  <CardTitle className="text-sm">School Statistics</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">$1,423</div>
-                  <div className="text-sm text-green-600">+12% from yesterday</div>
+                  <div className="text-2xl font-bold">{stats?.totalStudents || 0}</div>
+                  <div className="text-sm text-blue-600">Total Students</div>
+                  <div className="text-sm text-gray-500 mt-1">{stats?.newEnrollments || 0} new enrollments</div>
                 </CardContent>
               </Card>
             </div>

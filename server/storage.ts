@@ -1092,6 +1092,63 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(userStatus).where(eq(userStatus.isOnline, true));
   }
 
+  // Admin dashboard stats method
+  async getDashboardStats(): Promise<any> {
+    try {
+      // Get actual dashboard statistics
+      const allUsers = await db.select().from(users);
+      const allEnrollments = await db.select().from(enrollments);
+      const allSections = await db.select().from(sections);
+      const allAssignments = await db.select().from(teacherTasks);
+      
+      // Count users by role
+      const totalUsers = allUsers.length;
+      const students = allUsers.filter(user => user.role === 'student');
+      const teachers = allUsers.filter(user => user.role === 'teacher');
+      const newStudents = students.filter(user => {
+        const createdAt = user.createdAt || new Date();
+        const oneWeekAgo = new Date();
+        oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+        return createdAt >= oneWeekAgo;
+      });
+      
+      // Count enrollment statuses
+      const activeEnrollments = allEnrollments.filter(e => e.status === 'approved').length;
+      const pendingApprovals = allEnrollments.filter(e => e.status === 'pending').length;
+      
+      // Count assignments by time
+      const newAssignments = allAssignments.filter(assignment => {
+        const createdAt = assignment.createdAt || new Date();
+        const oneWeekAgo = new Date();
+        oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+        return createdAt >= oneWeekAgo;
+      });
+      
+      return {
+        totalUsers,
+        activeEnrollments,
+        pendingApprovals,
+        totalSections: allSections.length,
+        newStudents: newStudents.length,
+        totalTeachers: teachers.length,
+        newAssignments: newAssignments.length,
+        completedToday: 0 // This would require completion tracking
+      };
+    } catch (error) {
+      console.error('Error getting dashboard stats:', error);
+      return {
+        totalUsers: 0,
+        activeEnrollments: 0,
+        pendingApprovals: 0,
+        totalSections: 0,
+        newStudents: 0,
+        totalTeachers: 0,
+        newAssignments: 0,
+        completedToday: 0
+      };
+    }
+  }
+
   // Principal dashboard methods
   async getPrincipalStats(): Promise<any> {
     try {
