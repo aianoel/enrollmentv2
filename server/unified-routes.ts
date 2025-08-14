@@ -877,9 +877,14 @@ export function registerRoutes(app: Express): Server {
 
   app.post("/api/chat/messages", async (req, res) => {
     try {
+      console.log("POST /api/chat/messages - Headers:", req.headers);
+      console.log("POST /api/chat/messages - Body:", req.body);
+      console.log("POST /api/chat/messages - Raw body type:", typeof req.body);
+      
       const { senderId, recipientId, messageText, conversationId } = req.body;
       
       if (!senderId || !recipientId || !messageText) {
+        console.log("Missing fields - senderId:", senderId, "recipientId:", recipientId, "messageText:", messageText);
         return res.status(400).json({ error: "Sender ID, Recipient ID, and messageText are required" });
       }
       

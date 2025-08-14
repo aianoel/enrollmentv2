@@ -301,6 +301,7 @@ export function EnhancedChatSystem() {
     };
 
     console.log("Sending message data:", messageData);
+    console.log("Message data JSON:", JSON.stringify(messageData));
 
     // Send via HTTP API
     sendMessageMutation.mutate(messageData);
