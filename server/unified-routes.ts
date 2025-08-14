@@ -493,7 +493,7 @@ export function registerRoutes(app: Express): Server {
           s.grade_level,
           s.capacity,
           s.school_year,
-          COALESCE(u.name, 'No Adviser') as adviser_name
+          COALESCE(u.first_name || ' ' || u.last_name, 'No Adviser') as adviser_name
         FROM sections s
         LEFT JOIN users u ON s.adviser_id = u.id
         ORDER BY s.grade_level, s.name
@@ -648,7 +648,7 @@ export function registerRoutes(app: Express): Server {
 
   app.get("/api/academic/teachers", async (req, res) => {
     try {
-      const result = await db.execute(`
+      const result = await pool.query(`
         SELECT id, first_name, last_name, email, role_id 
         FROM users 
         WHERE role_id = 4 
