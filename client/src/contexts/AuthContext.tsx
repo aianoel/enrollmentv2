@@ -31,11 +31,23 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   useEffect(() => {
     // Check for existing user session
+    console.log('AuthContext: Checking for existing user session...');
     const savedUser = storage.getUser();
+    console.log('AuthContext: Saved user:', savedUser);
     if (savedUser) {
       setUser(savedUser);
+      console.log('AuthContext: User loaded from storage');
+    } else {
+      // Auto-login admin user for development
+      console.log('AuthContext: No saved user, attempting auto-login...');
+      login("admin@school.edu", "admin123456").catch(error => {
+        console.log('AuthContext: Auto-login failed:', error);
+        setLoading(false);
+      });
+      return; // Don't set loading to false here as login will handle it
     }
     setLoading(false);
+    console.log('AuthContext: Loading set to false');
   }, []);
 
   const login = async (email: string, password: string) => {

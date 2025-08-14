@@ -25,12 +25,12 @@ export function UserManagement() {
   const { toast } = useToast();
 
   // Fetch all users
-  const { data: users = [], isLoading: usersLoading, refetch: refetchUsers } = useQuery({
+  const { data: users = [], isLoading: usersLoading, refetch: refetchUsers } = useQuery<User[]>({
     queryKey: ['/api/admin/users'],
   });
 
   // Fetch online users status
-  const { data: onlineUsers = [], refetch: refetchOnlineUsers } = useQuery({
+  const { data: onlineUsers = [], refetch: refetchOnlineUsers } = useQuery<User[]>({
     queryKey: ['/api/chat/online-users'],
   });
 
@@ -46,8 +46,8 @@ export function UserManagement() {
   // Merge users with online status
   const usersWithStatus = users.map((user: User) => ({
     ...user,
-    isOnline: onlineUsers.some((onlineUser: any) => onlineUser.id === user.id),
-    lastActive: onlineUsers.find((onlineUser: any) => onlineUser.id === user.id)?.lastActive || 'Unknown'
+    isOnline: onlineUsers.some((onlineUser: User) => onlineUser.id === user.id),
+    lastActive: onlineUsers.find((onlineUser: User) => onlineUser.id === user.id)?.lastActive || 'Unknown'
   }));
 
   // Filter users based on search, role, and online status
@@ -63,7 +63,7 @@ export function UserManagement() {
   });
 
   // Get unique roles for filter
-  const roles = [...new Set(users.map((user: User) => user.role))] as string[];
+  const roles = Array.from(new Set(users.map((user: User) => user.role)));
 
   // Statistics
   const totalUsers = users.length;
@@ -259,7 +259,7 @@ export function UserManagement() {
                         {user.isOnline ? 
                           ' • Active now' : 
                           user.lastActive !== 'Unknown' ? 
-                            ` • Last active: ${new Date(user.lastActive).toLocaleString()}` :
+                            ` • Last active: ${user.lastActive ? new Date(user.lastActive).toLocaleString() : 'Unknown'}` :
                             ' • Last activity unknown'
                         }
                       </p>

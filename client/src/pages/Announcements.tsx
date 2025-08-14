@@ -8,7 +8,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { Announcement } from '@shared/schema';
 
 export const Announcements: React.FC = () => {
-  const { userProfile } = useAuth();
+  const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState('all');
 
@@ -21,16 +21,14 @@ export const Announcements: React.FC = () => {
     { id: 'low', label: 'Low Priority' },
   ];
 
-  const canCreateAnnouncement = ['admin', 'teacher', 'guidance'].includes(userProfile?.role || '');
+  const canCreateAnnouncement = ['admin', 'teacher', 'guidance'].includes(user?.role || '');
 
-  const filteredAnnouncements = announcements.filter(announcement => {
+  const filteredAnnouncements = (announcements || []).filter(announcement => {
     if (searchQuery) {
       return announcement.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
              announcement.content.toLowerCase().includes(searchQuery.toLowerCase());
     }
-    if (activeFilter !== 'all') {
-      return announcement.priority === activeFilter;
-    }
+    // Since priority doesn't exist in the schema, we'll remove this filter for now
     return true;
   });
 
@@ -134,15 +132,15 @@ export const Announcements: React.FC = () => {
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex items-start space-x-3">
                     <div className="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center flex-shrink-0">
-                      <i className={getPriorityIcon(announcement.priority)}></i>
+                      <i className="fas fa-bullhorn text-primary-600"></i>
                     </div>
                     <div className="flex-1">
                       <div className="flex items-center space-x-2 mb-2">
                         <h3 className="font-semibold text-gray-900 text-lg" data-testid={`announcement-title-${announcement.id}`}>
                           {announcement.title}
                         </h3>
-                        <span className={`px-2 py-1 text-xs font-medium rounded-full ${getPriorityColor(announcement.priority || 'normal')}`}>
-                          {announcement.priority ? announcement.priority.charAt(0).toUpperCase() + announcement.priority.slice(1) : 'Normal'}
+                        <span className="px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-700">
+                          General
                         </span>
                       </div>
                       <div className="flex items-center text-sm text-gray-500 mb-3">
@@ -150,7 +148,7 @@ export const Announcements: React.FC = () => {
                         <span>Author Name</span>
                         <span className="mx-2">•</span>
                         <i className="fas fa-clock mr-1"></i>
-                        <span>{formatDate(announcement.createdAt)}</span>
+                        <span>{announcement.datePosted ? formatDate(announcement.datePosted) : 'No date'}</span>
                       </div>
                     </div>
                   </div>
@@ -166,40 +164,14 @@ export const Announcements: React.FC = () => {
                     {announcement.content}
                   </p>
 
-                  {announcement.attachments && announcement.attachments.length > 0 && (
-                    <div className="bg-gray-50 rounded-lg p-4 mb-4">
-                      <h4 className="font-medium text-gray-900 mb-2">
-                        <i className="fas fa-paperclip mr-2"></i>Attachments ({announcement.attachments.length})
-                      </h4>
-                      <div className="space-y-2">
-                        {announcement.attachments.map((attachment, index) => (
-                          <Button
-                            key={index}
-                            variant="ghost"
-                            size="sm"
-                            className="text-primary-600 hover:text-primary-700 justify-start p-0"
-                            data-testid={`attachment-${announcement.id}-${index}`}
-                          >
-                            <i className="fas fa-file mr-2"></i>
-                            Attachment {index + 1}
-                          </Button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
+
 
                   <div className="flex items-center justify-between text-sm text-gray-500">
                     <div className="flex items-center space-x-4">
                       <span>
                         <i className="fas fa-users mr-1"></i>
-                        Target: {announcement.targetAudience ? announcement.targetAudience.join(', ') : 'All Users'}
+                        Target: All Users
                       </span>
-                      {announcement.expiresAt && (
-                        <span>
-                          <i className="fas fa-calendar-times mr-1"></i>
-                          Expires: {formatDate(announcement.expiresAt)}
-                        </span>
-                      )}
                     </div>
                     <div className="flex items-center space-x-2">
                       <Button variant="ghost" size="sm" data-testid={`button-share-${announcement.id}`}>
