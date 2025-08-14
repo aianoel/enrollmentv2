@@ -1049,7 +1049,7 @@ export function registerRoutes(app: Express): Server {
       const users = await storage.getAllUsers();
       const students = users.filter(user => user.roleId === 5).map(user => ({
         id: user.id,
-        name: `${user.firstName} ${user.lastName}`,
+        name: user.name || `User ${user.id}`,
         email: user.email,
         section: "Not Assigned"
       }));
@@ -1078,7 +1078,7 @@ export function registerRoutes(app: Express): Server {
       const users = await storage.getAllUsers();
       const students = users.filter(user => user.roleId === 5).map(user => ({
         id: user.id,
-        name: `${user.firstName} ${user.lastName}`,
+        name: user.name || `User ${user.id}`,
         email: user.email
       }));
       res.json(students);
@@ -1120,7 +1120,7 @@ export function registerRoutes(app: Express): Server {
       const users = await storage.getAllUsers();
       const students = users.filter(user => user.roleId === 5).map(user => ({
         id: user.id,
-        name: `${user.firstName} ${user.lastName}`,
+        name: user.name || `User ${user.id}`,
         email: user.email
       }));
       res.json(students);
@@ -1136,10 +1136,10 @@ export function registerRoutes(app: Express): Server {
       const users = await storage.getAllUsers();
       const formattedUsers = users.map(user => ({
         id: user.id,
-        name: `${user.firstName} ${user.lastName}`,
+        name: user.name || `User ${user.id}`,
         email: user.email,
         role: user.roleId,
-        isActive: true,
+        isActive: user.isActive,
         createdAt: user.createdAt
       }));
       res.json(formattedUsers);
@@ -1211,10 +1211,10 @@ export function registerRoutes(app: Express): Server {
       const users = await storage.getAllUsers();
       const safeUsers = users.map(user => ({
         id: user.id,
-        name: `${user.firstName} ${user.lastName}`,
+        name: user.name || `User ${user.id}`,
         email: user.email,
-        role: 'user',
-        isActive: true
+        role: user.role || 'user',
+        isActive: user.isActive
       }));
       res.json(safeUsers);
     } catch (error) {
