@@ -768,6 +768,24 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  app.get("/api/chat/users", async (req, res) => {
+    try {
+      const users = await storage.getAllUsers();
+      // Return users without password hash for security
+      const safeUsers = users.map(user => ({
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        isActive: user.isActive
+      }));
+      res.json(safeUsers);
+    } catch (error) {
+      console.error("Error fetching chat users:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
   app.get("/api/chat/online-users", async (req, res) => {
     try {
       const onlineUsers = await storage.getOnlineUsers();

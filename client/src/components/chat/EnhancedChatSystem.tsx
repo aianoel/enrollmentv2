@@ -110,8 +110,8 @@ export function EnhancedChatSystem() {
   });
 
   const { data: users = [] } = useQuery({
-    queryKey: ["/api/chat/users"],
-    queryFn: () => apiRequest("/api/chat/users")
+    queryKey: ["/api/users"],
+    queryFn: () => apiRequest("/api/users")
   });
 
   // Forms
