@@ -780,14 +780,29 @@ export class DatabaseStorage implements IStorage {
 
   async getOnlineUsers(): Promise<any[]> {
     try {
-      const allUsers = await db.select().from(users);
-      return allUsers.map(user => ({
-        id: user.id,
-        name: user.firstName + ' ' + user.lastName,
-        email: user.email,
-        role: user.roleId,
-        isOnline: false, // Simple fallback for now
-        lastSeen: new Date()
+      // Get users with their online status from the onlineStatus table
+      const result = await db.execute(sql`
+        SELECT 
+          u.id, 
+          u.first_name, 
+          u.last_name, 
+          u.email, 
+          u.role_id,
+          COALESCE(os.is_online, false) as is_online,
+          COALESCE(os.last_seen, u.created_at) as last_seen
+        FROM users u
+        LEFT JOIN online_status os ON u.id = os.user_id
+        WHERE COALESCE(os.is_online, false) = true
+        ORDER BY u.first_name, u.last_name
+      `);
+      
+      return result.rows.map((row: any) => ({
+        id: row.id,
+        name: row.first_name + ' ' + row.last_name,
+        email: row.email,
+        role: row.role_id,
+        isOnline: row.is_online,
+        lastSeen: row.last_seen
       }));
     } catch (error) {
       console.error('Error getting online users:', error);

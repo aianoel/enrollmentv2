@@ -562,7 +562,7 @@ export function FacebookStyleChat() {
               </div>
             </div>
             
-            <ScrollArea className="flex-1">
+            <ScrollArea className="flex-1 h-[400px] max-h-[60vh]">
               <div className="p-1">
                 {filteredOnlineUsers.map((onlineUser: User) => (
                   <div

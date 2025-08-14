@@ -982,6 +982,7 @@ export function registerRoutes(app: Express): Server {
     // Handle user joining with their ID
     socket.on('join_user', async (userId) => {
       socket.join(`user_${userId}`);
+      socket.data = { userId }; // Store user ID in socket data for disconnect handling
       await storage.updateUserOnlineStatus(userId, true);
       
       // Broadcast that user is online
@@ -1035,8 +1036,17 @@ export function registerRoutes(app: Express): Server {
       console.log(`User ${socket.id} joined room ${roomId}`);
     });
 
-    socket.on('disconnect', () => {
+    socket.on('disconnect', async () => {
       console.log('User disconnected:', socket.id);
+      
+      // Get the user ID from the socket (you might need to store this when user joins)
+      const userId = socket.data?.userId;
+      if (userId) {
+        await storage.updateUserOnlineStatus(userId, false);
+        // Broadcast that user is offline
+        io.emit('user_status_update', { userId, isOnline: false });
+        console.log(`User ${userId} disconnected and is now offline`);
+      }
     });
   });
 
