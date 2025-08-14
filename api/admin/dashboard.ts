@@ -43,7 +43,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           totalEnrollments: 0,
           totalSections: 0
         },
-        lastError: null
+        lastError: null as string | null
       },
       blobStorage: {
         status: 'unknown',
@@ -54,7 +54,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           totalFiles: 0,
           storageUsed: '0 MB'
         },
-        lastError: null
+        lastError: null as string | null
       }
     };
 
