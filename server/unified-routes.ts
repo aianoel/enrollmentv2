@@ -785,6 +785,11 @@ export function registerRoutes(app: Express): Server {
         return res.status(400).json({ error: "User ID is required" });
       }
       
+      // Security check: Verify the requesting user (from session) matches userId
+      if (!req.session?.user || req.session.user.id !== userId) {
+        return res.status(403).json({ error: "Unauthorized: You can only access your own conversations" });
+      }
+      
       const conversations = await storage.getUserConversations(userId);
       res.json(conversations);
     } catch (error) {
@@ -841,6 +846,11 @@ export function registerRoutes(app: Express): Server {
         return res.status(400).json({ error: "User ID and Partner ID are required" });
       }
       
+      // Security check: Verify the requesting user (from session) matches userId
+      if (!req.session?.user || req.session.user.id !== userId) {
+        return res.status(403).json({ error: "Unauthorized: You can only access your own messages" });
+      }
+      
       const messages = await storage.getConversationMessages(userId, partnerId);
       res.json(messages);
     } catch (error) {
@@ -867,6 +877,11 @@ export function registerRoutes(app: Express): Server {
         return res.status(400).json({ error: "Invalid user IDs in conversation" });
       }
       
+      // Security check: Verify the requesting user is part of this conversation
+      if (!req.session?.user || (req.session.user.id !== userId1 && req.session.user.id !== userId2)) {
+        return res.status(403).json({ error: "Unauthorized: You can only access conversations you're part of" });
+      }
+      
       const messages = await storage.getConversationMessages(userId1, userId2);
       res.json(messages);
     } catch (error) {
@@ -882,6 +897,11 @@ export function registerRoutes(app: Express): Server {
       
       if (!senderId || !recipientId || !messageContent) {
         return res.status(400).json({ error: "Sender ID, Recipient ID, and message content are required" });
+      }
+      
+      // Security check: Verify the requesting user (from session) matches senderId
+      if (!req.session?.user || req.session.user.id !== senderId) {
+        return res.status(403).json({ error: "Unauthorized: You can only send messages as yourself" });
       }
       
       const message = await storage.createMessage({
@@ -980,16 +1000,22 @@ export function registerRoutes(app: Express): Server {
     // Handle sending messages
     socket.on('send_message', async (data) => {
       try {
+        // Basic validation - in production, you'd want to validate socket authentication
+        if (!data.senderId || !data.recipientId || !data.messageText) {
+          socket.emit('message_error', { error: 'Invalid message data' });
+          return;
+        }
+        
         const message = await storage.createMessage(data);
         const sender = await storage.getUser(data.senderId);
         
-        // Emit to recipient
+        // Emit to recipient only (private messaging)
         io.to(`user_${data.recipientId}`).emit('new_message', {
           ...message,
           senderName: sender?.name || 'Unknown'
         });
         
-        // Confirm to sender
+        // Confirm to sender only
         socket.emit('message_sent', message);
       } catch (error) {
         console.error('Error handling socket message:', error);
