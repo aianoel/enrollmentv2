@@ -1,0 +1,134 @@
+API Request failed: 
+Object {url: "/api/chat/conversations?userId=10", method: "GET", error: Error}
+
+API Request failed: 
+Object {url: "/api/chat/conversations?userId=10", method: "GET", error: Error}
+
+API Request failed: 
+Object {url: "/api/chat/conversations?userId=10", method: "GET", error: Error}
+
+API Request failed: 
+Object {url: "/api/chat/conversations?userId=10", method: "GET", error: Error}
+
+API Request failed: 
+Object {url: "/api/chat/conversations?userId=10", method: "GET", error: Error}
+
+API Request failed: 
+Object {url: "/api/chat/conversations?userId=10", method: "GET", error: Error}
+
+API Request failed: 
+Object {url: "/api/chat/conversations?userId=10", method: "GET", error: Error}
+
+API Request failed: 
+Object {url: "/api/chat/conversations?userId=10", method: "GET", error: Error}
+
+API Request failed: 
+Object {url: "/api/chat/conversations?userId=10", method: "GET", error: Error}
+
+API Request failed: 
+Object {url: "/api/chat/conversations?userId=10", method: "GET", error: Error}
+
+API Request failed: 
+Object {url: "/api/chat/conversations?userId=10", method: "GET", error: Error}
+
+API Request failed: 
+Object {url: "/api/chat/conversations?userId=10", method: "GET", error: Error}
+
+API Request failed: 
+Object {url: "/api/chat/conversations?userId=10", method: "GET", error: Error}
+
+API Request failed: 
+Object {url: "/api/chat/conversations?userId=10", method: "GET", error: Error}
+
+API Request failed: 
+Object {url: "/api/chat/conversations?userId=10", method: "GET", error: Error}
+
+API Request failed: 
+Object {url: "/api/chat/conversations?userId=10", method: "GET", error: Error}
+
+API Request failed: 
+Object {url: "/api/chat/conversations?userId=10", method: "GET", error: Error}
+
+API Request failed: 
+Object {url: "/api/chat/conversations?userId=10", method: "GET", error: Error}
+
+API Request failed: 
+Object {url: "/api/chat/conversations?userId=10", method: "GET", error: Error}
+
+API Request failed: 
+Object {url: "/api/chat/conversations?userId=10", method: "GET", error: Error}
+
+API Request failed: 
+Object {url: "/api/chat/conversations?userId=10", method: "GET", error: Error}
+
+API Request failed: 
+Object {url: "/api/chat/conversations?userId=10", method: "GET", error: Error}
+
+API Request failed: 
+Object {url: "/api/chat/conversations?userId=10", method: "GET", error: Error}
+
+API Request failed: 
+Object {url: "/api/chat/conversations?userId=10", method: "GET", error: Error}
+
+API Request failed: 
+Object {url: "/api/chat/conversations?userId=10", method: "GET", error: Error}
+
+API Request failed: 
+Object {url: "/api/chat/conversations?userId=10", method: "GET", error: Error}
+
+API Request failed: 
+Object {url: "/api/chat/conversations?userId=10", method: "GET", error: Error}
+
+API Request failed: 
+Object {url: "/api/chat/conversations?userId=10", method: "GET", error: Error}
+
+API Request failed: 
+Object {url: "/api/chat/conversations?userId=10", method: "GET", error: Error}
+
+API Request failed: 
+Object {url: "/api/chat/conversations?userId=10", method: "GET", error: Error}
+
+API Request failed: 
+Object {url: "/api/chat/conversations?userId=10", method: "GET", error: Error}
+
+API Request failed: 
+Object {url: "/api/chat/conversations?userId=10", method: "GET", error: Error}
+
+API Request failed: 
+Object {url: "/api/chat/conversations?userId=10", method: "GET", error: Error}
+
+API Request failed: 
+Object {url: "/api/chat/conversations?userId=10", method: "GET", error: Error}
+
+API Request failed: 
+Object {url: "/api/chat/conversations?userId=10", method: "GET", error: Error}
+
+API Request failed: 
+Object {url: "/api/chat/conversations?userId=10", method: "GET", error: Error}
+
+API Request failed: 
+Object {url: "/api/chat/conversations?userId=10", method: "GET", error: Error}
+
+API Request failed: 
+Object {url: "/api/chat/conversations?userId=10", method: "GET", error: Error}
+
+API Request failed: 
+Object {url: "/api/chat/conversations?userId=10", method: "GET", error: Error}
+
+API Request failed: 
+Object {url: "/api/chat/conversations?userId=10", method: "GET", error: Error}
+
+API Request failed: 
+Object {url: "/api/chat/conversations?userId=10", method: "GET", error: Error}
+
+API Request failed: 
+Object {url: "/api/chat/conversations?userId=10", method: "GET", error: Error}
+
+API Request failed: 
+Object {url: "/api/teacher/folders", method: "POST", error: Error}
+
+API Request failed: 
+Object {url: "/api/chat/conversations?userId=10", method: "GET", error: Error}
+
+API Request failed: 
+Object {url: "/api/chat/conversations?userId=10", method: "GET", error: Error}

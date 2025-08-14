@@ -308,130 +308,7 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  // Teacher Folder Management Routes
-  app.get('/api/teacher/folders', async (req: AuthenticatedRequest, res) => {
-    try {
-      const userId = req.session?.user?.id;
-      if (!userId) {
-        return res.status(401).json({ error: "Unauthorized" });
-      }
 
-      const folders = await storage.getTeacherFolders(userId);
-      res.json(folders);
-    } catch (error) {
-      console.error("Error fetching teacher folders:", error);
-      res.status(500).json({ error: "Internal server error" });
-    }
-  });
-
-  app.post('/api/teacher/folders', async (req: AuthenticatedRequest, res) => {
-    try {
-      const userId = req.session?.user?.id;
-      if (!userId) {
-        return res.status(401).json({ error: "Unauthorized" });
-      }
-
-      const { name, description } = req.body;
-      if (!name) {
-        return res.status(400).json({ error: "Folder name is required" });
-      }
-
-      const newFolder = await storage.createTeacherFolder({
-        teacherId: userId,
-        name,
-        description: description || null,
-      });
-
-      res.status(201).json(newFolder);
-    } catch (error) {
-      console.error("Error creating teacher folder:", error);
-      res.status(500).json({ error: "Internal server error" });
-    }
-  });
-
-  app.post('/api/teacher/folders/:folderId/share', async (req: AuthenticatedRequest, res) => {
-    try {
-      const userId = req.session?.user?.id;
-      const { folderId } = req.params;
-      const { sectionIds } = req.body;
-
-      if (!userId) {
-        return res.status(401).json({ error: "Unauthorized" });
-      }
-
-      if (!sectionIds || !Array.isArray(sectionIds)) {
-        return res.status(400).json({ error: "Section IDs are required" });
-      }
-
-      await storage.shareFolderWithSections(Number(folderId), sectionIds, userId);
-      res.json({ success: true });
-    } catch (error) {
-      console.error("Error sharing folder:", error);
-      res.status(500).json({ error: "Internal server error" });
-    }
-  });
-
-  app.get('/api/teacher/folders/:folderId/documents', async (req: AuthenticatedRequest, res) => {
-    try {
-      const userId = req.session?.user?.id;
-      const { folderId } = req.params;
-
-      if (!userId) {
-        return res.status(401).json({ error: "Unauthorized" });
-      }
-
-      const documents = await storage.getFolderDocuments(Number(folderId));
-      res.json(documents);
-    } catch (error) {
-      console.error("Error fetching folder documents:", error);
-      res.status(500).json({ error: "Internal server error" });
-    }
-  });
-
-  app.post('/api/teacher/folders/:folderId/documents', async (req: AuthenticatedRequest, res) => {
-    try {
-      const userId = req.session?.user?.id;
-      const { folderId } = req.params;
-      const { name, fileUrl, fileType, fileSize } = req.body;
-
-      if (!userId) {
-        return res.status(401).json({ error: "Unauthorized" });
-      }
-
-      if (!name || !fileUrl) {
-        return res.status(400).json({ error: "Document name and file URL are required" });
-      }
-
-      const newDocument = await storage.createFolderDocument({
-        folderId: Number(folderId),
-        name,
-        fileUrl,
-        fileType: fileType || null,
-        fileSize: fileSize || null,
-      });
-
-      res.status(201).json(newDocument);
-    } catch (error) {
-      console.error("Error creating folder document:", error);
-      res.status(500).json({ error: "Internal server error" });
-    }
-  });
-
-  // Student folder access routes
-  app.get('/api/student/shared-folders', async (req, res) => {
-    try {
-      const userId = req.session?.user?.id;
-      if (!userId) {
-        return res.status(401).json({ error: "Unauthorized" });
-      }
-
-      const sharedFolders = await storage.getSharedFoldersForStudent(userId);
-      res.json(sharedFolders);
-    } catch (error) {
-      console.error("Error fetching shared folders:", error);
-      res.status(500).json({ error: "Internal server error" });
-    }
-  });
 
   app.get("/api/teacher/meetings", async (req, res) => {
     try {
@@ -1346,6 +1223,99 @@ export function registerRoutes(app: Express): Server {
       res.json({ success: true });
     } catch (error) {
       console.error("Error updating user status:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  // Teacher Folder Management Routes
+  app.get("/api/teacher/folders", async (req, res) => {
+    try {
+      const folders = await storage.getTeacherFolders(10); // Pass teacher ID
+      res.json(folders);
+    } catch (error) {
+      console.error("Error fetching teacher folders:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.post("/api/teacher/folders", async (req, res) => {
+    try {
+      const { name, description } = req.body;
+      if (!name) {
+        return res.status(400).json({ error: "Folder name is required" });
+      }
+      
+      const folder = await storage.createTeacherFolder({
+        name,
+        description: description || null,
+        teacherId: 10 // Hard-coded for demo, should come from auth
+      });
+      res.status(201).json(folder);
+    } catch (error) {
+      console.error("Error creating teacher folder:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.get("/api/teacher/folders/:folderId/documents", async (req, res) => {
+    try {
+      const folderId = parseInt(req.params.folderId);
+      const documents = await storage.getFolderDocuments(folderId);
+      res.json(documents);
+    } catch (error) {
+      console.error("Error fetching folder documents:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.post("/api/teacher/folders/:folderId/documents", async (req, res) => {
+    try {
+      const folderId = parseInt(req.params.folderId);
+      const { name, fileUrl, fileType, fileSize } = req.body;
+      
+      if (!name || !fileUrl) {
+        return res.status(400).json({ error: "Document name and file URL are required" });
+      }
+      
+      const document = await storage.addFolderDocument({
+        folderId,
+        name,
+        fileUrl,
+        fileType: fileType || null,
+        fileSize: fileSize || null
+      });
+      res.status(201).json(document);
+    } catch (error) {
+      console.error("Error adding folder document:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.post("/api/teacher/folders/:folderId/share", async (req, res) => {
+    try {
+      const folderId = parseInt(req.params.folderId);
+      const { sectionIds } = req.body;
+      
+      if (!Array.isArray(sectionIds) || sectionIds.length === 0) {
+        return res.status(400).json({ error: "Section IDs are required" });
+      }
+      
+      await storage.shareFolderWithSections(folderId, sectionIds, 10); // Pass teacher ID
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error sharing folder:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  // Student Shared Folders Routes
+  app.get("/api/student/shared-folders", async (req, res) => {
+    try {
+      const studentId = 10; // Hard-coded for demo, should come from auth
+      const sharedFolders = await storage.getSharedFoldersForStudent(studentId);
+      res.json(sharedFolders);
+    } catch (error) {
+      console.error("Error fetching shared folders:", error);
       res.status(500).json({ error: "Internal server error" });
     }
   });
