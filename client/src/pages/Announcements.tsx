@@ -192,7 +192,7 @@ export const Announcements: React.FC = () => {
                     <div className="flex items-center space-x-4">
                       <span>
                         <i className="fas fa-users mr-1"></i>
-                        Target: {announcement.targetAudience.join(', ')}
+                        Target: {announcement.targetAudience ? announcement.targetAudience.join(', ') : 'All Users'}
                       </span>
                       {announcement.expiresAt && (
                         <span>
