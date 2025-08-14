@@ -181,7 +181,7 @@ export function EnhancedAcademicDashboard() {
 
   const assignTeacherMutation = useMutation({
     mutationFn: (data: z.infer<typeof assignmentSchema>) => 
-      apiRequest("/api/academic/assign-teacher", "POST", data),
+      apiRequest("/api/academic/teacher-assignments", "POST", data),
     onSuccess: () => {
       toast({ title: "Success", description: "Teacher assigned successfully" });
       queryClient.invalidateQueries({ queryKey: ["/api/academic/teacher-assignments"] });
