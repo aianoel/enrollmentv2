@@ -4,10 +4,13 @@ import { Server as SocketIOServer } from "socket.io";
 import { storage } from "./storage";
 import { db, pool } from "./db";
 import bcrypt from "bcryptjs";
+import session from "express-session";
+import { sql } from "drizzle-orm";
 
 // Extend Express Request to include session
 interface AuthenticatedRequest extends Request {
   session: { 
+    userId?: number;
     user?: { 
       id: number; 
       role: string; 
@@ -77,6 +80,18 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  // Setup session middleware
+  app.use(session({
+    secret: process.env.SESSION_SECRET || 'your-session-secret-key-here',
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      secure: process.env.NODE_ENV === 'production',
+      httpOnly: true,
+      maxAge: 24 * 60 * 60 * 1000 // 24 hours
+    }
+  }));
+
   // Authentication routes
   app.post("/api/auth/login", async (req, res) => {
     try {
@@ -109,6 +124,13 @@ export function registerRoutes(app: Express): Server {
         case 8: roleName = 'registrar'; break;
         case 9: roleName = 'accounting'; break;
       }
+
+      // Store user info in session
+      (req as any).session.userId = user.id;
+      (req as any).session.user = {
+        id: user.id,
+        role: roleName
+      };
 
       const responseUser = {
         id: user.id,
@@ -325,6 +347,13 @@ export function registerRoutes(app: Express): Server {
   // Teacher Assignments (sections and subjects assigned to teacher)
   app.get("/api/teacher/assignments", async (req, res) => {
     try {
+      // Check if user is authenticated
+      if (!req.session?.userId) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+
+      console.log("Fetching assignments for teacher ID:", req.session.userId);
+      
       const result = await db.execute(sql`
         SELECT 
           ta.id,
@@ -339,6 +368,8 @@ export function registerRoutes(app: Express): Server {
         WHERE ta.teacher_id = ${req.session.userId}
         ORDER BY s.name, sub.name
       `);
+      
+      console.log("Teacher assignments result:", result.rows);
       res.json(result.rows);
     } catch (error) {
       console.error("Error fetching teacher assignments:", error);
@@ -376,6 +407,11 @@ export function registerRoutes(app: Express): Server {
   // All students taught by the teacher (across all sections)
   app.get("/api/teacher/all-students", async (req, res) => {
     try {
+      // Check if user is authenticated
+      if (!req.session?.userId) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+
       const result = await db.execute(sql`
         SELECT DISTINCT
           u.id,
