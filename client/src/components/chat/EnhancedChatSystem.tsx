@@ -143,11 +143,20 @@ export function EnhancedChatSystem() {
 
   const sendMessageMutation = useMutation({
     mutationFn: (messageData: any) => apiRequest("/api/chat/messages", "POST", messageData),
-    onSuccess: () => {
+    onSuccess: (response) => {
+      console.log("Message sent successfully:", response);
       const partnerId = (selectedConversation as any)?.partnerId;
       queryClient.invalidateQueries({ queryKey: ["/api/chat/messages", user?.id, partnerId] });
       queryClient.invalidateQueries({ queryKey: ["/api/chat/conversations", user?.id] });
       setMessageText("");
+    },
+    onError: (error) => {
+      console.error("Error sending message:", error);
+      toast({
+        title: "Error",
+        description: "Failed to send message. Please try again.",
+        variant: "destructive",
+      });
     },
   });
 
@@ -268,7 +277,15 @@ export function EnhancedChatSystem() {
     // Extract recipient ID from conversation
     const recipientId = (selectedConversation as any).partnerId;
     
+    console.log("handleSendMessage debug:", {
+      messageText: messageText.trim(),
+      selectedConversation,
+      user,
+      recipientId
+    });
+    
     if (!recipientId) {
+      console.error("No recipientId found in conversation:", selectedConversation);
       toast({
         title: "Error",
         description: "Cannot identify message recipient",
@@ -282,6 +299,8 @@ export function EnhancedChatSystem() {
       recipientId: recipientId,
       messageText: messageText.trim(),
     };
+
+    console.log("Sending message data:", messageData);
 
     // Send via HTTP API
     sendMessageMutation.mutate(messageData);
