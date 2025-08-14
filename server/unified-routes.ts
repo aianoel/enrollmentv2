@@ -745,17 +745,33 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  app.get("/api/notifications/count", (req, res) => {
+  app.get("/api/notifications/count", async (req, res) => {
     try {
       const recipientId = parseInt(req.query.recipientId as string);
       if (!recipientId) {
         return res.status(400).json({ error: "Recipient ID is required" });
       }
       
-      // Return a default count
-      res.json({ count: 0 });
+      const notifications = await storage.getNotifications(recipientId);
+      const unreadCount = notifications.filter(n => !n.isRead).length;
+      res.json({ count: unreadCount });
     } catch (error) {
       console.error("Error fetching notification count:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.get("/api/notifications", async (req, res) => {
+    try {
+      const recipientId = parseInt(req.query.recipientId as string);
+      if (!recipientId) {
+        return res.status(400).json({ error: "Recipient ID is required" });
+      }
+      
+      const notifications = await storage.getNotifications(recipientId);
+      res.json(notifications);
+    } catch (error) {
+      console.error("Error fetching notifications:", error);
       res.status(500).json({ error: "Internal server error" });
     }
   });
@@ -772,6 +788,45 @@ export function registerRoutes(app: Express): Server {
       res.json(conversations);
     } catch (error) {
       console.error("Error fetching conversations:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.post("/api/chat/conversations", async (req, res) => {
+    try {
+      const { conversationType, memberIds } = req.body;
+      
+      if (!conversationType || !memberIds || !Array.isArray(memberIds) || memberIds.length === 0) {
+        return res.status(400).json({ error: "Conversation type and member IDs are required" });
+      }
+      
+      // For private conversations, create a simple conversation ID
+      if (conversationType === "private" && memberIds.length === 1) {
+        // Get current user from session or authentication
+        // For now, we'll pass the current user ID in the request body
+        const currentUserId = req.body.currentUserId;
+        const partnerId = memberIds[0];
+        
+        if (!currentUserId) {
+          return res.status(400).json({ error: "Current user ID is required" });
+        }
+        
+        // Create conversation ID in format conv_userId1_userId2 (smaller ID first for consistency)
+        const id1 = Math.min(currentUserId, partnerId);
+        const id2 = Math.max(currentUserId, partnerId);
+        
+        const conversation = {
+          id: `conv_${id1}_${id2}`,
+          conversationType: "private",
+          createdAt: new Date().toISOString()
+        };
+        
+        res.status(201).json(conversation);
+      } else {
+        res.status(400).json({ error: "Group conversations not yet implemented" });
+      }
+    } catch (error) {
+      console.error("Error creating conversation:", error);
       res.status(500).json({ error: "Internal server error" });
     }
   });
@@ -793,18 +848,44 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  app.get("/api/chat/conversations/:id/messages", async (req, res) => {
+    try {
+      const conversationId = req.params.id;
+      
+      // For now, we'll use a simple approach where conversation ID is in format "conv_userId1_userId2"
+      // Extract user IDs from conversation ID
+      const parts = conversationId.split('_');
+      if (parts.length < 3) {
+        return res.status(400).json({ error: "Invalid conversation ID format" });
+      }
+      
+      const userId1 = parseInt(parts[1]);
+      const userId2 = parseInt(parts[2]);
+      
+      if (!userId1 || !userId2) {
+        return res.status(400).json({ error: "Invalid user IDs in conversation" });
+      }
+      
+      const messages = await storage.getConversationMessages(userId1, userId2);
+      res.json(messages);
+    } catch (error) {
+      console.error("Error fetching conversation messages:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
   app.post("/api/chat/messages", async (req, res) => {
     try {
-      const { senderId, recipientId, content } = req.body;
+      const { senderId, recipientId, messageText, conversationId } = req.body;
       
-      if (!senderId || !recipientId || !content) {
-        return res.status(400).json({ error: "Sender ID, Recipient ID, and content are required" });
+      if (!senderId || !recipientId || !messageText) {
+        return res.status(400).json({ error: "Sender ID, Recipient ID, and messageText are required" });
       }
       
       const message = await storage.createMessage({
         senderId,
         recipientId,
-        content
+        messageText
       });
       
       // Emit the message via Socket.IO for real-time updates

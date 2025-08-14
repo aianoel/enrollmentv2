@@ -127,7 +127,7 @@ export function EnhancedChatSystem() {
   const createConversationMutation = useMutation({
     mutationFn: (data: ConversationFormData) => apiRequest("/api/chat/conversations", "POST", {
       ...data,
-      memberIds: [...data.memberIds, user?.id] // Include current user
+      currentUserId: user?.id // Add current user ID for conversation creation
     }),
     onSuccess: (newConversation) => {
       queryClient.invalidateQueries({ queryKey: ["/api/chat/conversations"] });

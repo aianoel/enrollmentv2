@@ -681,13 +681,15 @@ export class DatabaseStorage implements IStorage {
             ).length;
             
             conversations.push({
-              id: `conv_${partnerId}_${userId}`,
+              id: `conv_${Math.min(partnerId, userId)}_${Math.max(partnerId, userId)}`,
+              conversationType: "private",
               partnerId,
-              partnerName: partner.firstName + ' ' + partner.lastName,
-              partnerRole: partner.roleId,
+              partnerName: partner.name || `${partner.firstName} ${partner.lastName}`,
+              partnerRole: partner.role || 'user',
               lastMessage: lastMessage?.messageText || '',
               lastMessageTime: lastMessage?.createdAt,
-              unreadCount
+              unreadCount,
+              createdAt: lastMessage?.createdAt || new Date().toISOString()
             });
           }
         }
@@ -715,7 +717,7 @@ export class DatabaseStorage implements IStorage {
         id: msg.id,
         senderId: msg.sender_id,
         recipientId: msg.receiver_id,
-        message: msg.message,
+        messageText: msg.message,
         createdAt: msg.sent_at,
         isRead: msg.is_read
       }));
@@ -730,7 +732,7 @@ export class DatabaseStorage implements IStorage {
       // Use raw SQL since the schema mapping is inconsistent
       const result = await db.execute(sql`
         INSERT INTO messages (sender_id, receiver_id, message, sent_at, is_read) 
-        VALUES (${data.senderId}, ${data.recipientId}, ${data.content || data.message}, NOW(), false) 
+        VALUES (${data.senderId}, ${data.recipientId}, ${data.messageText || data.content || data.message}, NOW(), false) 
         RETURNING *
       `);
       const message = result.rows[0] as any;
@@ -739,7 +741,7 @@ export class DatabaseStorage implements IStorage {
         id: message.id,
         senderId: message.sender_id,
         recipientId: message.receiver_id,
-        message: message.message,
+        messageText: message.message,
         createdAt: message.sent_at,
         isRead: message.is_read
       };
